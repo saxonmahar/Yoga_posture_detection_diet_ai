@@ -1,6 +1,7 @@
 {
   "name": "yoga-diet-ai-backend",
   "version": "1.0.0",
+   "type": "module",
   "description": "Backend for Yoga Posture Detection and Diet AI",
   "main": "index.js",
   "scripts": {
