@@ -1,6 +1,28 @@
 {
+  "name": "yoga-diet-ai-backend",
+  "version": "1.0.0",
+  "description": "Backend for Yoga Posture Detection and Diet AI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
   "dependencies": {
+    "@mediapipe/pose": "^0.5.1675469404",
+    "@tensorflow/tfjs-backend-cpu": "^4.22.0",
+    "@tensorflow/tfjs-core": "^4.22.0",
+    "bcryptjs": "^3.0.3",
+    "canvas": "^3.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^5.2.1",
+    "joi": "^18.0.2",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.0.1",
+    "multer": "^2.0.2",
+    "sharp": "^0.34.5"
+  },
+  "devDependencies": {
     "nodemon": "^3.1.11"
   }
 }

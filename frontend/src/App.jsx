@@ -1,8 +1,10 @@
+// src/App.jsx
 import React, { useState, useEffect } from 'react'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import Navbar from './components/common/Navbar'
+import Footer from './components/common/Footer'
 
-// Import all pages - MAKE SURE THESE FILES EXIST
+// Import all pages
 import HomePage from './pages/HomePage'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -14,167 +16,305 @@ import PricingPage from './pages/PricingPage'
 import AboutPage from './pages/AboutPage'
 import TestimonialsPage from './pages/TestimonialsPage'
 
-// Import new company pages
+// Import company pages
 import CareersPage from './pages/CareersPage'
 import BlogPage from './pages/BlogPage'
 import PressPage from './pages/PressPage'
 import ContactPage from './pages/ContactPage'
 
 // Import pose detection page
-import PoseDetection from './components/PoseDetection'
+import PoseDetection from './components/common/PoseDetection'
 
-export default function App() {
-  const [currentPage, setCurrentPage] = useState('home')
+// Import new YogaAI feature pages
+import DietPlanPage from './pages/DietPlanPage'
+import ProgressPage from './pages/Progress'
+
+// Layout wrapper component
+const Layout = ({ children, showFooter = true, user, onLogout }) => {
+  return (
+    <div className="min-h-screen bg-background text-text-primary">
+      <Navbar user={user} onLogout={onLogout} />
+      <main className="pt-16"> {/* Add padding for fixed navbar */}
+        {children}
+      </main>
+      {showFooter && <Footer />}
+    </div>
+  )
+}
+
+// Legal pages component
+const LegalPage = ({ title, content, navigate }) => (
+  <div className="min-h-screen bg-gradient-to-b from-background to-surface flex items-center justify-center p-4">
+    <div className="bg-card p-8 rounded-2xl border border-white/10 max-w-2xl w-full">
+      <h1 className="text-3xl font-bold mb-6 gradient-text">{title}</h1>
+      <div className="space-y-4 text-text-muted">
+        {content}
+      </div>
+      <button
+        onClick={() => navigate('/')}
+        className="mt-6 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors"
+      >
+        Back to Home
+      </button>
+    </div>
+  </div>
+)
+
+// Main app content with routing
+function AppContent() {
   const [user, setUser] = useState(null)
+  const navigate = useNavigate()
+
+  // Navigation helper function
+  const navigateTo = (page) => {
+    navigate(`/${page}`)
+  }
 
   // Simulate user authentication state
   useEffect(() => {
     const savedUser = localStorage.getItem('yogaai-user')
     if (savedUser) {
-      setUser(JSON.parse(savedUser))
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch (error) {
+        console.error('Error parsing saved user data:', error)
+        localStorage.removeItem('yogaai-user')
+      }
     }
   }, [])
 
   const handleLogin = (userData) => {
-    setUser(userData)
-    localStorage.setItem('yogaai-user', JSON.stringify(userData))
-    setCurrentPage('dashboard')
+    const userWithStats = {
+      ...userData,
+      stats: userData.stats || {
+        totalWorkouts: 12,
+        totalCaloriesBurned: 1250,
+        currentStreak: 7,
+        averageAccuracy: 87
+      }
+    }
+    setUser(userWithStats)
+    localStorage.setItem('yogaai-user', JSON.stringify(userWithStats))
+    navigate('/dashboard')
   }
 
   const handleRegister = (userData) => {
-    setUser(userData)
-    localStorage.setItem('yogaai-user', JSON.stringify(userData))
-    setCurrentPage('dashboard')
+    const userWithStats = {
+      ...userData,
+      stats: userData.stats || {
+        totalWorkouts: 0,
+        totalCaloriesBurned: 0,
+        currentStreak: 0,
+        averageAccuracy: 0
+      }
+    }
+    setUser(userWithStats)
+    localStorage.setItem('yogaai-user', JSON.stringify(userWithStats))
+    navigate('/dashboard')
   }
 
   const handleLogout = () => {
     setUser(null)
     localStorage.removeItem('yogaai-user')
-    setCurrentPage('home')
+    navigate('/')
   }
 
-  const renderPage = () => {
-    switch(currentPage) {
-      case 'login':
-        return <Login onNavigate={setCurrentPage} onLogin={handleLogin} />
-      case 'register':
-        return <Register onNavigate={setCurrentPage} onRegister={handleRegister} />
-      case 'dashboard':
-        return <Dashboard onNavigate={setCurrentPage} user={user} onLogout={handleLogout} />
-      case 'premium':
-        return <Premium onNavigate={setCurrentPage} user={user} />
-      
-      // Main navigation pages
-      case 'features':
-        return <FeaturesPage onNavigate={setCurrentPage} />
-      case 'how-it-works':
-        return <HowItWorksPage onNavigate={setCurrentPage} />
-      case 'pricing':
-        return <PricingPage onNavigate={setCurrentPage} />
-      case 'about':
-        return <AboutPage onNavigate={setCurrentPage} />
-      case 'testimonials':
-        return <TestimonialsPage onNavigate={setCurrentPage} />
-      
-      // Company pages (from footer)
-      case 'careers':
-        return <CareersPage onNavigate={setCurrentPage} />
-      case 'blog':
-        return <BlogPage onNavigate={setCurrentPage} />
-      case 'press':
-        return <PressPage onNavigate={setCurrentPage} />
-      case 'contact':
-        return <ContactPage onNavigate={setCurrentPage} />
-      
-      // AI Pose Detection page
-      case 'pose-detection':
-        return <PoseDetection onNavigate={setCurrentPage} />
-      
-      // Legal pages (for footer links)
-      case 'privacy':
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
-              <p className="text-gray-600 mb-4">Privacy policy content will appear here...</p>
-              <button onClick={() => setCurrentPage('home')} className="px-6 py-2 bg-blue-500 text-white rounded-lg">
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )
-      case 'terms':
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6">Terms of Service</h1>
-              <p className="text-gray-600 mb-4">Terms of service content will appear here...</p>
-              <button onClick={() => setCurrentPage('home')} className="px-6 py-2 bg-blue-500 text-white rounded-lg">
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )
-      case 'cookies':
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6">Cookie Policy</h1>
-              <p className="text-gray-600 mb-4">Cookie policy content will appear here...</p>
-              <button onClick={() => setCurrentPage('home')} className="px-6 py-2 bg-blue-500 text-white rounded-lg">
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )
-      case 'security':
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6">Security</h1>
-              <p className="text-gray-600 mb-4">Security information will appear here...</p>
-              <button onClick={() => setCurrentPage('home')} className="px-6 py-2 bg-blue-500 text-white rounded-lg">
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )
-      case 'gdpr':
-        return (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6">GDPR Compliance</h1>
-              <p className="text-gray-600 mb-4">GDPR information will appear here...</p>
-              <button onClick={() => setCurrentPage('home')} className="px-6 py-2 bg-blue-500 text-white rounded-lg">
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )
-      
-      // Default to homepage
-      default:
-        return <HomePage onNavigate={setCurrentPage} />
+  // Function to update user stats (for pose detection completion)
+  const updateUserStats = (newStats) => {
+    if (user) {
+      const updatedUser = {
+        ...user,
+        stats: {
+          ...user.stats,
+          ...newStats
+        }
+      }
+      setUser(updatedUser)
+      localStorage.setItem('yogaai-user', JSON.stringify(updatedUser))
     }
   }
 
-  // Show footer on main pages only (not on auth/dashboard pages)
-  const showFooter = () => {
-    const noFooterPages = ['login', 'register', 'dashboard', 'premium']
-    return !noFooterPages.includes(currentPage)
-  }
-
   return (
-    <div className="min-h-screen bg-primary text-text">
-      <Navbar 
-        onNavigate={setCurrentPage} 
-        currentPage={currentPage}
-        user={user}
-        onLogout={handleLogout}
-      />
-      {renderPage()}
-      {/* Show footer on main pages */}
-      {showFooter() && <Footer onNavigate={setCurrentPage} />}
-    </div>
+    <Routes>
+      {/* Public routes with footer */}
+      <Route path="/" element={
+        <Layout showFooter={true}>
+          <HomePage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/home" element={
+        <Layout showFooter={true}>
+          <HomePage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/features" element={
+        <Layout showFooter={true}>
+          <FeaturesPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/how-it-works" element={
+        <Layout showFooter={true}>
+          <HowItWorksPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/pricing" element={
+        <Layout showFooter={true}>
+          <PricingPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/about" element={
+        <Layout showFooter={true}>
+          <AboutPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/testimonials" element={
+        <Layout showFooter={true}>
+          <TestimonialsPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/careers" element={
+        <Layout showFooter={true}>
+          <CareersPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/blog" element={
+        <Layout showFooter={true}>
+          <BlogPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/press" element={
+        <Layout showFooter={true}>
+          <PressPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/contact" element={
+        <Layout showFooter={true}>
+          <ContactPage onNavigate={navigateTo} />
+        </Layout>
+      } />
+
+      {/* Auth routes without footer */}
+      <Route path="/login" element={
+        <Layout showFooter={false}>
+          <Login onLogin={handleLogin} />
+        </Layout>
+      } />
+      <Route path="/register" element={
+        <Layout showFooter={false}>
+          <Register onRegister={handleRegister} />
+        </Layout>
+      } />
+
+      {/* Protected routes - dashboard and features */}
+      <Route path="/dashboard" element={
+        <Layout showFooter={false}>
+          <Dashboard user={user} onLogout={handleLogout} />
+        </Layout>
+      } />
+      <Route path="/premium" element={
+        <Layout showFooter={false}>
+          <Premium user={user} onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/pose-detection" element={
+        <Layout showFooter={false}>
+          <PoseDetection user={user} updateUserStats={updateUserStats} onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/diet-plan" element={
+        <Layout showFooter={false}>
+          <DietPlanPage user={user} onNavigate={navigateTo} />
+        </Layout>
+      } />
+      <Route path="/progress" element={
+        <Layout showFooter={false}>
+          <ProgressPage user={user} onNavigate={navigateTo} />
+        </Layout>
+      } />
+
+      {/* Legal pages */}
+      <Route path="/privacy" element={
+        <Layout showFooter={true}>
+          <LegalPage 
+            title="Privacy Policy"
+            content={
+              <>
+                <p>Your privacy is important to us. This Privacy Policy explains how YogaAI collects, uses, and protects your personal information.</p>
+                <p>We collect information you provide directly, such as your name, email address, and fitness goals. We also collect usage data to improve our services.</p>
+                <p>Your data is encrypted and stored securely. We never sell your personal information to third parties.</p>
+              </>
+            }
+          />
+        </Layout>
+      } />
+      <Route path="/terms" element={
+        <Layout showFooter={true}>
+          <LegalPage 
+            title="Terms of Service"
+            content={
+              <>
+                <p>By using YogaAI, you agree to these Terms of Service. Please read them carefully.</p>
+                <p>Our services are designed to support your wellness journey, but they are not a substitute for professional medical advice.</p>
+                <p>You are responsible for using our services safely and within your physical limits. We recommend consulting with a healthcare professional before starting any new exercise program.</p>
+              </>
+            }
+          />
+        </Layout>
+      } />
+      <Route path="/cookies" element={
+        <Layout showFooter={true}>
+          <LegalPage 
+            title="Cookie Policy"
+            content={
+              <>
+                <p>We use cookies to enhance your experience on YogaAI. Cookies are small text files stored on your device.</p>
+                <p>Essential cookies are necessary for the website to function properly. We also use analytics cookies to understand how users interact with our platform.</p>
+                <p>You can control cookies through your browser settings. However, disabling essential cookies may affect your ability to use certain features.</p>
+              </>
+            }
+          />
+        </Layout>
+      } />
+      <Route path="/security" element={
+        <Layout showFooter={true}>
+          <LegalPage 
+            title="Security"
+            content={
+              <>
+                <p>We take security seriously at YogaAI. Your data is protected with industry-standard encryption and security measures.</p>
+                <p>We implement secure authentication, regular security audits, and monitoring systems to protect against unauthorized access.</p>
+                <p>If you suspect any security issues, please contact us immediately at security@yogaai.com.</p>
+              </>
+            }
+          />
+        </Layout>
+      } />
+      <Route path="/gdpr" element={
+        <Layout showFooter={true}>
+          <LegalPage 
+            title="GDPR Compliance"
+            content={
+              <>
+                <p>YogaAI is committed to complying with the General Data Protection Regulation (GDPR) for our users in the European Union.</p>
+                <p>You have the right to access, correct, or delete your personal data. You can also request data portability or object to data processing.</p>
+                <p>To exercise your GDPR rights, please contact our Data Protection Officer at dpo@yogaai.com.</p>
+              </>
+            }
+          />
+        </Layout>
+      } />
+
+      {/* Redirect any unknown route to home */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
+
+// Main App component
+export default function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   )
 }

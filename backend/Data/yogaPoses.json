@@ -1,0 +1,79 @@
+﻿{
+  "poses": [
+    {
+      "id": 1,
+      "name": "Mountain Pose",
+      "sanskritName": "Tadasana",
+      "difficulty": "Beginner",
+      "category": "Standing",
+      "description": "Foundation for all standing poses. Stand tall like a mountain.",
+      "instructions": [
+        "Stand with feet together or hip-width apart",
+        "Distribute weight evenly on both feet",
+        "Engage thigh muscles and lift kneecaps",
+        "Lengthen spine upward",
+        "Relax shoulders away from ears",
+        "Arms at sides with palms facing forward",
+        "Breathe deeply and hold for 30-60 seconds"
+      ],
+      "benefits": [
+        "Improves posture",
+        "Strengthens thighs, knees, and ankles",
+        "Relieves back pain",
+        "Calms the mind",
+        "Increases awareness"
+      ],
+      "duration": "30-60 seconds",
+      "image": "mountain_pose.jpg"
+    },
+    {
+      "id": 2,
+      "name": "Tree Pose",
+      "sanskritName": "Vrikshasana",
+      "difficulty": "Beginner",
+      "category": "Balance",
+      "description": "Balance pose that improves focus and stability. Stand steady like a tree.",
+      "instructions": [
+        "Stand on left leg, ground through foot",
+        "Place right foot on left inner thigh or calf (avoid knee)",
+        "Bring hands to prayer position at chest",
+        "Focus on a fixed point ahead",
+        "Hold for 30 seconds",
+        "Repeat on other side"
+      ],
+      "benefits": [
+        "Improves balance and coordination",
+        "Strengthens legs and core",
+        "Increases concentration and focus",
+        "Stretches groins and inner thighs"
+      ],
+      "duration": "30 seconds each side",
+      "image": "tree_pose.jpg"
+    },
+    {
+      "id": 3,
+      "name": "Warrior II",
+      "sanskritName": "Virabhadrasana II",
+      "difficulty": "Intermediate",
+      "category": "Standing",
+      "description": "Powerful standing pose that builds strength, stamina, and concentration.",
+      "instructions": [
+        "Step feet wide apart (about 4 feet)",
+        "Turn right foot out 90°, left foot in slightly",
+        "Bend right knee over right ankle",
+        "Extend arms parallel to floor",
+        "Gaze over right middle finger",
+        "Keep hips open to the side",
+        "Hold for 30 seconds, then switch sides"
+      ],
+      "benefits": [
+        "Strengthens legs and ankles",
+        "Stretches groins, chest, and lungs",
+        "Increases stamina",
+        "Relieves backaches"
+      ],
+      "duration": "30 seconds each side",
+      "image": "warrior_ii.jpg"
+    }
+  ]
+}

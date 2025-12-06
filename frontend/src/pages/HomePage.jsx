@@ -133,7 +133,10 @@ export default function HomePage({ onNavigate }) {
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </button>
 
-                <button className="px-8 py-4 bg-card hover:bg-secondary rounded-xl text-lg font-semibold transition border border-white/10 flex items-center justify-center">
+                <button
+                  onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
+                  className="px-8 py-4 bg-card hover:bg-secondary rounded-xl text-lg font-semibold transition border border-white/10 flex items-center justify-center"
+                >
                   <Play className="w-5 h-5 mr-2" />
                   Watch Demo
                 </button>

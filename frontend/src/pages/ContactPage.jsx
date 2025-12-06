@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './CompanyPages.css';
 
-const ContactPage = ({ onNavigate }) => {
+const ContactPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
