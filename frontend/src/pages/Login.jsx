@@ -170,7 +170,7 @@ function Login({ onNavigate, onLogin }) {
             <p className="text-center text-text-muted">
               Don't have an account?{' '}
               <button
-                onClick={() => onNavigate('register')}
+                onClick={() => onNavigate('/register')}
                 className="text-accent hover:text-accent-light font-semibold"
               >
                 Create account

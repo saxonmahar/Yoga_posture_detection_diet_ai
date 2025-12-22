@@ -76,37 +76,6 @@ const FeaturesPage = ({ onNavigate }) => {
           </div>
         </div>
       )
-    },
-    {
-      id: 'live-classes',
-      icon: '🎥',
-      title: 'Live Classes',
-      description: 'Join live sessions with expert instructors from around the world.',
-      content: (
-        <div className="live-classes-grid">
-          <div className="class-card">
-            <h3>Morning Flow</h3>
-            <p>Start your day with energy</p>
-            <div className="class-time">8:00 AM - 9:00 AM</div>
-            <p>Instructor: Sarah Chen</p>
-            <button className="join-btn" onClick={() => alert('Joining Morning Flow class...')}>Join Class</button>
-          </div>
-          <div className="class-card">
-            <h3>Power Yoga</h3>
-            <p>Build strength and endurance</p>
-            <div className="class-time">6:00 PM - 7:00 PM</div>
-            <p>Instructor: Miguel Rodriguez</p>
-            <button className="join-btn" onClick={() => alert('Joining Power Yoga class...')}>Join Class</button>
-          </div>
-          <div className="class-card">
-            <h3>Yin & Restorative</h3>
-            <p>Evening relaxation session</p>
-            <div className="class-time">8:00 PM - 9:00 PM</div>
-            <p>Instructor: Priya Sharma</p>
-            <button className="join-btn" onClick={() => alert('Joining Yin Yoga class...')}>Join Class</button>
-          </div>
-        </div>
-      )
     }
   ];
 

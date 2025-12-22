@@ -4,49 +4,43 @@ import './CompanyPages.css';
 const PressPage = ({ onNavigate }) => {
   const pressReleases = [
     {
-      id: 1,
-      title: 'YogaAI Raises $10M Series A to Expand AI Yoga Platform',
-      date: 'March 1, 2024',
-      summary: 'Funding led by Tech Ventures to accelerate development of real-time pose detection.',
-      link: '#'
+      date: 'Mar 1, 2024',
+      title: 'YogaAI Raises $10M Series A to Expand AI Wellness Platform',
+      summary: 'Funding led by HealthTech Ventures to accelerate development of advanced pose detection algorithms.'
     },
     {
-      id: 2,
-      title: 'YogaAI Partners with Major Wellness Chains',
-      date: 'February 15, 2024',
-      summary: 'New partnerships bring AI yoga to 500+ studios nationwide.',
-      link: '#'
+      date: 'Feb 15, 2024',
+      title: 'YogaAI Partners with Major Fitness Chains',
+      summary: 'New integration brings AI yoga coaching to 500+ fitness centers nationwide.'
     },
     {
-      id: 3,
-      title: 'Study Shows YogaAI Improves Practice Consistency by 300%',
-      date: 'January 30, 2024',
-      summary: 'Independent research validates effectiveness of AI-guided yoga.',
-      link: '#'
-    },
-    {
-      id: 4,
-      title: 'YogaAI Launches Personalized Diet Planning Feature',
-      date: 'January 10, 2024',
-      summary: 'New AI nutrition recommendations integrated with yoga practice.',
-      link: '#'
+      date: 'Jan 30, 2024',
+      title: 'Study Shows YogaAI Users Improve 45% Faster',
+      summary: 'Independent research validates effectiveness of AI-guided yoga practice.'
     }
   ];
 
   const mediaCoverage = [
-    { outlet: 'TechCrunch', logo: '📰', headline: 'AI Meets Yoga', date: 'Feb 2024' },
-    { outlet: 'Forbes', logo: '💼', headline: 'Wellness Tech Revolution', date: 'Jan 2024' },
-    { outlet: 'Health Magazine', logo: '🏥', headline: 'Digital Yoga Breakthrough', date: 'Dec 2023' },
-    { outlet: 'Wired', logo: '🔌', headline: 'The Future of Fitness', date: 'Nov 2023' },
-    { outlet: 'Bloomberg', logo: '📊', headline: 'Startup Spotlight', date: 'Oct 2023' },
-    { outlet: 'Yoga Journal', logo: '🧘', headline: 'Technology & Tradition', date: 'Sep 2023' },
+    { logo: '📺', outlet: 'TechCrunch', headline: 'AI Meets Yoga: The Future of Fitness', date: 'Feb 28, 2024' },
+    { logo: '📰', outlet: 'Forbes', headline: 'How YogaAI is Revolutionizing Digital Wellness', date: 'Feb 20, 2024' },
+    { logo: '🎙️', outlet: 'The Verge', headline: 'Real-time Pose Detection with YogaAI', date: 'Feb 15, 2024' },
+    { logo: '💻', outlet: 'Wired', headline: 'The AI Coach in Your Pocket', date: 'Feb 10, 2024' },
+    { logo: '📱', outlet: 'Business Insider', headline: 'Startup of the Month: YogaAI', date: 'Feb 5, 2024' },
+    { logo: '📺', outlet: 'Bloomberg', headline: 'Wellness Tech Boom: YogaAI Leads the Way', date: 'Jan 30, 2024' },
+  ];
+
+  const companyFacts = [
+    { number: '10,000+', label: 'Active Users' },
+    { number: '50+', label: 'Team Members' },
+    { number: '98%', label: 'Accuracy Rate' },
+    { number: '4.9', label: 'App Store Rating' },
   ];
 
   return (
     <div className="company-page">
       <div className="company-hero press-hero">
         <h1>Press & Media</h1>
-        <p className="subtitle">Latest news, media kit, and company information</p>
+        <p className="subtitle">Latest news and coverage about YogaAI</p>
       </div>
 
       <div className="company-content">
@@ -54,30 +48,34 @@ const PressPage = ({ onNavigate }) => {
         <section className="section press-contact">
           <div className="press-contact-card">
             <h2>Press Contact</h2>
-            <p>For media inquiries, please contact:</p>
             <div className="contact-info">
-              <p><strong>Sarah Johnson</strong></p>
-              <p>Head of Communications</p>
-              <p>press@yogaai.com</p>
-              <p>+1 (555) 123-4567</p>
+              <p><strong>Press Inquiries:</strong> press@yogaai.com</p>
+              <p><strong>Media Kit:</strong> Download assets and brand guidelines</p>
+              <p><strong>Phone:</strong> +1 (555) 123-4567</p>
             </div>
             <div className="press-kit-buttons">
-              <button className="press-kit-btn">📥 Download Press Kit</button>
-              <button className="logo-kit-btn">🎨 Download Logos</button>
+              <button className="press-kit-btn" onClick={() => alert('Downloading press kit...')}>
+                Download Press Kit
+              </button>
+              <button className="logo-kit-btn" onClick={() => alert('Downloading logo kit...')}>
+                Download Logo Kit
+              </button>
             </div>
           </div>
         </section>
 
         {/* Press Releases */}
-        <section className="section">
+        <section className="section press-releases">
           <h2>Press Releases</h2>
-          <div className="press-releases">
-            {pressReleases.map(release => (
-              <div key={release.id} className="press-release">
+          <div className="releases-grid">
+            {pressReleases.map((release, index) => (
+              <div key={index} className="press-release">
                 <div className="release-date">{release.date}</div>
                 <h3>{release.title}</h3>
                 <p>{release.summary}</p>
-                <a href={release.link} className="read-more">Read Full Release →</a>
+                <a href="#" className="read-more" onClick={(e) => { e.preventDefault(); alert('Reading full release...'); }}>
+                  Read Full Release →
+                </a>
               </div>
             ))}
           </div>
@@ -90,36 +88,24 @@ const PressPage = ({ onNavigate }) => {
             {mediaCoverage.map((media, index) => (
               <div key={index} className="media-card">
                 <div className="media-logo">{media.logo}</div>
-                <div className="media-content">
-                  <h3>{media.outlet}</h3>
-                  <p className="headline">{media.headline}</p>
-                  <p className="date">{media.date}</p>
-                </div>
+                <div className="outlet-name">{media.outlet}</div>
+                <div className="headline">{media.headline}</div>
+                <div className="date">{media.date}</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* Company Facts */}
-        <section className="section facts-section">
+        <section className="section">
           <h2>Company Facts</h2>
           <div className="facts-grid">
-            <div className="fact-card">
-              <div className="fact-number">2022</div>
-              <div className="fact-title">Founded</div>
-            </div>
-            <div className="fact-card">
-              <div className="fact-number">50+</div>
-              <div className="fact-title">Team Members</div>
-            </div>
-            <div className="fact-card">
-              <div className="fact-number">10K+</div>
-              <div className="fact-title">Active Users</div>
-            </div>
-            <div className="fact-card">
-              <div className="fact-number">98%</div>
-              <div className="fact-title">Pose Accuracy</div>
-            </div>
+            {companyFacts.map((fact, index) => (
+              <div key={index} className="fact-card">
+                <div className="fact-number">{fact.number}</div>
+                <div className="fact-label">{fact.label}</div>
+              </div>
+            ))}
           </div>
         </section>
       </div>

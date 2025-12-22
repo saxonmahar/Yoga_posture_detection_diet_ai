@@ -37,12 +37,6 @@ export default function HomePage({ onNavigate }) {
       description: "Detailed analytics and insights to track your journey",
       color: "from-green-500 to-emerald-400",
     },
-    {
-      icon: Users,
-      title: "Live Community",
-      description: "Join expert-led yoga sessions with global practitioners",
-      color: "from-orange-500 to-yellow-400",
-    },
   ];
 
   const testimonials = [

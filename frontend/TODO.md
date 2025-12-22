@@ -1,18 +1,32 @@
-# TODO List for Website Modifications
+# MVCR Refactoring TODO
 
-## Navbar Modifications
-- [ ] Add Contact page link to the navbar navItems array in Navbar.jsx
+## Phase 1: Router Setup
+- [ ] Create src/router/Router.jsx with all routing logic
+- [ ] Extract ProtectedRoute component
+- [ ] Extract Layout wrapper component
 
-## Home Page Modifications
-- [ ] Remove "Download our app" section (App Store and Google Play links) from Footer.jsx (displayed on home page)
-- [ ] Remove "Live Community" feature from HomePage.jsx features array
+## Phase 2: App.jsx Simplification
+- [ ] Remove routing logic from App.jsx
+- [ ] Remove auth state management (move to AuthContext)
+- [ ] Simplify to just render Router with AuthProvider
 
-## Footer Modifications
-- [ ] Update footer contact section with dark-themed CSS (add dark background to Quick Contact Info)
+## Phase 3: Controller Layer (Hooks Consolidation)
+- [ ] Merge similar hooks (useDietplan, useNutrition, useProgress)
+- [ ] Consolidate useYogaSession and usePoseDetection
+- [ ] Create unified useAuth hook
 
-## Features Page Modifications
-- [ ] Remove "Live Classes" feature from FeaturesPage.jsx features array
+## Phase 4: Model Layer Enhancement
+- [ ] Enhance AuthContext with better state management
+- [ ] Consolidate API services
+- [ ] Create shared data models
 
-## Testing
-- [ ] Verify all changes are applied correctly
-- [ ] Check navigation and styling
+## Phase 5: View Layer Minimization
+- [ ] Remove inline logic from components
+- [ ] Consolidate similar components
+- [ ] Use shared utilities for common patterns
+
+## Phase 6: Testing & Verification
+- [ ] Test all routes work
+- [ ] Verify auth flow
+- [ ] Check component functionality
+- [ ] Ensure no broken features
