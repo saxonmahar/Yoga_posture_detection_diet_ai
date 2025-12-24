@@ -5,9 +5,9 @@
   /* Updated color palette for yoga app */
   --color-background: 0 0% 98%; /* Off-white background */
   --color-surface: 0 0% 100%; /* Pure white for cards */
-  --color-primary: 199 89% 48%; /* #0ea5e9 - Sky blue for pose detection trust */
-  --color-secondary: 160 84% 39%; /* #10b981 - Emerald for diet health */
-  --color-accent: 262 83% 58%; /* #8b5cf6 - Purple for spiritual elements */
+  --color-primary: 142 76% 36%; /* #22C55E - Electric green for energetic fitness */
+  --color-secondary: 222 47% 11%; /* #0F172A - Charcoal black for headers */
+  --color-accent: 80 81% 60%; /* #A3E635 - Lime for accents */
   --color-success: 142 76% 36%; /* Green for correct poses */
   --color-warning: 38 92% 50%; /* Amber for adjustments needed */
   --color-error: 0 84% 60%; /* Soft red for incorrect poses */

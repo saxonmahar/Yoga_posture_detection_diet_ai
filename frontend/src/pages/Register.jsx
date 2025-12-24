@@ -1,279 +1,250 @@
-import React, { useState } from 'react'
-import { Mail, Lock, User, CheckCircle, XCircle } from 'lucide-react'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Mail, Lock, Eye, EyeOff, Leaf, Heart } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
-function Register({ onNavigate, onRegister }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    fitnessLevel: 'beginner',
-    goals: []
-  })
-
-  const [errors, setErrors] = useState({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const fitnessLevels = [
-    { value: 'beginner', label: 'Beginner', icon: '🌱' },
-    { value: 'intermediate', label: 'Intermediate', icon: '💪' },
-    { value: 'advanced', label: 'Advanced', icon: '🔥' }
-  ]
-
-  const goals = [
-    { id: 'weightLoss', label: 'Weight Loss', icon: '⚖️' },
-    { id: 'flexibility', label: 'Flexibility', icon: '🤸' },
-    { id: 'strength', label: 'Strength', icon: '💪' },
-    { id: 'stressRelief', label: 'Stress Relief', icon: '🧘' },
-    { id: 'mindfulness', label: 'Mindfulness', icon: '✨' },
-  ]
-
-  const validateForm = () => {
-    const newErrors = {}
-    
-    if (!formData.name.trim()) newErrors.name = 'Name is required'
-    if (!formData.email.trim()) newErrors.email = 'Email is required'
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid'
-    
-    if (!formData.password) newErrors.password = 'Password is required'
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters'
-    
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match'
-    }
-    
-    return newErrors
-  }
+export default function Register() {
+  const [form, setForm] = useState({ 
+    name: "", 
+    email: "", 
+    password: "", 
+    confirmPassword: "",
+    level: "beginner" 
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  const { register } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    const validationErrors = validateForm()
-    
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors)
-      return
-    }
-    
-    setIsSubmitting(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      const userData = {
-        id: Date.now(),
-        name: formData.name,
-        email: formData.email,
-        isPremium: false,
-        fitnessLevel: formData.fitnessLevel,
-        goals: formData.goals,
-        joinDate: new Date().toISOString()
-      }
-      
-      onRegister(userData)
-      setIsSubmitting(false)
-    }, 1500)
-  }
+    e.preventDefault();
+    setError("");
 
-  const toggleGoal = (goalId) => {
-    setFormData(prev => ({
-      ...prev,
-      goals: prev.goals.includes(goalId)
-        ? prev.goals.filter(id => id !== goalId)
-        : [...prev.goals, goalId]
-    }))
-  }
+    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
+      setError("Please fill all fields");
+      return;
+    }
+
+    if (!form.email.includes("@")) {
+      setError("Please enter a valid email");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await register({
+        name: form.name,
+        email: form.email,
+        password: form.password,
+        level: form.level
+      });
+      navigate("/dashboard");
+    } catch (err) {
+      setError("Failed to register");
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary via-surface to-secondary py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4">
+      {/* Decorative elements */}
+      <div className="absolute top-10 right-10 opacity-20">
+        <Leaf size={80} className="text-emerald-600" />
+      </div>
+      <div className="absolute bottom-10 left-10 opacity-20">
+        <Heart size={80} className="text-rose-400" />
+      </div>
+
+      <div className="w-full max-w-md">
+        {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto bg-gradient-to-br from-accent to-pink-500 rounded-2xl flex items-center justify-center mb-6 animate-float">
-            <span className="text-3xl">🧘‍♀️</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full mb-4 shadow-lg">
+            <Leaf size={32} className="text-white" />
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-accent to-pink-400 bg-clip-text text-transparent">
-            Begin Your Journey
-          </h1>
-          <p className="text-text-muted mt-2">
-            Create your personalized wellness account
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800">YogaLife</h1>
+          <p className="text-gray-600 mt-2">Begin your wellness journey today</p>
         </div>
 
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl border border-white/10 p-8 shadow-2xl shadow-accent/10">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            
-            {/* Personal Info */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <User className="w-5 h-5 mr-2 text-accent" />
-                Personal Information
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className={`w-full px-4 py-3 bg-surface border rounded-lg focus:outline-none focus:ring-2 transition ${
-                      errors.name ? 'border-red-500 focus:ring-red-500' : 'border-white/10 focus:ring-accent'
-                    }`}
-                    placeholder="John Doe"
-                  />
-                  {errors.name && <p className="text-red-400 text-sm mt-1 flex items-center"><XCircle className="w-4 h-4 mr-1" /> {errors.name}</p>}
-                </div>
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-xl space-y-5 border border-emerald-100">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Create Account</h2>
+            <p className="text-gray-600 text-sm mt-1">Join our wellness community</p>
+          </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className={`w-full px-12 py-3 bg-surface border rounded-lg focus:outline-none focus:ring-2 transition ${
-                        errors.email ? 'border-red-500 focus:ring-red-500' : 'border-white/10 focus:ring-accent'
-                      }`}
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  {errors.email && <p className="text-red-400 text-sm mt-1 flex items-center"><XCircle className="w-4 h-4 mr-1" /> {errors.email}</p>}
-                </div>
-              </div>
+          {error && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+              <span className="font-semibold">⚠</span>
+              {error}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {/* Full Name */}
+            <div className="relative group">
+              <User className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+              />
+            </div>
+
+            {/* Email */}
+            <div className="relative group">
+              <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <input
+                type="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+              />
             </div>
 
             {/* Password */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center">
-                <Lock className="w-5 h-5 mr-2 text-accent" />
-                Security
-              </h3>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                    <input
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({...formData, password: e.target.value})}
-                      className={`w-full px-12 py-3 bg-surface border rounded-lg focus:outline-none focus:ring-2 transition ${
-                        errors.password ? 'border-red-500 focus:ring-red-500' : 'border-white/10 focus:ring-accent'
-                      }`}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  {errors.password && <p className="text-red-400 text-sm mt-1 flex items-center"><XCircle className="w-4 h-4 mr-1" /> {errors.password}</p>}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Confirm Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                    <input
-                      type="password"
-                      value={formData.confirmPassword}
-                      onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                      className={`w-full px-12 py-3 bg-surface border rounded-lg focus:outline-none focus:ring-2 transition ${
-                        errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-white/10 focus:ring-accent'
-                      }`}
-                      placeholder="••••••••"
-                    />
-                  </div>
-                  {errors.confirmPassword && <p className="text-red-400 text-sm mt-1 flex items-center"><XCircle className="w-4 h-4 mr-1" /> {errors.confirmPassword}</p>}
-                </div>
-              </div>
-            </div>
-
-            {/* Fitness Level */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Fitness Level</h3>
-              <div className="grid grid-cols-3 gap-4">
-                {fitnessLevels.map((level) => (
-                  <button
-                    key={level.value}
-                    type="button"
-                    onClick={() => setFormData({...formData, fitnessLevel: level.value})}
-                    className={`p-4 rounded-xl border transition-all ${
-                      formData.fitnessLevel === level.value
-                        ? 'border-accent bg-accent/10 ring-2 ring-accent/20'
-                        : 'border-white/10 bg-surface hover:border-accent/50'
-                    }`}
-                  >
-                    <div className="text-2xl mb-2">{level.icon}</div>
-                    <div className="font-medium">{level.label}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Goals */}
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Wellness Goals</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {goals.map((goal) => (
-                  <button
-                    key={goal.id}
-                    type="button"
-                    onClick={() => toggleGoal(goal.id)}
-                    className={`p-3 rounded-lg border transition-all flex flex-col items-center ${
-                      formData.goals.includes(goal.id)
-                        ? 'border-accent bg-accent/10 text-accent'
-                        : 'border-white/10 bg-surface hover:border-accent/50'
-                    }`}
-                  >
-                    <span className="text-xl mb-1">{goal.icon}</span>
-                    <span className="text-sm font-medium">{goal.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Terms */}
-            <div className="flex items-center space-x-3">
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
-                type="checkbox"
-                id="terms"
-                className="w-5 h-5 rounded border-white/20 bg-surface text-accent focus:ring-accent"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password (min. 6 characters)"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
               />
-              <label htmlFor="terms" className="text-sm text-text-muted">
-                I agree to the <button type="button" className="text-accent hover:text-accent-light">Terms of Service</button> and <button type="button" className="text-accent hover:text-accent-light">Privacy Policy</button>
-              </label>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full py-4 bg-gradient-to-r from-accent to-pink-500 hover:from-accent/90 hover:to-pink-600 rounded-xl font-bold text-lg transition-all shadow-lg shadow-accent/30 hover:shadow-accent/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Creating Account...</span>
-                </>
-              ) : (
-                <>
-                  <span>Create Account</span>
-                  <CheckCircle className="w-6 h-6" />
-                </>
-              )}
-            </button>
-
-            {/* Login Link */}
-            <p className="text-center text-text-muted">
-              Already have an account?{' '}
               <button
                 type="button"
-                onClick={() => onNavigate('login')}
-                className="text-accent hover:text-accent-light font-semibold"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
               >
-                Sign in here
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm Password"
+                value={form.confirmPassword}
+                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+
+            {/* Password Match Indicator */}
+            {form.password && form.confirmPassword && (
+              <div className="text-sm">
+                {form.password === form.confirmPassword ? (
+                  <p className="text-emerald-600 flex items-center gap-1">
+                    ✓ Passwords match
+                  </p>
+                ) : (
+                  <p className="text-rose-600 flex items-center gap-1">
+                    ✗ Passwords do not match
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Experience Level Toggle */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Your Experience Level
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, level: "beginner" })}
+                  className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
+                    form.level === "beginner"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Beginner
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, level: "intermediate" })}
+                  className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
+                    form.level === "intermediate"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Intermediate
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, level: "advanced" })}
+                  className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
+                    form.level === "advanced"
+                      ? "bg-emerald-500 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  Advanced
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                Creating account...
+              </span>
+            ) : (
+              "Create Account"
+            )}
+          </button>
+
+          <div className="text-center pt-2">
+            <p className="text-gray-600 text-sm">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+              >
+                Sign in
               </button>
             </p>
-          </form>
+          </div>
         </div>
+
+        <p className="text-center text-gray-500 text-xs mt-6">
+          By creating an account, you agree to our Terms & Privacy Policy
+        </p>
       </div>
     </div>
-  )
+  );
 }
-
-export default Register

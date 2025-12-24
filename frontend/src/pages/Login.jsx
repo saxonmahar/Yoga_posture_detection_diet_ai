@@ -1,203 +1,167 @@
-import React, { useState } from 'react'
-import { Mail, Lock, LogIn, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, Leaf, Heart } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
-function Login({ onNavigate, onLogin }) {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
+export default function Login() {
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
+  const handleLogin = () => {
+    login({
+      email: form.email,
+      name: form.email.split("@")[0],
+    });
+    navigate("/Dashboard");
+  };
+
+  const submit = (e) => {
+    e.preventDefault();
+    setError("");
     
-    if (!formData.email || !formData.password) {
-      setError('Please fill in all fields')
-      return
+    if (!form.email || !form.password) {
+      return setError("Please fill all fields");
     }
-    
-    setIsLoading(true)
-    
-    // Simulate API call
-    setTimeout(() => {
-      // For demo purposes - in real app, validate against backend
-      if (formData.email.includes('@') && formData.password.length >= 6) {
-        const userData = {
-          id: 1,
-          name: formData.email.split('@')[0],
-          email: formData.email,
-          isPremium: false,
-          fitnessLevel: 'intermediate',
-          goals: ['flexibility', 'stressRelief'],
-          joinDate: new Date().toISOString()
-        }
-        
-        onLogin(userData)
-      } else {
-        setError('Invalid credentials. For demo, use any email and password (min 6 chars)')
-      }
-      
-      setIsLoading(false)
-    }, 1500)
-  }
 
-  const handleDemoLogin = () => {
-    setFormData({
-      email: 'demo@yogaai.com',
-      password: 'demo123'
-    })
-  }
+    if (!form.email.includes("@")) {
+      return setError("Please enter a valid email");
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      if (form.password.length >= 6) {
+        handleLogin();
+      } else {
+        setError("Password must be at least 6 characters");
+      }
+      setLoading(false);
+    }, 800);
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary via-surface to-secondary py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md mx-auto">
-        <div className="text-center mb-10">
-          <div className="relative inline-block mb-6">
-            <div className="w-24 h-24 bg-gradient-to-br from-accent to-pink-500 rounded-2xl flex items-center justify-center animate-glow">
-              <Sparkles className="w-12 h-12 text-white" />
-            </div>
-            <div className="absolute -top-2 -right-2 w-8 h-8 bg-premium rounded-full flex items-center justify-center animate-pulse">
-              <span className="text-xs font-bold">🌟</span>
-            </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4">
+      {/* Decorative elements */}
+      <div className="absolute top-10 left-10 opacity-20">
+        <Leaf size={80} className="text-emerald-600" />
+      </div>
+      <div className="absolute bottom-10 right-10 opacity-20">
+        <Heart size={80} className="text-rose-400" />
+      </div>
+
+      <div className="w-full max-w-md">
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full mb-4 shadow-lg">
+            <Leaf size={32} className="text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-2">
-            Welcome Back to{' '}
-            <span className="bg-gradient-to-r from-accent to-pink-400 bg-clip-text text-transparent">
-              YogaAI
-            </span>
-          </h1>
-          <p className="text-text-muted">
-            Continue your wellness journey with intelligent guidance
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800">YogaLife</h1>
+          <p className="text-gray-600 mt-2">Nourish your body, calm your mind</p>
         </div>
 
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl border border-white/10 p-8 shadow-2xl shadow-accent/10">
+        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-xl space-y-5 border border-emerald-100">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Welcome Back</h2>
+            <p className="text-gray-600 text-sm mt-1">Continue your wellness journey</p>
+          </div>
+
           {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-              <p className="text-red-400 text-sm">{error}</p>
+            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+              <span className="font-semibold">⚠</span>
+              {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  className="w-full pl-12 pr-4 py-3 bg-surface border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent transition"
-                  placeholder="your@email.com"
-                  required
-                />
-              </div>
+          <div className="space-y-4">
+            <div className="relative group">
+              <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <input
+                type="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && submit(e)}
+                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+              />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-text-muted" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  className="w-full pl-12 pr-12 py-3 bg-surface border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-accent transition"
-                  placeholder="••••••••"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-text-muted hover:text-text"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="remember"
-                  className="w-4 h-4 rounded border-white/20 bg-surface text-accent focus:ring-accent"
-                />
-                <label htmlFor="remember" className="ml-2 text-sm text-text-muted">
-                  Remember me
-                </label>
-              </div>
+            <div className="relative group">
+              <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <input
+                type={show ? "text" : "password"}
+                placeholder="Password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onKeyPress={(e) => e.key === 'Enter' && submit(e)}
+                className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+              />
               <button
                 type="button"
-                className="text-sm text-accent hover:text-accent-light"
+                onClick={() => setShow(!show)}
+                className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
               >
-                Forgot password?
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-4 bg-gradient-to-r from-accent to-pink-500 hover:from-accent/90 hover:to-pink-600 rounded-xl font-bold text-lg transition-all shadow-lg shadow-accent/30 hover:shadow-accent/50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-3"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Signing In...</span>
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <LogIn className="w-6 h-6" />
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              className="w-full py-3 bg-surface hover:bg-secondary border border-white/10 rounded-xl font-medium transition flex items-center justify-center space-x-2"
-            >
-              <Sparkles className="w-5 h-5" />
-              <span>Try Demo Account</span>
-            </button>
-          </form>
-
-          <div className="mt-8 pt-8 border-t border-white/10">
-            <p className="text-center text-text-muted">
-              Don't have an account?{' '}
-              <button
-                onClick={() => onNavigate('/register')}
-                className="text-accent hover:text-accent-light font-semibold"
-              >
-                Create account
-              </button>
-            </p>
-            
-            <div className="mt-6">
-              <button
-                onClick={() => onNavigate('home')}
-                className="w-full py-3 text-text-muted hover:text-text transition flex items-center justify-center space-x-2"
-              >
-                ← Back to Home
+                {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
           </div>
+
+          <button
+            onClick={submit}
+            disabled={loading}
+            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                Signing in...
+              </span>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-white text-gray-500">or</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setForm({ email: "demo@yogaai.com", password: "demo123" });
+              setTimeout(handleLogin, 300);
+            }}
+            className="w-full py-3 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-all border border-emerald-200"
+          >
+            Try Demo Account
+          </button>
+
+          <div className="text-center pt-2">
+            <p className="text-gray-600 text-sm">
+              New to YogaLife?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/Register")}
+                className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+              >
+                Create your account
+              </button>
+            </p>
+          </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <p className="text-sm text-text-muted">
-            By signing in, you agree to our{' '}
-            <button className="text-accent hover:text-accent-light">Terms</button> and{' '}
-            <button className="text-accent hover:text-accent-light">Privacy Policy</button>
-          </p>
-        </div>
+        <p className="text-center text-gray-500 text-xs mt-6">
+          By continuing, you agree to our Terms & Privacy Policy
+        </p>
       </div>
     </div>
-  )
+  );
 }
-
-export default Login
