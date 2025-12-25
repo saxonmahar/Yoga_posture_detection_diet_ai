@@ -32,24 +32,23 @@ import ContactPage from "../pages/ContactPage";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
-  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-background">
-      <Navbar user={user} />
+      <Navbar />
       <main className="pt-16">{children}</main>
       {footer && <Footer />}
     </div>
   );
 };
 
-// Protected route wrapper with loading state
+// Protected route
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -61,14 +60,14 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Public route wrapper (redirects if already logged in)
+// Public route (login/register)
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -80,7 +79,9 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-const withLayout = (page, footer = true) => <Layout footer={footer}>{page}</Layout>;
+const withLayout = (page, footer = true) => (
+  <Layout footer={footer}>{page}</Layout>
+);
 
 export default function Router() {
   const publicRoutes = [
@@ -110,12 +111,12 @@ export default function Router() {
 
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public pages */}
       {publicRoutes.map(([path, page]) => (
         <Route key={path} path={path} element={withLayout(page)} />
       ))}
 
-      {/* Auth routes - only accessible when NOT logged in */}
+      {/* Auth pages */}
       <Route
         path="/login"
         element={
@@ -124,6 +125,7 @@ export default function Router() {
           </PublicRoute>
         }
       />
+
       <Route
         path="/register"
         element={
@@ -133,7 +135,7 @@ export default function Router() {
         }
       />
 
-      {/* Protected routes - only accessible when logged in */}
+      {/* Protected pages */}
       {protectedRoutes.map(([path, page]) => (
         <Route
           key={path}

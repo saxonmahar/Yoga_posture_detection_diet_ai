@@ -1,13 +1,18 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { registerRequest, loginRequest, getMeRequest, logoutRequest } from "../services/authService";
+import {
+  registerRequest,
+  loginRequest,
+  getMeRequest,
+  logoutRequest
+} from "../services/authService";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // 👈 start true for initial load
 
-  // Register user
+  // Register
   const register = async ({ name, email, password, level }) => {
     setLoading(true);
     try {
@@ -18,6 +23,7 @@ export const AuthProvider = ({ children }) => {
         confirmPassword: password,
         level
       });
+
       setUser(response.user);
       return response;
     } catch (error) {
@@ -27,7 +33,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Login user
+  // Login
   const login = async ({ email, password }) => {
     setLoading(true);
     try {
@@ -35,32 +41,35 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data.user);
       return response;
     } catch (error) {
+      setUser(null); // 👈 ensure clean state on failure
       throw error;
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout user
+  // Logout
   const logout = async () => {
     setLoading(true);
     try {
-      await logoutRequest(); // optional backend endpoint to clear cookie
-      setUser(null);
+      await logoutRequest(); // backend clears cookie
     } catch (error) {
-      console.error("Logout error", error);
+      console.error("Logout error:", error);
     } finally {
+      setUser(null); // 👈 ALWAYS clear user
       setLoading(false);
     }
   };
 
-  // Get user on page load
+  // Load user on refresh
   const loadUser = async () => {
     try {
-      const response = await getMeRequest(); // endpoint returns user from cookie
+      const response = await getMeRequest();
       setUser(response.data.user);
     } catch (error) {
       setUser(null);
+    } finally {
+      setLoading(false); // 👈 CRITICAL
     }
   };
 
@@ -69,7 +78,15 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, register, login, logout, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        register,
+        login,
+        logout,
+        loading
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -77,6 +94,8 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used within AuthProvider");
+  }
   return context;
 };
