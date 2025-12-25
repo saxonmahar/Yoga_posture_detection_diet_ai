@@ -119,13 +119,7 @@ export default function HomePage({ onNavigate }) {
 
               {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={() => onNavigate("register")}
-                  className="px-8 py-4 bg-gradient-to-r from-accent to-pink-500 hover:from-accent/90 hover:to-pink-600 rounded-xl text-lg font-semibold transition-all shadow-lg shadow-accent/20 hover:shadow-accent/40 flex items-center justify-center"
-                >
-                  <span>Start Free Trial</span>
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </button>
+        
 
                 <button
                   onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
