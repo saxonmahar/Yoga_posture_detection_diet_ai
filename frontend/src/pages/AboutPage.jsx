@@ -5,13 +5,13 @@ import {
   Award, 
   Heart, 
   Globe, 
-  Sparkles,
-  TrendingUp,
-  ArrowRight,
   CheckCircle
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'  // <-- Import useNavigate
 
-function AboutPage({ onNavigate }) {
+function AboutPage() {
+  const navigate = useNavigate()  // <-- Initialize navigate
+
   const teamMembers = [
     { name: 'Sarah Chen', role: 'Co-Founder & Yoga Expert', bio: '15+ years yoga experience, certified instructor' },
     { name: 'Dr. Alex Johnson', role: 'Co-Founder & AI Researcher', bio: 'PhD in Computer Vision, Stanford alumni' },
@@ -104,7 +104,6 @@ function AboutPage({ onNavigate }) {
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-center mb-12">Our Journey</h2>
             <div className="relative">
-              {/* Timeline line */}
               <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent/50 via-pink-500/50 to-accent/50 transform -translate-x-1/2"></div>
               
               <div className="space-y-12 lg:space-y-0">
@@ -161,13 +160,13 @@ function AboutPage({ onNavigate }) {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => onNavigate('register')}
+                onClick={() => navigate('/login')} // <-- Navigate to login instead of register
                 className="px-8 py-3 bg-gradient-to-r from-accent to-pink-500 hover:from-accent/90 hover:to-pink-600 rounded-xl font-semibold transition-all shadow-lg shadow-accent/20 hover:shadow-accent/40"
               >
                 Start Your Journey
               </button>
               <button
-                onClick={() => onNavigate('home')}
+                onClick={() => navigate('/')} // Navigate to home
                 className="px-8 py-3 bg-card hover:bg-secondary rounded-xl font-semibold transition border border-white/10"
               >
                 Back to Home

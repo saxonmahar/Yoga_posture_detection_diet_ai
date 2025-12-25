@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './FeaturesPage.css';
 
-const FeaturesPage = ({ onNavigate }) => {
+const FeaturesPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ai-coach');
 
   const features = [
@@ -106,9 +108,12 @@ const FeaturesPage = ({ onNavigate }) => {
           <h2>{activeFeature.title}</h2>
           <p>{activeFeature.description}</p>
           {activeFeature.content}
-          
+
           <div className="feature-cta">
-            <button className="cta-btn" onClick={() => onNavigate('home')}>
+            <button
+              className="cta-btn"
+              onClick={() => navigate('/')}
+            >
               ← Back to Home
             </button>
           </div>
