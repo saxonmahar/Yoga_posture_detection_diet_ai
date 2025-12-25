@@ -31,12 +31,16 @@ import {
   Moon,
   Sun,
   Droplets,
-  Wind
+  Wind,
+  LogOut // Added LogOut icon
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext' // Add this import
 
-function Dashboard({ user, onLogout }) {
+
+function Dashboard() { // Remove props
   const navigate = useNavigate()
-  
+  const { user, logout } = useAuth() // Get user and logout from context
+
   const stats = [
     { 
       label: 'Yoga Sessions', 
@@ -196,6 +200,12 @@ function Dashboard({ user, onLogout }) {
     fats: { consumed: 42, target: 65 }
   }
 
+  // Add this function to handle logout
+  const handleLogout = () => {
+    logout()
+    navigate('/Login')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Animated Background Elements */}
@@ -224,13 +234,14 @@ function Dashboard({ user, onLogout }) {
                     Premium Member
                   </div>
                 )}
-                {user?.stats?.goal && (
-                  <div className="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold border border-emerald-500/30">
-                    🎯 {user.stats.goal.replace('-', ' ')}
-                  </div>
-                )}
+                <div className="px-4 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-sm font-semibold border border-emerald-500/30">
+                  🎯 Wellness Goals
+                </div>
                 <div className="px-4 py-1.5 rounded-full bg-blue-500/20 text-blue-400 text-sm font-semibold border border-blue-500/30">
-                  Level {user?.level || user?.stats?.level || 'Beginner'}
+                  Level {user?.level?.charAt(0).toUpperCase() + user?.level?.slice(1) || 'Beginner'}
+                </div>
+                <div className="px-4 py-1.5 rounded-full bg-purple-500/20 text-purple-400 text-sm font-semibold border border-purple-500/30">
+                  📧 {user?.email || ''}
                 </div>
               </div>
             </div>
@@ -256,9 +267,10 @@ function Dashboard({ user, onLogout }) {
                 )}
               </button>
               <button
-                onClick={onLogout}
-                className="px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm rounded-xl font-semibold transition-all border border-slate-700 shadow-lg"
+                onClick={handleLogout}
+                className="px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm rounded-xl font-semibold transition-all border border-slate-700 shadow-lg flex items-center gap-2"
               >
+                <LogOut className="w-5 h-5" />
                 Logout
               </button>
             </div>

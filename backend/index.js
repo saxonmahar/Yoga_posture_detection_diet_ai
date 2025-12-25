@@ -1,31 +1,60 @@
-﻿require('dotenv').config();
-const express = require('express');
-const authRoutes =  require('./routes/authRoutes')
-const cors = require('cors');
-const path = require('path');
+﻿require("dotenv").config();
+const express = require("express");
+const cors = require('cors')
+const cookieParser = require("cookie-parser");
+
+
+const authRoutes = require("./routes/authRoutes");
+const connectDB = require("./DbConfig/db.config");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// DB Connection
-const connectDB = require('./DbConfig/db.config');
-connectDB();
+/*
+|--------------------------------------------------------------------------
+| Middleware
+|--------------------------------------------------------------------------
+*/
 
-// ✅ Body Parser (MUST be before routes)
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
-
-// ✅ CORS
+// CORS (simple + controlled)
+app.use(cookieParser())
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: process.env.FRONTEND_URL || "http://localhost:3001", // your frontend
+  methods: ["GET","POST","PUT","DELETE"],
+  credentials: true // allow cookies
 }));
 
-// Routes
+// Body parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-app.use(authRoutes)
+/*
+|--------------------------------------------------------------------------
+| Database
+|--------------------------------------------------------------------------
+*/
+connectDB();
 
-// Start Server
+/*
+|--------------------------------------------------------------------------
+| Routes
+|--------------------------------------------------------------------------
+*/
+app.use("/api/auth", authRoutes);
+
+// Health check / root route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "API is running"
+  });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Server
+|--------------------------------------------------------------------------
+*/
 app.listen(PORT, () => {
-  console.log(`🚀 Server is up and running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

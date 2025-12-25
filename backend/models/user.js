@@ -1,41 +1,144 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
-  fullName: {
-    type: String,
-    required: [true, 'Full name is required'],
-    trim: true
+const userSchema = new mongoose.Schema(
+  {
+    fullName: {
+      type: String,
+      required: [true, "Full name is required"],
+      trim: true,
+      minlength: 2,
+      maxlength: 50
+    },
+
+    email: {
+      type: String,
+      required: [true, "Email address is required"],
+      unique: true,
+      lowercase: true,
+      trim: true
+    },
+
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: 6,
+      select: false
+    },
+
+    fitnessLevel: {
+      type: String,
+      enum: ["beginner", "intermediate", "advanced"],
+      default: "beginner"
+    },
+
+    wellnessGoals: {
+      type: [String],
+      enum: [
+        "Weight Loss",
+        "Flexibility",
+        "Strength",
+        "Stress Relief",
+        "Mindfulness"
+      ],
+      default: ["Stress Relief"]
+    },
+
+    agreedToTerms: {
+      type: Boolean,
+      default: true
+    },
+
+    // Dashboard statistics
+    stats: {
+      totalWorkouts: { type: Number, default: 0 },
+      totalCaloriesBurned: { type: Number, default: 0 },
+      currentStreak: { type: Number, default: 0 },
+      longestStreak: { type: Number, default: 0 },
+      averageAccuracy: { type: Number, default: 0 },
+      totalMinutes: { type: Number, default: 0 },
+      completedSessions: { type: Number, default: 0 },
+      lastLogin: { type: Date }
+    },
+
+    // Subscription & preferences
+    isPremium: { type: Boolean, default: false },
+    subscriptionType: {
+      type: String,
+      enum: ["free", "premium", "pro"],
+      default: "free"
+    },
+    subscriptionExpiry: { type: Date },
+
+    // Profile
+    avatar: { type: String },
+    bio: { type: String, maxlength: 500 },
+    age: { type: Number, min: 1 },
+    weight: { type: Number }, // kg
+    height: { type: Number }  // cm
   },
-  email: {
-    type: String,
-    required: [true, 'Email address is required'],
-    unique: true,
-    lowercase: true,
-    trim: true
-  },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: 8
-  },
-  fitnessLevel: {
-    type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced'],
-    default: 'Beginner'
-  },
-  wellnessGoals: {
-    type: [String], // Allows for multiple selections
-    enum: ['Weight Loss', 'Flexibility', 'Strength', 'Stress Relief', 'Mindfulness'],
-    required: true
-  },
-  agreedToTerms: {
-    type: Boolean,
-    required: [true, 'You must agree to the terms']
+  {
+    timestamps: true
   }
-}, { 
-  timestamps: true // Automatically creates 'createdAt' and 'updatedAt'
-});
+);
 
-const User = mongoose.model('User', userSchema);
+//
+// ===== Instance Methods =====
+//
 
-module.exports = User;
+// Update last login timestamp
+userSchema.methods.updateLastLogin = function () {
+  this.stats.lastLogin = new Date();
+  return this.save();
+};
+
+// Update login streak
+userSchema.methods.updateStreak = function () {
+  const now = new Date();
+  const lastLogin = this.stats.lastLogin || this.createdAt;
+  const diffDays = Math.floor(
+    (now - lastLogin) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffDays === 1) {
+    this.stats.currentStreak += 1;
+    this.stats.longestStreak = Math.max(
+      this.stats.longestStreak,
+      this.stats.currentStreak
+    );
+  } else if (diffDays > 1) {
+    this.stats.currentStreak = 1;
+  }
+
+  this.stats.lastLogin = now;
+  return this.save();
+};
+
+// Add workout statistics
+userSchema.methods.addWorkoutStats = function (
+  calories,
+  accuracy,
+  duration
+) {
+  this.stats.totalWorkouts += 1;
+  this.stats.totalCaloriesBurned += calories;
+  this.stats.completedSessions += 1;
+  this.stats.totalMinutes += duration;
+
+  const totalAccuracy =
+    this.stats.averageAccuracy * (this.stats.completedSessions - 1) +
+    accuracy;
+
+  this.stats.averageAccuracy =
+    totalAccuracy / this.stats.completedSessions;
+
+  return this.save();
+};
+
+userSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.__v;
+  return user;
+};
+
+module.exports = mongoose.model("User", userSchema);

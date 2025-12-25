@@ -1,13 +1,17 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Menu, X, User, ChevronDown } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext' // Only keep this one
 
-function Navbar({ user, onLogout }) {
+function Navbar() {
   const navigate = useNavigate()
   const location = useLocation()
   const currentPage = location.pathname.slice(1) || 'home'
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [featuresDropdown, setFeaturesDropdown] = useState(false)
+  
+  // Use the auth context
+  const { user, logout } = useAuth()
 
   const navItems = [
     { id: 'home', label: 'Home', page: 'home' },
@@ -31,6 +35,12 @@ function Navbar({ user, onLogout }) {
     navigate(`/${page}`)
     setIsMenuOpen(false)
     setFeaturesDropdown(false)
+  }
+
+  const handleLogout = () => {
+    logout()
+    setIsMenuOpen(false)
+    navigate('/login')
   }
 
   return (
@@ -117,7 +127,9 @@ function Navbar({ user, onLogout }) {
                   </div>
                   <div>
                     <p className="text-sm font-semibold">{user.name}</p>
-                    <p className="text-xs text-text-muted">{user.isPremium ? '🌟 Premium' : 'Free Plan'}</p>
+                    <p className="text-xs text-text-muted">
+                      {user.level ? `${user.level.charAt(0).toUpperCase() + user.level.slice(1)} Level` : 'Member'}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -127,10 +139,7 @@ function Navbar({ user, onLogout }) {
                   Dashboard
                 </button>
                 <button
-                  onClick={() => {
-                    onLogout()
-                    handleNavigation('home')
-                  }}
+                  onClick={handleLogout}
                   className="px-4 py-2 text-sm text-red-400 hover:text-red-300 transition"
                 >
                   Logout
@@ -205,20 +214,22 @@ function Navbar({ user, onLogout }) {
                       </div>
                       <div>
                         <p className="font-semibold">{user.name}</p>
-                        <p className="text-sm text-text-muted">{user.isPremium ? '🌟 Premium' : 'Free Plan'}</p>
+                        <p className="text-sm text-text-muted">
+                          {user.level ? `${user.level.charAt(0).toUpperCase() + user.level.slice(1)} Level` : 'Member'}
+                        </p>
                       </div>
                     </div>
                     <button
-                      onClick={() => handleNavigation('dashboard')}
+                      onClick={() => {
+                        handleNavigation('dashboard')
+                        setIsMenuOpen(false)
+                      }}
                       className="w-full py-3 bg-surface hover:bg-secondary rounded-lg font-medium transition"
                     >
                       Go to Dashboard
                     </button>
                     <button
-                      onClick={() => {
-                        onLogout()
-                        handleNavigation('home')
-                      }}
+                      onClick={handleLogout}
                       className="w-full py-3 text-red-400 hover:text-red-300 transition"
                     >
                       Logout
@@ -227,13 +238,19 @@ function Navbar({ user, onLogout }) {
                 ) : (
                   <>
                     <button
-                      onClick={() => handleNavigation('login')}
+                      onClick={() => {
+                        handleNavigation('login')
+                        setIsMenuOpen(false)
+                      }}
                       className="w-full py-3 bg-surface hover:bg-secondary rounded-lg font-medium transition"
                     >
                       Sign In
                     </button>
                     <button
-                      onClick={() => handleNavigation('register')}
+                      onClick={() => {
+                        handleNavigation('register')
+                        setIsMenuOpen(false)
+                      }}
                       className="w-full py-3 btn-primary"
                     >
                       Get Started Free

@@ -1,13 +1,15 @@
 const express = require('express');
-const router = express.Router();
-const { registerUser } = require('../controllers/authController');
-const validateRegistration = require('../middleware/validation');
+const authRouter = express.Router();
 
-/**
- * @route   POST /api/auth/register
- * @desc    Register a new user
- * @access  Public
- */
-router.post('/register', validateRegistration, registerUser);
+const registerValidation = require('../middleware/registerMiddleware')
+const registerController = require('../controllers/registerController')
 
-module.exports = router;
+
+const loginValidation = require('../middleware/loginMiddleware')
+const loginController = require('../controllers/loginController')
+
+authRouter.post('/register', registerValidation ,registerController )
+authRouter.post('/login',loginValidation,loginController)
+
+
+module.exports = authRouter

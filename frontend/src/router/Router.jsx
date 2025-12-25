@@ -32,27 +32,57 @@ import ContactPage from "../pages/ContactPage";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-background">
-      <Navbar user={user} onLogout={logout} />
+      <Navbar user={user} />
       <main className="pt-16">{children}</main>
       {footer && <Footer />}
     </div>
   );
 };
 
-// Protected route wrapper
-const Protected = ({ children }) => {
-  const { user } = useAuth();
-  return user ? children : <Navigate to="/login" replace />;
+// Protected route wrapper with loading state
+const ProtectedRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+};
+
+// Public route wrapper (redirects if already logged in)
+const PublicRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 const withLayout = (page, footer = true) => <Layout footer={footer}>{page}</Layout>;
 
 export default function Router() {
-  const { user } = useAuth();
-
   const publicRoutes = [
     ["/", <HomePage />],
     ["/home", <HomePage />],
@@ -85,19 +115,35 @@ export default function Router() {
         <Route key={path} path={path} element={withLayout(page)} />
       ))}
 
-      {/* Auth routes */}
+      {/* Auth routes - only accessible when NOT logged in */}
       <Route
         path="/login"
-        element={withLayout(user ? <Navigate to="/dashboard" /> : <Login />, false)}
+        element={
+          <PublicRoute>
+            {withLayout(<Login />, false)}
+          </PublicRoute>
+        }
       />
       <Route
         path="/register"
-        element={withLayout(user ? <Navigate to="/dashboard" /> : <Register />, false)}
+        element={
+          <PublicRoute>
+            {withLayout(<Register />, false)}
+          </PublicRoute>
+        }
       />
 
-      {/* Protected routes */}
+      {/* Protected routes - only accessible when logged in */}
       {protectedRoutes.map(([path, page]) => (
-        <Route key={path} path={path} element={<Protected>{withLayout(page, false)}</Protected>} />
+        <Route
+          key={path}
+          path={path}
+          element={
+            <ProtectedRoute>
+              {withLayout(page, false)}
+            </ProtectedRoute>
+          }
+        />
       ))}
 
       {/* 404 */}

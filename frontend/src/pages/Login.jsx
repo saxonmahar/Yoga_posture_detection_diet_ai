@@ -7,45 +7,74 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const handleLogin = () => {
-    login({
-      email: form.email,
-      name: form.email.split("@")[0],
-    });
-    navigate("/Dashboard");
+  const handleInputChange = (field, value) => {
+    setForm(prev => ({ ...prev, [field]: value }));
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setError("");
-    
-    if (!form.email || !form.password) {
-      return setError("Please fill all fields");
-    }
 
-    if (!form.email.includes("@")) {
-      return setError("Please enter a valid email");
-    }
+    // Frontend validation
+    if (!form.email || !form.password) return alert("Please fill all fields");
+    if (!form.email.includes("@")) return alert("Please enter a valid email");
+    if (form.password.length < 6) return alert("Password must be at least 6 characters");
 
     setLoading(true);
-    setTimeout(() => {
-      if (form.password.length >= 6) {
-        handleLogin();
-      } else {
-        setError("Password must be at least 6 characters");
+
+    try {
+      const result = await login({
+        email: form.email,
+        password: form.password
+      });
+
+      alert("Login successful!");
+      navigate("/Dashboard");
+    } catch (err) {
+      console.error("Login error:", err);
+
+      let message = "Invalid email or password. Please try again.";
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          message = data.errors.join(", ");
+        } else if (data.message) {
+          message = data.message;
+        }
+      } else if (err.message) {
+        message = err.message;
       }
+
+      alert(message);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setForm({ email: "demo@yogaai.com", password: "demo123" });
+    setTimeout(async () => {
+      setLoading(true);
+      try {
+        await login({ email: "demo@yogaai.com", password: "demo123" });
+        alert("Demo login successful!");
+        navigate("/Dashboard");
+      } catch (err) {
+        alert("Demo login failed. Please create an account.");
+        setLoading(false);
+      }
+    }, 300);
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter" && !loading) submit(e);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4">
-      {/* Decorative elements */}
       <div className="absolute top-10 left-10 opacity-20">
         <Leaf size={80} className="text-emerald-600" />
       </div>
@@ -54,7 +83,6 @@ export default function Login() {
       </div>
 
       <div className="w-full max-w-md">
-        {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full mb-4 shadow-lg">
             <Leaf size={32} className="text-white" />
@@ -69,60 +97,54 @@ export default function Login() {
             <p className="text-gray-600 text-sm mt-1">Continue your wellness journey</p>
           </div>
 
-          {error && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-              <span className="font-semibold">⚠</span>
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
+          <form onSubmit={submit} className="space-y-4">
+            {/* Email */}
             <div className="relative group">
               <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type="email"
                 placeholder="Email address"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                onKeyPress={(e) => e.key === 'Enter' && submit(e)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                onKeyPress={handleKeyPress}
+                required
                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                disabled={loading}
               />
             </div>
 
+            {/* Password */}
             <div className="relative group">
               <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
               <input
                 type={show ? "text" : "password"}
                 placeholder="Password"
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
-                onKeyPress={(e) => e.key === 'Enter' && submit(e)}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                onKeyPress={handleKeyPress}
+                required
+                minLength={6}
                 className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShow(!show)}
                 className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
+                disabled={loading}
               >
                 {show ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
-          </div>
 
-          <button
-            onClick={submit}
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                Signing in...
-              </span>
-            ) : (
-              "Sign In"
-            )}
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Signing in..." : "Sign In"}
+            </button>
+          </form>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -135,11 +157,9 @@ export default function Login() {
 
           <button
             type="button"
-            onClick={() => {
-              setForm({ email: "demo@yogaai.com", password: "demo123" });
-              setTimeout(handleLogin, 300);
-            }}
-            className="w-full py-3 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-all border border-emerald-200"
+            onClick={handleDemoLogin}
+            disabled={loading}
+            className="w-full py-3 bg-emerald-50 text-emerald-700 rounded-xl font-medium hover:bg-emerald-100 transition-all border border-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Try Demo Account
           </button>
@@ -149,8 +169,9 @@ export default function Login() {
               New to YogaLife?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/Register")}
+                onClick={(e) => { e.preventDefault(); navigate("/Register"); }}
                 className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+                disabled={loading}
               >
                 Create your account
               </button>

@@ -4,63 +4,77 @@ import { User, Mail, Lock, Eye, EyeOff, Leaf, Heart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
-  const [form, setForm] = useState({ 
-    name: "", 
-    email: "", 
-    password: "", 
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
     confirmPassword: "",
-    level: "beginner" 
+    level: "beginner",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
 
+    // Frontend validation
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
-      setError("Please fill all fields");
-      return;
+      return alert("Please fill all fields");
     }
-
     if (!form.email.includes("@")) {
-      setError("Please enter a valid email");
-      return;
+      return alert("Please enter a valid email");
     }
-
     if (form.password.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
+      return alert("Password must be at least 6 characters");
     }
-
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
-      return;
+      return alert("Passwords do not match");
     }
 
     setLoading(true);
+
     try {
-      await register({
+      const result = await register({
         name: form.name,
         email: form.email,
         password: form.password,
-        level: form.level
+        level: form.level,
       });
-      navigate("/dashboard");
+
+      console.log("Registration successful:", result);
+      navigate("/Login");
     } catch (err) {
-      setError("Failed to register");
+      console.error("Registration error:", err);
+
+      let message = "Registration failed. Please try again.";
+
+      if (err.response?.data) {
+        const data = err.response.data;
+        if (Array.isArray(data.errors) && data.errors.length > 0) {
+          message = data.errors.join(", ");
+        } else if (data.message) {
+          message = data.message;
+        }
+      } else if (err.message) {
+        message = err.message;
+      }
+
+      alert(message);
+    } finally {
       setLoading(false);
     }
   };
 
+  const handleInputChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4">
-      {/* Decorative elements */}
       <div className="absolute top-10 right-10 opacity-20">
         <Leaf size={80} className="text-emerald-600" />
       </div>
@@ -69,7 +83,6 @@ export default function Register() {
       </div>
 
       <div className="w-full max-w-md">
-        {/* Logo/Brand */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full mb-4 shadow-lg">
             <Leaf size={32} className="text-white" />
@@ -84,14 +97,7 @@ export default function Register() {
             <p className="text-gray-600 text-sm mt-1">Join our wellness community</p>
           </div>
 
-          {error && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
-              <span className="font-semibold">⚠</span>
-              {error}
-            </div>
-          )}
-
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="relative group">
               <User className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
@@ -99,8 +105,10 @@ export default function Register() {
                 type="text"
                 placeholder="Full Name"
                 value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                required
                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                disabled={loading}
               />
             </div>
 
@@ -111,8 +119,10 @@ export default function Register() {
                 type="email"
                 placeholder="Email address"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                required
                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                disabled={loading}
               />
             </div>
 
@@ -123,13 +133,17 @@ export default function Register() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Password (min. 6 characters)"
                 value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                onChange={(e) => handleInputChange("password", e.target.value)}
+                required
+                minLength={6}
                 className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
+                disabled={loading}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -142,98 +156,65 @@ export default function Register() {
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 value={form.confirmPassword}
-                onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                required
                 className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
+                disabled={loading}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
 
-            {/* Password Match Indicator */}
-            {form.password && form.confirmPassword && (
-              <div className="text-sm">
-                {form.password === form.confirmPassword ? (
-                  <p className="text-emerald-600 flex items-center gap-1">
-                    ✓ Passwords match
-                  </p>
-                ) : (
-                  <p className="text-rose-600 flex items-center gap-1">
-                    ✗ Passwords do not match
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Experience Level Toggle */}
+            {/* Experience Level */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Your Experience Level
               </label>
               <div className="grid grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, level: "beginner" })}
-                  className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
-                    form.level === "beginner"
-                      ? "bg-emerald-500 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  Beginner
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, level: "intermediate" })}
-                  className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
-                    form.level === "intermediate"
-                      ? "bg-emerald-500 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  Intermediate
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, level: "advanced" })}
-                  className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
-                    form.level === "advanced"
-                      ? "bg-emerald-500 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  Advanced
-                </button>
+                {["beginner", "intermediate", "advanced"].map((level) => (
+                  <button
+                    key={level}
+                    type="button"
+                    onClick={() => handleInputChange("level", level)}
+                    disabled={loading}
+                    className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
+                      form.level === level
+                        ? "bg-emerald-500 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                  </button>
+                ))}
               </div>
             </div>
-          </div>
 
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                Creating account...
-              </span>
-            ) : (
-              "Create Account"
-            )}
-          </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Creating account..." : "Create Account"}
+            </button>
+          </form>
 
           <div className="text-center pt-2">
             <p className="text-gray-600 text-sm">
               Already have an account?{" "}
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate("/Login");
+                }}
                 className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+                disabled={loading}
               >
                 Sign in
               </button>
