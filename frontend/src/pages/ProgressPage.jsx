@@ -69,49 +69,49 @@ function ProgressPage({ onNavigate, user }) {
         </div>
 
         {/* Achievements */}
-        <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10 mb-8">
-          <h2 className="text-xl font-semibold mb-6">Achievements</h2>
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-green-500/30 mb-8 shadow-xl">
+          <h2 className="text-xl font-semibold mb-6 text-white">Achievements</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {achievements.map((achievement) => (
-              <div 
+              <div
                 key={achievement.id}
-                className={`p-4 rounded-xl border ${
-                  achievement.unlocked 
-                    ? 'bg-green-500/10 border-green-500/20' 
-                    : 'bg-surface/50 border-white/10'
+                className={`p-4 rounded-xl border transition-all hover:scale-105 ${
+                  achievement.unlocked
+                    ? 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20'
+                    : 'bg-slate-700/30 border-slate-600/30 hover:border-slate-600'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <Award className={`w-5 h-5 ${
-                    achievement.unlocked ? 'text-green-400' : 'text-text-muted'
+                    achievement.unlocked ? 'text-green-400' : 'text-slate-500'
                   }`} />
                   {achievement.unlocked && (
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">Unlocked</span>
+                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded border border-green-500/30">Unlocked</span>
                   )}
                 </div>
-                <h4 className="font-medium">{achievement.title}</h4>
-                <p className="text-sm text-text-muted mt-1">{achievement.description}</p>
+                <h4 className="font-medium text-white">{achievement.title}</h4>
+                <p className="text-sm text-slate-400 mt-1">{achievement.description}</p>
               </div>
             ))}
           </div>
         </div>
 
         {/* AI Insights */}
-        <div className="bg-gradient-to-r from-accent/10 to-pink-500/10 rounded-2xl p-6 border border-accent/30">
-          <h3 className="text-lg font-semibold mb-3">AI Insights</h3>
-          <p className="text-text-muted mb-4">
+        <div className="bg-gradient-to-r from-green-500/10 to-cyan-500/10 rounded-2xl p-6 border border-green-500/30 shadow-xl">
+          <h3 className="text-lg font-semibold mb-3 text-white">AI Insights</h3>
+          <p className="text-slate-400 mb-4">
             "Your consistency has improved by 30% this week. Keep practicing for 10 more minutes daily to reach your goal faster."
           </p>
           <div className="flex space-x-4">
-            <button 
+            <button
               onClick={() => onNavigate && onNavigate('pose-detection')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="px-4 py-2 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-lg transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40"
             >
               Continue Practice
             </button>
-            <button 
+            <button
               onClick={() => onNavigate && onNavigate('dashboard')}
-              className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600"
+              className="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 backdrop-blur-sm text-white rounded-lg transition-all border border-slate-600 hover:border-green-400/50"
             >
               Back to Dashboard
             </button>

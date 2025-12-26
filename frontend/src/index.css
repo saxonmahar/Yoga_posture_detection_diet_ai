@@ -1,322 +1,53 @@
-/* src/index.css */
 @import "tailwindcss";
 
 @theme {
-  /* Updated color palette for yoga app */
-  --color-background: 0 0% 98%; /* Off-white background */
-  --color-surface: 0 0% 100%; /* Pure white for cards */
-  --color-primary: 142 76% 36%; /* #22C55E - Electric green for energetic fitness */
-  --color-secondary: 222 47% 11%; /* #0F172A - Charcoal black for headers */
-  --color-accent: 80 81% 60%; /* #A3E635 - Lime for accents */
-  --color-success: 142 76% 36%; /* Green for correct poses */
-  --color-warning: 38 92% 50%; /* Amber for adjustments needed */
-  --color-error: 0 84% 60%; /* Soft red for incorrect poses */
-  --color-text-primary: 0 0% 15%; /* Dark gray text */
-  --color-text-muted: 0 0% 45%; /* Medium gray for secondary text */
-  --color-text-light: 0 0% 65%; /* Light gray for hints */
+  --color-primary: #0a0a1a;
+  --color-secondary: #111827;
+  --color-card: #1f2937;
+  --color-surface: #0f172a;
+  --color-text: #f8fafc;
+  --color-text-muted: #94a3b8;
+  --color-accent: #8b5cf6;
+  --color-accent-light: #a78bfa;
+  --color-accent-dark: #7c3aed;
+  --color-premium: #f59e0b;
+  --color-success: #10b981;
+  --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+  --gradient-premium: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-glow: glow 2s ease-in-out infinite alternate;
 }
 
-@layer base {
-  body {
-    @apply bg-background text-text-primary;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    margin: 0;
-    padding: 0;
-    min-height: 100vh;
-    line-height: 1.6;
-  }
-
-  /* Respect user's motion preferences */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
-  }
-}
-
-@layer components {
-  /* Button styles */
-  .btn-primary {
-    @apply px-6 py-3 bg-primary text-white rounded-xl font-medium
-           hover:bg-primary/90 hover:scale-105 active:scale-95
-           transition-all duration-200 shadow-lg hover:shadow-xl;
-  }
-
-  .btn-secondary {
-    @apply px-6 py-3 bg-secondary text-white rounded-xl font-medium
-           hover:bg-secondary/90 hover:scale-105 active:scale-95
-           transition-all duration-200 shadow-lg hover:shadow-xl;
-  }
-
-  .btn-accent {
-    @apply px-6 py-3 bg-accent text-white rounded-xl font-medium
-           hover:bg-accent/90 hover:scale-105 active:scale-95
-           transition-all duration-200 shadow-lg hover:shadow-xl;
-  }
-
-  /* Card styles */
-  .card {
-    @apply bg-surface rounded-2xl shadow-lg border border-gray-100
-           hover:shadow-xl transition-all duration-300;
-  }
-
-  .card-hover {
-    @apply hover:scale-[1.02] transition-transform duration-300;
-  }
-
-  /* Pose detection specific styles */
-  .pose-feedback-correct {
-    @apply text-green-600 bg-green-50 border-green-200;
-  }
-
-  .pose-feedback-adjust {
-    @apply text-amber-600 bg-amber-50 border-amber-200;
-  }
-
-  .pose-feedback-incorrect {
-    @apply text-red-500 bg-red-50 border-red-200;
-  }
-
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent;
-  }
-
-  .gradient-text-spiritual {
-    @apply bg-gradient-to-r from-accent to-purple-400 bg-clip-text text-transparent;
-  }
-
-  /* Loading animations */
-  .loading-lotus {
-    @apply relative;
-  }
-
-  .loading-lotus::before {
-    content: '';
-    @apply absolute inset-0 rounded-full border-4 border-accent/20;
-    animation: lotus-bloom 2s ease-in-out infinite;
-  }
-
-  .loading-lotus::after {
-    content: '';
-    @apply absolute inset-2 rounded-full border-4 border-transparent border-t-accent;
-    animation: lotus-spin 1s linear infinite;
-  }
-
-  /* Breathing animation */
-  .breathing {
-    animation: breathe 4s ease-in-out infinite;
-  }
-
-  /* Progress ring */
-  .progress-ring {
-    @apply relative;
-  }
-
-  .progress-ring-circle {
-    @apply stroke-current;
-    stroke-dasharray: 283;
-    stroke-dashoffset: 283;
-    transform-origin: center;
-    animation: progress-ring 2s ease-in-out;
-  }
-
-  /* Keypoint indicators */
-  .keypoint-indicator {
-    @apply absolute w-3 h-3 rounded-full border-2 border-white shadow-lg;
-    animation: keypoint-pulse 2s ease-in-out infinite;
-  }
-
-  .keypoint-correct {
-    @apply bg-green-500;
-  }
-
-  .keypoint-adjust {
-    @apply bg-amber-500;
-  }
-
-  .keypoint-incorrect {
-    @apply bg-red-400;
-  }
-
-  /* Correction arrows */
-  .correction-arrow {
-    @apply absolute text-2xl text-accent;
-    animation: arrow-flow 1.5s ease-in-out infinite;
-  }
-
-  /* Success celebration */
-  .success-celebration {
-    animation: success-bounce 0.6s ease-out;
-  }
-
-  /* Diet card animations */
-  .diet-card-enter {
-    animation: diet-card-slide-in 0.5s ease-out;
-  }
-
-  .diet-card-hover {
-    @apply hover:shadow-2xl hover:-translate-y-2 transition-all duration-300;
-  }
-
-  /* Nutritional reveal */
-  .nutrition-reveal {
-    @apply opacity-0 max-h-0 overflow-hidden transition-all duration-300;
-  }
-
-  .nutrition-reveal.show {
-    @apply opacity-100 max-h-96;
-  }
-
-  /* Health score animation */
-  .health-score {
-    animation: health-score-count 2s ease-out;
-  }
-}
-
-/* Custom animations */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-20px); }
 }
 
 @keyframes glow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
-    transform: scale(1);
-  }
-  50% {
-    box-shadow: 0 0 40px rgba(14, 165, 233, 0.6);
-    transform: scale(1.05);
-  }
+  from { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+  to { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8); }
 }
 
-@keyframes breathe {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-  }
+body {
+  @apply bg-primary text-text font-sans antialiased;
 }
 
-@keyframes lotus-bloom {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.5;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
 }
 
-@keyframes lotus-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+::-webkit-scrollbar-track {
+  @apply bg-secondary;
 }
 
-@keyframes keypoint-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.3);
-    opacity: 1;
-  }
+::-webkit-scrollbar-thumb {
+  @apply bg-accent rounded-full;
 }
 
-@keyframes arrow-flow {
-  0%, 100% {
-    transform: translateX(0px) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateX(10px) scale(1.1);
-    opacity: 1;
-  }
-}
-
-@keyframes success-bounce {
-  0% { transform: scale(0.3); opacity: 0; }
-  50% { transform: scale(1.05); }
-  70% { transform: scale(0.9); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-@keyframes progress-ring {
-  from { stroke-dashoffset: 283; }
-  to { stroke-dashoffset: 0; }
-}
-
-@keyframes diet-card-slide-in {
-  from {
-    transform: translateY(30px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes health-score-count {
-  from { transform: scale(0.5); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-/* Utility animations */
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-.animate-breathing {
-  animation: breathe 4s ease-in-out infinite;
-}
-
-.animate-lotus {
-  animation: lotus-bloom 2s ease-in-out infinite;
-}
-
-.animate-success {
-  animation: success-bounce 0.6s ease-out;
-}
-
-.animate-progress {
-  animation: progress-ring 2s ease-in-out;
-}
-
-/* Responsive design helpers */
-@media (max-width: 768px) {
-  .btn-primary, .btn-secondary, .btn-accent {
-    @apply px-4 py-2 text-sm;
-  }
-
-  .card {
-    @apply rounded-xl;
-  }
-}
-
-/* Focus states for accessibility */
-.btn-primary:focus-visible,
-.btn-secondary:focus-visible,
-.btn-accent:focus-visible {
-  @apply ring-2 ring-offset-2 ring-primary outline-none;
-}
-
-.card:focus-within {
-  @apply ring-2 ring-primary/50 ring-offset-2;
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-accent-light;
 }

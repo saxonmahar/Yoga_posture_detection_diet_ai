@@ -67,23 +67,23 @@ function Footer() {
   }
 
   return (
-    <footer className="bg-surface border-t border-white/10 mt-20">
+    <footer className="bg-slate-900/50 backdrop-blur-xl border-t border-slate-700 mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
         <div className="grid lg:grid-cols-5 gap-10 mb-12">
           {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-accent to-pink-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
                 <span className="text-xl font-bold">🧘</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold gradient-text">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">
                   YogaAI
                 </h2>
-                <p className="text-sm text-text-muted">Intelligent Wellness</p>
+                <p className="text-sm text-slate-400">Intelligent Wellness</p>
               </div>
             </div>
-            <p className="text-text-muted mb-6 max-w-md">
+            <p className="text-slate-400 mb-6 max-w-md">
               Empowering your wellness journey with AI-powered yoga guidance and personalized nutrition.
               Join thousands who transformed their health with intelligent technology.
             </p>
@@ -94,10 +94,10 @@ function Footer() {
                   <button
                     key={index}
                     onClick={() => handleSocialClick(social.label)}
-                    className="w-10 h-10 bg-card hover:bg-secondary rounded-full flex items-center justify-center transition hover:scale-110 hover:shadow-lg group"
+                    className="w-10 h-10 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600 rounded-full flex items-center justify-center transition hover:scale-110 hover:shadow-lg hover:shadow-green-500/20 group"
                     aria-label={`Follow us on ${social.label}`}
                   >
-                    <Icon className="w-5 h-5 group-hover:text-accent transition" />
+                    <Icon className="w-5 h-5 text-slate-400 group-hover:text-green-400 transition" />
                   </button>
                 )
               })}
@@ -106,13 +106,13 @@ function Footer() {
 
           {/* Product Links */}
           <div>
-            <h4 className="font-bold text-lg mb-6 text-text-primary">Product</h4>
+            <h4 className="font-bold text-lg mb-6 text-white">Product</h4>
             <ul className="space-y-3">
               {productLinks.map((link) => (
                 <li key={link.id + link.label}>
-                  <button 
+                  <button
                     onClick={() => handleNavigate(link.id)}
-                    className="text-text-muted hover:text-accent transition hover:translate-x-1 block w-full text-left text-sm"
+                    className="text-slate-400 hover:text-green-400 transition hover:translate-x-1 block w-full text-left text-sm"
                   >
                     {link.label}
                   </button>
@@ -123,13 +123,13 @@ function Footer() {
 
           {/* Company Links */}
           <div>
-            <h4 className="font-bold text-lg mb-6 text-text-primary">Company</h4>
+            <h4 className="font-bold text-lg mb-6 text-white">Company</h4>
             <ul className="space-y-3">
               {companyLinks.map((link) => (
                 <li key={link.id}>
-                  <button 
+                  <button
                     onClick={() => handleNavigate(link.id)}
-                    className="text-text-muted hover:text-accent transition hover:translate-x-1 block w-full text-left text-sm"
+                    className="text-slate-400 hover:text-green-400 transition hover:translate-x-1 block w-full text-left text-sm"
                   >
                     {link.label}
                   </button>
@@ -140,13 +140,13 @@ function Footer() {
 
           {/* Resources Links */}
           <div>
-            <h4 className="font-bold text-lg mb-6 text-text-primary">Resources</h4>
+            <h4 className="font-bold text-lg mb-6 text-white">Resources</h4>
             <ul className="space-y-3">
               {resourcesLinks.map((link) => (
                 <li key={link.id}>
-                  <button 
+                  <button
                     onClick={() => handleNavigate(link.id)}
-                    className="text-text-muted hover:text-accent transition hover:translate-x-1 block w-full text-left text-sm"
+                    className="text-slate-400 hover:text-green-400 transition hover:translate-x-1 block w-full text-left text-sm"
                   >
                     {link.label}
                   </button>
@@ -157,13 +157,13 @@ function Footer() {
 
           {/* Legal Links */}
           <div>
-            <h4 className="font-bold text-lg mb-6 text-text-primary">Legal</h4>
+            <h4 className="font-bold text-lg mb-6 text-white">Legal</h4>
             <ul className="space-y-3">
               {legalLinks.map((link) => (
                 <li key={link.id}>
-                  <button 
+                  <button
                     onClick={() => handleNavigate(link.id)}
-                    className="text-text-muted hover:text-accent transition hover:translate-x-1 block w-full text-left text-sm"
+                    className="text-slate-400 hover:text-green-400 transition hover:translate-x-1 block w-full text-left text-sm"
                   >
                     {link.label}
                   </button>
@@ -233,7 +233,7 @@ function Footer() {
       </div>
     </footer>
   )
-} {/* App Download Links */}
+} 
          
 
 export default Footer

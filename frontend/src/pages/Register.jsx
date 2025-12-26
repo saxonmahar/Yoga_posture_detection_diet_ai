@@ -46,7 +46,7 @@ export default function Register() {
       });
 
       console.log("Registration successful:", result);
-      navigate("/Login");
+      navigate("/login");
     } catch (err) {
       console.error("Registration error:", err);
 
@@ -74,61 +74,61 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 p-4">
-      <div className="absolute top-10 right-10 opacity-20">
-        <Leaf size={80} className="text-emerald-600" />
-      </div>
-      <div className="absolute bottom-10 left-10 opacity-20">
-        <Heart size={80} className="text-rose-400" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-green-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full mb-4 shadow-lg">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-green-400 to-cyan-500 rounded-full mb-4 shadow-lg shadow-green-500/20 animate-glow">
             <Leaf size={32} className="text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">YogaLife</h1>
-          <p className="text-gray-600 mt-2">Begin your wellness journey today</p>
+          <h1 className="text-3xl font-bold text-white">YogaLife</h1>
+          <p className="text-slate-400 mt-2">Begin your wellness journey today</p>
         </div>
 
-        <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-xl space-y-5 border border-emerald-100">
+        <div className="bg-slate-800/50 backdrop-blur-xl p-8 rounded-3xl shadow-2xl space-y-5 border border-green-500/30">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Create Account</h2>
-            <p className="text-gray-600 text-sm mt-1">Join our wellness community</p>
+            <h2 className="text-2xl font-bold text-white">Create Account</h2>
+            <p className="text-slate-400 text-sm mt-1">Join our wellness community</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Full Name */}
             <div className="relative group">
-              <User className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <User className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-green-400 transition-colors" size={18} />
               <input
                 type="text"
                 placeholder="Full Name"
                 value={form.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
                 disabled={loading}
               />
             </div>
 
             {/* Email */}
             <div className="relative group">
-              <Mail className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Mail className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-green-400 transition-colors" size={18} />
               <input
                 type="email"
                 placeholder="Email address"
                 value={form.email}
                 onChange={(e) => handleInputChange("email", e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                className="w-full pl-10 pr-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
                 disabled={loading}
               />
             </div>
 
             {/* Password */}
             <div className="relative group">
-              <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Lock className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-green-400 transition-colors" size={18} />
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password (min. 6 characters)"
@@ -136,13 +136,13 @@ export default function Register() {
                 onChange={(e) => handleInputChange("password", e.target.value)}
                 required
                 minLength={6}
-                className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                className="w-full pl-10 pr-12 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-green-400 transition-colors"
                 disabled={loading}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -151,20 +151,20 @@ export default function Register() {
 
             {/* Confirm Password */}
             <div className="relative group">
-              <Lock className="absolute left-3 top-3.5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
+              <Lock className="absolute left-3 top-3.5 text-slate-400 group-focus-within:text-green-400 transition-colors" size={18} />
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm Password"
                 value={form.confirmPassword}
                 onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
                 required
-                className="w-full pl-10 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-400 focus:outline-none transition-all"
+                className="w-full pl-10 pr-12 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
                 disabled={loading}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-3.5 text-gray-400 hover:text-emerald-600 transition-colors"
+                className="absolute right-3 top-3.5 text-slate-400 hover:text-green-400 transition-colors"
                 disabled={loading}
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -173,7 +173,7 @@ export default function Register() {
 
             {/* Experience Level */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-slate-300 mb-3">
                 Your Experience Level
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -185,8 +185,8 @@ export default function Register() {
                     disabled={loading}
                     className={`py-2.5 px-4 rounded-lg font-medium transition-all ${
                       form.level === level
-                        ? "bg-emerald-500 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        ? "bg-gradient-to-r from-green-500 to-cyan-500 text-white shadow-lg shadow-green-500/20"
+                        : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border border-slate-600"
                     } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     {level.charAt(0).toUpperCase() + level.slice(1)}
@@ -198,22 +198,22 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-xl font-semibold transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
 
           <div className="text-center pt-2">
-            <p className="text-gray-600 text-sm">
+            <p className="text-slate-400 text-sm">
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
-                  navigate("/Login");
+                  navigate("/login");
                 }}
-                className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
+                className="text-green-400 font-semibold hover:text-green-300 transition-colors"
                 disabled={loading}
               >
                 Sign in
@@ -222,7 +222,7 @@ export default function Register() {
           </div>
         </div>
 
-        <p className="text-center text-gray-500 text-xs mt-6">
+        <p className="text-center text-slate-500 text-xs mt-6">
           By creating an account, you agree to our Terms & Privacy Policy
         </p>
       </div>

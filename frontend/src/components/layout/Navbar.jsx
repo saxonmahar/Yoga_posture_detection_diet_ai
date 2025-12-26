@@ -69,7 +69,7 @@ function Navbar() {
             {navItems.map((item) => (
               <div key={item.id} className="relative">
                 {item.dropdown ? (
-                  <div 
+                  <div
                     className="relative"
                     onMouseEnter={() => setFeaturesDropdown(true)}
                     onMouseLeave={() => setFeaturesDropdown(false)}
@@ -77,24 +77,24 @@ function Navbar() {
                     <button
                       onClick={() => handleNavigation(item.page)}
                       className={`px-4 py-2 text-sm font-medium transition-all duration-300 flex items-center ${
-                        currentPage === item.page 
-                          ? 'text-accent' 
-                          : 'text-text-muted hover:text-accent'
+                        currentPage === item.page
+                          ? 'text-green-400'
+                          : 'text-slate-400 hover:text-green-400'
                       }`}
                     >
                       {item.label}
                       <ChevronDown className={`w-4 h-4 ml-1 transition-transform ${featuresDropdown ? 'rotate-180' : ''}`} />
                     </button>
-                    
+
                     {featuresDropdown && (
-                      <div className="absolute top-full left-0 mt-2 w-48 bg-card/95 backdrop-blur-lg rounded-xl border border-white/10 shadow-2xl py-2 z-50 animate-fadeIn">
+                      <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-lg rounded-xl border border-green-500/30 shadow-2xl py-2 z-50 animate-fadeIn">
                         {item.dropdown.map((subItem) => (
                           <button
                             key={subItem.id}
                             onClick={() => handleNavigation(subItem.page)}
-                            className="w-full text-left px-4 py-3 text-sm text-text-muted hover:text-accent hover:bg-white/5 transition flex items-center"
+                            className="w-full text-left px-4 py-3 text-sm text-slate-400 hover:text-green-400 hover:bg-green-500/10 transition flex items-center"
                           >
-                            <div className="w-2 h-2 bg-accent rounded-full mr-3"></div>
+                            <div className="w-2 h-2 bg-green-400 rounded-full mr-3"></div>
                             {subItem.label}
                           </button>
                         ))}
@@ -105,9 +105,9 @@ function Navbar() {
                   <button
                     onClick={() => handleNavigation(item.page)}
                     className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${
-                      currentPage === item.page 
-                        ? 'text-accent border-b-2 border-accent' 
-                        : 'text-text-muted hover:text-accent hover:border-b-2 hover:border-accent/50'
+                      currentPage === item.page
+                        ? 'text-green-400 border-b-2 border-green-400'
+                        : 'text-slate-400 hover:text-green-400 hover:border-b-2 hover:border-green-400/50'
                     }`}
                   >
                     {item.label}

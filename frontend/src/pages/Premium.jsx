@@ -191,19 +191,19 @@ function Premium({ onNavigate, user }) {
 
         {/* Benefits */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Why Choose <span className="text-premium">Premium</span>?
+          <h2 className="text-3xl font-bold text-center mb-12 text-white">
+            Why Choose <span className="text-green-400">Premium</span>?
           </h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => {
               const Icon = benefit.icon
               return (
-                <div key={index} className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-premium/50 transition">
-                  <div className="w-12 h-12 bg-gradient-to-br from-premium/20 to-orange-500/20 rounded-xl flex items-center justify-center mb-4">
-                    <Icon className="w-6 h-6 text-premium" />
+                <div key={index} className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-green-500/50 transition hover:scale-105 shadow-xl">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500/20 to-cyan-500/20 rounded-xl flex items-center justify-center mb-4 border border-green-500/30">
+                    <Icon className="w-6 h-6 text-green-400" />
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
-                  <p className="text-text-muted">{benefit.description}</p>
+                  <h3 className="text-xl font-bold mb-2 text-white">{benefit.title}</h3>
+                  <p className="text-slate-400">{benefit.description}</p>
                 </div>
               )
             })}
@@ -211,9 +211,9 @@ function Premium({ onNavigate, user }) {
         </div>
 
         {/* Testimonials */}
-        <div className="bg-gradient-to-br from-accent/10 to-pink-500/10 backdrop-blur-sm rounded-2xl p-8 border border-white/10">
-          <h2 className="text-3xl font-bold text-center mb-10">
-            Loved by <span className="text-premium">10,000+</span> Yogis
+        <div className="bg-gradient-to-br from-green-500/10 to-cyan-500/10 backdrop-blur-xl rounded-2xl p-8 border border-green-500/30 shadow-xl">
+          <h2 className="text-3xl font-bold text-center mb-10 text-white">
+            Loved by <span className="text-green-400">10,000+</span> Yogis
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -221,18 +221,18 @@ function Premium({ onNavigate, user }) {
               { name: 'Mike R.', role: 'Fitness Coach', text: 'The personalized diet plans helped me lose 15lbs while gaining flexibility.' },
               { name: 'Emma L.', role: 'Wellness Coach', text: 'Best investment in my health. The live classes keep me motivated.' },
             ].map((testimonial, index) => (
-              <div key={index} className="bg-card/50 rounded-xl p-6">
+              <div key={index} className="bg-slate-800/50 backdrop-blur-xl rounded-xl p-6 border border-slate-700/50">
                 <div className="flex items-center mb-4">
                   {[0, 1, 2, 3, 4].map((star) => (
-                    <Star key={star} className="w-5 h-5 text-premium fill-premium" />
+                    <Star key={star} className="w-5 h-5 text-green-400 fill-green-400" />
                   ))}
                 </div>
-                <p className="text-text-muted mb-6 italic">"{testimonial.text}"</p>
+                <p className="text-slate-400 mb-6 italic">"{testimonial.text}"</p>
                 <div className="flex items-center">
-                  <div className="w-10 h-10 bg-gradient-to-br from-premium to-orange-500 rounded-full"></div>
+                  <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-cyan-500 rounded-full"></div>
                   <div className="ml-3">
-                    <p className="font-semibold">{testimonial.name}</p>
-                    <p className="text-sm text-text-muted">{testimonial.role}</p>
+                    <p className="font-semibold text-white">{testimonial.name}</p>
+                    <p className="text-sm text-slate-400">{testimonial.role}</p>
                   </div>
                 </div>
               </div>
