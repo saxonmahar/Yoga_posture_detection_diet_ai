@@ -11,6 +11,7 @@
     "@mediapipe/pose": "^0.5.1675469404",
     "@tensorflow/tfjs-backend-cpu": "^4.22.0",
     "@tensorflow/tfjs-core": "^4.22.0",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "canvas": "^3.2.0",
     "cookie-parser": "^1.4.7",

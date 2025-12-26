@@ -51,15 +51,15 @@ function Dashboard() { // Remove props
       color: 'from-blue-500 to-cyan-400',
       bgColor: 'bg-blue-500/10'
     },
-    { 
-      label: 'Calories Burned', 
-      value: user?.stats?.totalCaloriesBurned || '0', 
-      icon: Flame, 
-      change: '+8%', 
-      trending: 'up',
-      color: 'from-orange-500 to-red-400',
-      bgColor: 'bg-orange-500/10'
-    },
+    // { 
+    //   label: 'Calories Burned', 
+    //   value: user?.stats?.totalCaloriesBurned || '0', 
+    //   icon: Flame, 
+    //   change: '+8%', 
+    //   trending: 'up',
+    //   color: 'from-orange-500 to-red-400',
+    //   bgColor: 'bg-orange-500/10'
+    // },
     { 
       label: 'Current Streak', 
       value: `${user?.stats?.currentStreak || 0} days`, 
@@ -134,7 +134,7 @@ function Dashboard() { // Remove props
       icon: Utensils,
       gradient: 'from-green-500 to-emerald-400',
       badge: 'New',
-      onClick: () => navigate('/diet-plan')
+      onClick: () => navigate('/nutrition')
     },
     {
       id: 'progress',
@@ -159,7 +159,7 @@ function Dashboard() { // Remove props
   const upcomingClasses = [
     { 
       name: 'Morning Flow', 
-      instructor: 'Sarah Kumar',
+      instructor: 'Sanjay Mahar',
       time: '8:00 AM', 
       duration: '45 min',
       difficulty: 'Beginner',
@@ -168,7 +168,7 @@ function Dashboard() { // Remove props
     },
     { 
       name: 'Power Yoga', 
-      instructor: 'Mike Chen',
+      instructor: 'Shashank Yadav',
       time: '12:00 PM', 
       duration: '60 min',
       difficulty: 'Intermediate',
@@ -176,7 +176,7 @@ function Dashboard() { // Remove props
       thumbnail: '💪'
     },
     { 
-      name: 'Sunset Meditation', 
+      name: 'Bishsist Pandey', 
       instructor: 'Lisa Sharma',
       time: '6:00 PM', 
       duration: '30 min',
@@ -203,7 +203,7 @@ function Dashboard() { // Remove props
   // Add this function to handle logout
   const handleLogout = () => {
     logout()
-    navigate('/Login')
+    navigate('/login')
   }
 
   return (

@@ -50,7 +50,7 @@ function Navbar() {
           
           {/* Logo */}
           <button
-            onClick={() => handleNavigation('home')}
+            onClick={() => handleNavigation('login')}
             className="flex items-center space-x-2 cursor-pointer group"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-accent to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -132,12 +132,7 @@ function Navbar() {
                     </p>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleNavigation('dashboard')}
-                  className="px-4 py-2 text-sm text-text-muted hover:text-accent transition"
-                >
-                  Dashboard
-                </button>
+              
                 <button
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm text-red-400 hover:text-red-300 transition"
@@ -219,15 +214,8 @@ function Navbar() {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        handleNavigation('dashboard')
-                        setIsMenuOpen(false)
-                      }}
-                      className="w-full py-3 bg-surface hover:bg-secondary rounded-lg font-medium transition"
-                    >
-                      Go to Dashboard
-                    </button>
+                 
+                 
                     <button
                       onClick={handleLogout}
                       className="w-full py-3 text-red-400 hover:text-red-300 transition"
@@ -239,7 +227,7 @@ function Navbar() {
                   <>
                     <button
                       onClick={() => {
-                        handleNavigation('login')
+                        handleNavigation('home')
                         setIsMenuOpen(false)
                       }}
                       className="w-full py-3 bg-surface hover:bg-secondary rounded-lg font-medium transition"

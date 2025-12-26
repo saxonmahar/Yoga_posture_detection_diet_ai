@@ -228,7 +228,32 @@ function Footer() {
             </div>
           </div>
 
-    
+          {/* App Download Links */}
+          <div className="mt-8 text-center">
+            <p className="text-text-muted mb-4">Download our mobile app:</p>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <button 
+                onClick={() => window.open('https://apps.apple.com', '_blank')}
+                className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-900 transition flex items-center gap-2"
+              >
+                <span className="text-xl">📱</span>
+                <div className="text-left">
+                  <div className="text-xs">Download on the</div>
+                  <div className="font-semibold">App Store</div>
+                </div>
+              </button>
+              <button 
+                onClick={() => window.open('https://play.google.com', '_blank')}
+                className="px-6 py-3 bg-[#0F9D58] text-white rounded-lg hover:bg-[#0a7d46] transition flex items-center gap-2"
+              >
+                <span className="text-xl">🤖</span>
+                <div className="text-left">
+                  <div className="text-xs">Get it on</div>
+                  <div className="font-semibold">Google Play</div>
+                </div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
