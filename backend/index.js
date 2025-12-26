@@ -1,119 +1,89 @@
 ﻿require("dotenv").config();
 const express = require("express");
-const cors = require('cors');
+const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const axios = require("axios");
 
-const authRoutes = require("./routes/authRoutes");
 const connectDB = require("./DbConfig/db.config");
-
-// Import REAL routes
+const authRoutes = require("./routes/authRoutes");
 const poseRoutes = require("./routes/poseRoutes");
 const dietRoutes = require("./routes/dietRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const ML_API_URL = process.env.ML_API_URL || "http://localhost:5000"; // Correct ML port
 
-/*
-|--------------------------------------------------------------------------
-| Middleware
-|--------------------------------------------------------------------------
-*/
-
-// CORS (simple + controlled)
+// ----------------------------
+// Middleware
+// ----------------------------
 app.use(cookieParser());
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3001",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true
+    origin: process.env.FRONTEND_URL || "http://localhost:3001",
+    credentials: true
 }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Body parsers
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ----------------------------
+// Connect to MongoDB
+// ----------------------------
+connectDB(); // Single call only
 
-/*
-|--------------------------------------------------------------------------
-| Database
-|--------------------------------------------------------------------------
-*/
-connectDB();
-
-/*
-|--------------------------------------------------------------------------
-| Routes
-|--------------------------------------------------------------------------
-*/
+// ----------------------------
+// Routes
+// ----------------------------
 app.use("/api/auth", authRoutes);
+app.use("/api/pose", poseRoutes);
+app.use("/api/diet", dietRoutes);
+app.use("/api/analytics", analyticsRoutes);
 
-// REAL ROUTES (not test anymore)
-app.use("/api/pose", poseRoutes);      // Pose detection & yoga sessions
-app.use("/api/diet", dietRoutes);      // Diet & nutrition tracking
-app.use("/api/analytics", analyticsRoutes); // Progress analytics
+// ----------------------------
+// ML Proxy Endpoints
+// ----------------------------
+app.get("/api/ml/health", async (req, res) => {
+    try {
+        const response = await axios.get(`${ML_API_URL}/health`);
+        res.json(response.data);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'ML service unavailable',
+            details: error.message,
+            ml_url: ML_API_URL
+        });
+    }
+});
 
-// Health check / root route
+// ----------------------------
+// Root Endpoint
+// ----------------------------
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,
         message: "Yoga Posture Detection & Diet AI API",
-        version: "1.0.0",
-        status: "running",
-        endpoints: {
-            auth: {
-                login: "POST /api/auth/login",
-                register: "POST /api/auth/register"
-            },
-            pose: {
-                createSession: "POST /api/pose/sessions",
-                analyzePose: "POST /api/pose/analyze",
-                getSessions: "GET /api/pose/sessions",
-                getSessionDetails: "GET /api/pose/sessions/:id"
-            },
-            diet: {
-                logMeal: "POST /api/diet/meals",
-                getTodayMeals: "GET /api/diet/meals/today",
-                getRecommendation: "POST /api/diet/recommendations"
-            },
-            analytics: {
-                getAnalytics: "GET /api/analytics/overview",
-                getStreaks: "GET /api/analytics/streaks",
-                saveProgress: "POST /api/analytics/progress"
-            }
-        }
+        ml_service: { url: ML_API_URL },
+        mongo_uri: process.env.MONGO_URI
     });
 });
 
-// 404 handler
-app.use((req, res, next) => {
-    res.status(404).json({
-        success: false,
-        message: `Route not found: ${req.method} ${req.originalUrl}`
-    });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error("Server Error:", err);
-    res.status(500).json({
-        success: false,
-        message: "Internal server error",
-        error: process.env.NODE_ENV === 'development' ? err.message : undefined
-    });
-});
-
-/*
-|--------------------------------------------------------------------------
-| Server
-|--------------------------------------------------------------------------
-*/
+// ----------------------------
+// Start Server & Test ML Service
+// ----------------------------
 app.listen(PORT, () => {
-    console.log(`\n🚀 ========================================`);
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`🌐 Base URL: http://localhost:${PORT}`);
-    console.log(`📚 ========================================`);
-    console.log(`🔗 Auth API:      http://localhost:${PORT}/api/auth`);
-    console.log(`🧘 Pose API:      http://localhost:${PORT}/api/pose`);
-    console.log(`🍎 Diet API:      http://localhost:${PORT}/api/diet`);
-    console.log(`📊 Analytics API: http://localhost:${PORT}/api/analytics`);
-    console.log(`========================================\n`);
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`🤖 ML Service URL: ${ML_API_URL}`);
+
+    // Test ML service separately without blocking server start
+    const testMLService = async () => {
+        try {
+            const res = await axios.get(`${ML_API_URL}/health`);
+            console.log(`✅ ML Service: ${res.data.status}`);
+        } catch (err) {
+            console.log(`❌ ML Service unavailable: ${err.message}`);
+            console.log(`⚠️  Make sure the ML service is running on ${ML_API_URL}`);
+        }
+    };
+
+    testMLService();
 });
