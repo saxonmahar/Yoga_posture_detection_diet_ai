@@ -100,7 +100,7 @@ export default function HomePage({ onNavigate }) {
       </div>
 
       {/* ---------------- HERO SECTION ---------------- */}
-      <section className="relative overflow-hidden -mt-20">
+      <section className="relative overflow-hidden -mt-25">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-green-500/10 via-transparent to-transparent"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-20 relative z-10">

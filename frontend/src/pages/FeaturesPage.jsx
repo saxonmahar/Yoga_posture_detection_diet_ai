@@ -6,6 +6,12 @@ const FeaturesPage = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('ai-coach');
 
+  // helper function to navigate and scroll to top
+  const goTo = (path) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  }
+
   const features = [
     {
       id: 'ai-coach',
@@ -112,7 +118,7 @@ const FeaturesPage = () => {
           <div className="feature-cta">
             <button
               className="cta-btn"
-              onClick={() => navigate('/')}
+              onClick={() => goTo('/')} // updated to scroll to top
             >
               ← Back to Home
             </button>

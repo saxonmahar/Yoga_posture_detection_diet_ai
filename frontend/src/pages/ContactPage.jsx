@@ -53,7 +53,8 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary via-surface to-secondary">
       {/* Hero */}
-      <section className="pt-20 pb-16 px-4">
+      <section className="relative overflow-hidden -mt-13">
+
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center px-4 py-2 bg-accent/20 rounded-full text-sm font-semibold text-accent mb-6">
             <MessageSquare className="w-4 h-4 mr-2" />

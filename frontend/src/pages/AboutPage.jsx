@@ -1,22 +1,54 @@
 import React from 'react'
 import { 
-  Users, 
   Target, 
   Award, 
   Heart, 
   Globe, 
   CheckCircle
 } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'  // <-- Import useNavigate
+import { useNavigate } from 'react-router-dom'
 
 function AboutPage() {
-  const navigate = useNavigate()  // <-- Initialize navigate
+  const navigate = useNavigate()
 
+  // helper function to navigate and scroll to top
+  const goTo = (path) => {
+    navigate(path)
+    window.scrollTo(0, 0)
+  }
+
+  // Team members (images from public folder)
   const teamMembers = [
-    { name: 'Sarah Chen', role: 'Co-Founder & Yoga Expert', bio: '15+ years yoga experience, certified instructor' },
-    { name: 'Dr. Alex Johnson', role: 'Co-Founder & AI Researcher', bio: 'PhD in Computer Vision, Stanford alumni' },
-    { name: 'Maya Patel', role: 'Nutrition Specialist', bio: 'Registered dietitian, wellness coach' },
-    { name: 'David Kim', role: 'Lead Developer', bio: 'Full-stack developer, fitness enthusiast' },
+    {
+      name: 'Anup Bhatt',
+      role: 'Co-Founder & Yoga Expert',
+      bio: '15+ years yoga experience, certified instructor',
+      image: '/images/team/anup.jpg',
+    },
+    {
+      name: 'Ashish Karn',
+      role: 'Co-Founder & AI Researcher',
+      bio: 'PhD in Computer Vision, Stanford alumni',
+      image: '/images/team/ashish.jpg',
+    },
+    {
+      name: 'Bishist Pandey',
+      role: 'Nutrition Specialist',
+      bio: 'Registered dietitian, wellness coach',
+      image: '/images/team/bistey.jpg',
+    },
+    {
+      name: 'Sanjay Mahar',
+      role: 'Lead Developer',
+      bio: 'Full-stack developer, fitness enthusiast',
+      image: '/images/team/sanjay.jpg',
+    },
+    {
+      name: 'Shashank Yadav',
+      role: 'Lead Developer',
+      bio: 'Full-stack developer, fitness enthusiast',
+      image: '/images/team/shashank.jpg',
+    },
   ]
 
   const milestones = [
@@ -29,14 +61,14 @@ function AboutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary via-surface to-secondary">
       {/* Hero */}
-      <section className="pt-20 pb-16 px-4">
+      <section className="relative overflow-hidden -mt-12">
         <div className="max-w-7xl mx-auto text-center">
           <div className="inline-flex items-center px-4 py-2 bg-accent/20 rounded-full text-sm font-semibold text-accent mb-6">
             <Heart className="w-4 h-4 mr-2" />
             OUR STORY
           </div>
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-            Revolutionizing Wellness with{" "}
+            Revolutionizing Wellness with{' '}
             <span className="bg-gradient-to-r from-accent to-pink-400 bg-clip-text text-transparent">
               AI Technology
             </span>
@@ -51,6 +83,8 @@ function AboutPage() {
       {/* Mission */}
       <section className="py-16 px-4">
         <div className="max-w-7xl mx-auto">
+
+          {/* Mission section */}
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
             <div>
               <h2 className="text-3xl font-bold mb-6">Our Mission</h2>
@@ -83,15 +117,17 @@ function AboutPage() {
             </div>
           </div>
 
-          {/* Team */}
+          {/* Team Section */}
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-center mb-12">Meet Our Team</h2>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {teamMembers.map((member, index) => (
                 <div key={index} className="bg-card/30 backdrop-blur-sm rounded-xl p-6 text-center">
-                  <div className="w-20 h-20 bg-gradient-to-br from-accent to-pink-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="w-24 h-24 rounded-full object-cover mx-auto mb-4 border-4 border-accent/30"
+                  />
                   <h3 className="text-xl font-bold mb-2">{member.name}</h3>
                   <p className="text-accent mb-2">{member.role}</p>
                   <p className="text-text-muted text-sm">{member.bio}</p>
@@ -103,29 +139,16 @@ function AboutPage() {
           {/* Milestones */}
           <div className="mb-16">
             <h2 className="text-3xl font-bold text-center mb-12">Our Journey</h2>
-            <div className="relative">
-              <div className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-gradient-to-b from-accent/50 via-pink-500/50 to-accent/50 transform -translate-x-1/2"></div>
-              
-              <div className="space-y-12 lg:space-y-0">
-                {milestones.map((milestone, index) => {
-                  const isEven = index % 2 === 0
-                  return (
-                    <div key={index} className={`lg:flex items-center ${isEven ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
-                      <div className={`lg:w-1/2 ${isEven ? 'lg:pr-12' : 'lg:pl-12'}`}>
-                        <div className="bg-card/50 rounded-xl p-6">
-                          <div className="text-2xl font-bold text-accent mb-2">{milestone.year}</div>
-                          <h3 className="text-xl font-bold mb-2">{milestone.event}</h3>
-                          <p className="text-text-muted">{milestone.description}</p>
-                        </div>
-                      </div>
-                      <div className="hidden lg:flex absolute left-1/2 transform -translate-x-1/2">
-                        <div className="w-8 h-8 bg-accent rounded-full border-4 border-primary"></div>
-                      </div>
-                      <div className="lg:w-1/2"></div>
-                    </div>
-                  )
-                })}
-              </div>
+            <div className="space-y-8">
+              {milestones.map((milestone, index) => (
+                <div key={index} className="bg-card/50 rounded-xl p-6 text-center">
+                  <div className="text-2xl font-bold text-accent mb-2">
+                    {milestone.year}
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{milestone.event}</h3>
+                  <p className="text-text-muted">{milestone.description}</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -153,26 +176,27 @@ function AboutPage() {
           </div>
 
           {/* CTA */}
-          <div className="bg-gradient-to-br from-accent/10 to-pink-500/10 backdrop-blur-sm rounded-2xl p-8 border border-accent/20 text-center">
+          <div className="bg-gradient-to-br from-accent/10 to-pink-500/10 rounded-2xl p-8 text-center">
             <h3 className="text-2xl font-bold mb-4">Join Our Wellness Revolution</h3>
             <p className="text-text-muted mb-6 max-w-2xl mx-auto">
               Be part of the community that's transforming how people approach yoga and nutrition.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex gap-4 justify-center">
               <button
-                onClick={() => navigate('/login')} // <-- Navigate to login instead of register
-                className="px-8 py-3 bg-gradient-to-r from-accent to-pink-500 hover:from-accent/90 hover:to-pink-600 rounded-xl font-semibold transition-all shadow-lg shadow-accent/20 hover:shadow-accent/40"
+                onClick={() => goTo('/login')}
+                className="px-8 py-3 bg-gradient-to-r from-accent to-pink-500 rounded-xl font-semibold"
               >
                 Start Your Journey
               </button>
               <button
-                onClick={() => navigate('/')} // Navigate to home
-                className="px-8 py-3 bg-card hover:bg-secondary rounded-xl font-semibold transition border border-white/10"
+                onClick={() => goTo('/')}
+                className="px-8 py-3 bg-card rounded-xl font-semibold border border-white/10"
               >
                 Back to Home
               </button>
             </div>
           </div>
+
         </div>
       </section>
     </div>
