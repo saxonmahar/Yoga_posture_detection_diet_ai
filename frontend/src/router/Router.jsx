@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 // Layout
@@ -79,6 +79,12 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// Custom PoseDetectionPage wrapper to ensure location state is passed
+const PoseDetectionWrapper = () => {
+  const location = useLocation();
+  return <PoseDetectionPage locationState={location.state} />;
+};
+
 const withLayout = (page, footer = true) => (
   <Layout footer={footer}>{page}</Layout>
 );
@@ -101,7 +107,7 @@ export default function Router() {
   const protectedRoutes = [
     ["/dashboard", <Dashboard />],
     ["/premium", <Premium />],
-    ["/pose-detection", <PoseDetectionPage />],
+    ["/pose-detection", <PoseDetectionWrapper />], // Updated to use wrapper
     ["/yoga-session", <YogaSessionPage />],
     ["/diet-plan", <DietPlanPage />],
     ["/progress", <ProgressPage />],

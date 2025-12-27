@@ -61,6 +61,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user stats - NEW FUNCTION
+  const updateUserStats = async (newStats) => {
+    if (!user) return;
+    
+    try {
+      const updatedUser = {
+        ...user,
+        stats: {
+          ...user.stats,
+          ...newStats
+        }
+      };
+      setUser(updatedUser);
+      
+      // If you want to persist to backend, add API call here:
+      // await updateUserStatsRequest(newStats);
+      
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user stats:", error);
+      throw error;
+    }
+  };
+
   // Load user on refresh
   const loadUser = async () => {
     try {
@@ -84,6 +108,7 @@ export const AuthProvider = ({ children }) => {
         register,
         login,
         logout,
+        updateUserStats, // 👈 Added to context
         loading
       }}
     >

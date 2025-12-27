@@ -32,14 +32,80 @@ import {
   Sun,
   Droplets,
   Wind,
-  LogOut // Added LogOut icon
+  LogOut,
+  AlertCircle // Added AlertCircle icon
 } from 'lucide-react'
-import { useAuth } from '../context/AuthContext' // Add this import
+import { useAuth } from '../context/AuthContext'
 
-
-function Dashboard() { // Remove props
+function Dashboard() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth() // Get user and logout from context
+  const { user, logout } = useAuth()
+
+  // Check Flask ML server status
+  const checkMLServer = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/health', {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { success: true, data };
+      }
+      return { success: false, error: 'Server not responding properly' };
+    } catch (error) {
+      return { success: false, error: 'Cannot connect to ML server' };
+    }
+  };
+
+  // Start ML server via backend API (optional - if you have backend endpoint)
+  const startMLServer = async () => {
+    try {
+      // If you have a backend endpoint to start Flask
+      const response = await fetch('http://localhost:5001/api/start-ml-server', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  // Handle AI Pose Detection click - UPDATED
+  const handlePoseDetectionClick = async () => {
+    // Check if ML server is running
+    const mlStatus = await checkMLServer();
+    
+    if (!mlStatus.success) {
+      // Show dialog with instructions
+      const userConfirmed = window.confirm(
+        '🧘 AI Pose Detection requires the ML Server to be running.\n\n' +
+        'To start the ML Server:\n' +
+        '1. Open Terminal/CMD\n' +
+        '2. Navigate to: cd ai-ml\n' +
+        '3. Run: python app.py\n\n' +
+        'The server should start on http://localhost:5000\n\n' +
+        'Click OK to open pose detection anyway, or Cancel to stay here.'
+      );
+      
+      if (!userConfirmed) {
+        return; // Don't navigate if user cancels
+      }
+    }
+    
+    // Navigate to pose detection page WITH AUTO-START FLAG
+    navigate('/pose-detection', { 
+      state: { 
+        autoStartWebcam: true,
+        fromDashboard: true 
+      } 
+    });
+  };
 
   const stats = [
     { 
@@ -51,15 +117,6 @@ function Dashboard() { // Remove props
       color: 'from-blue-500 to-cyan-400',
       bgColor: 'bg-blue-500/10'
     },
-    // { 
-    //   label: 'Calories Burned', 
-    //   value: user?.stats?.totalCaloriesBurned || '0', 
-    //   icon: Flame, 
-    //   change: '+8%', 
-    //   trending: 'up',
-    //   color: 'from-orange-500 to-red-400',
-    //   bgColor: 'bg-orange-500/10'
-    // },
     { 
       label: 'Current Streak', 
       value: `${user?.stats?.currentStreak || 0} days`, 
@@ -125,7 +182,7 @@ function Dashboard() { // Remove props
       icon: Camera,
       gradient: 'from-blue-500 to-cyan-400',
       badge: 'Popular',
-      onClick: () => navigate('/pose-detection')
+      onClick: handlePoseDetectionClick
     },
     {
       id: 'diet-plan',
@@ -321,6 +378,21 @@ function Dashboard() { // Remove props
               <Zap className="w-6 h-6 mr-3 text-yellow-400" />
               Quick Actions
             </h2>
+            {/* ML Server Status Indicator */}
+            <button
+              onClick={async () => {
+                const status = await checkMLServer();
+                if (status.success) {
+                  alert('✅ ML Server is running on http://localhost:5000');
+                } else {
+                  alert('❌ ML Server is not running. Please start Flask server on port 5000.');
+                }
+              }}
+              className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm font-semibold transition-all flex items-center gap-2"
+            >
+              <AlertCircle className="w-4 h-4" />
+              Check ML Server
+            </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {quickActions.map((action) => {
@@ -697,7 +769,7 @@ function Dashboard() { // Remove props
               </h4>
               <div className="space-y-2">
                 <button
-                  onClick={() => navigate('/pose-detection')}
+                  onClick={handlePoseDetectionClick}
                   className="w-full flex items-center justify-between p-3 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-all border border-slate-600/30 hover:border-slate-600 group"
                 >
                   <div className="flex items-center">
@@ -785,7 +857,7 @@ function Dashboard() { // Remove props
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => navigate('/pose-detection')}
+                onClick={handlePoseDetectionClick}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-400 hover:from-blue-600 hover:to-cyan-500 rounded-xl font-bold text-white transition-all shadow-lg shadow-blue-500/20 flex items-center gap-2"
               >
                 <Camera className="w-5 h-5" />
