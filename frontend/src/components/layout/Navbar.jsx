@@ -126,10 +126,7 @@ function Navbar() {
                     <User className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">{user.name}</p>
-                    <p className="text-xs text-text-muted">
-                      {user.level ? `${user.level.charAt(0).toUpperCase() + user.level.slice(1)} Level` : 'Member'}
-                    </p>
+                    <p className="text-sm font-semibold">{user.name || user.fullName || 'User'}</p>
                   </div>
                 </div>
               
@@ -208,10 +205,7 @@ function Navbar() {
                         <User className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="font-semibold">{user.name}</p>
-                        <p className="text-sm text-text-muted">
-                          {user.level ? `${user.level.charAt(0).toUpperCase() + user.level.slice(1)} Level` : 'Member'}
-                        </p>
+                        <p className="font-semibold">{user.name || user.fullName || 'User'}</p>
                       </div>
                     </div>
                  

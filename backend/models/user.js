@@ -74,7 +74,18 @@ const userSchema = new mongoose.Schema(
     bio: { type: String, maxlength: 500 },
     age: { type: Number, min: 1 },
     weight: { type: Number }, // kg
-    height: { type: Number }  // cm
+    height: { type: Number },  // cm
+    bmi: { type: Number }, // Body Mass Index
+    bodyType: {
+      type: String,
+      enum: ["ectomorphic", "mesomorphic", "endomorphic"],
+      default: "mesomorphic"
+    },
+    goal: {
+      type: String,
+      enum: ["weight_loss", "maintain", "weight_gain", "muscle-gain"],
+      default: "maintain"
+    }
   },
   {
     timestamps: true

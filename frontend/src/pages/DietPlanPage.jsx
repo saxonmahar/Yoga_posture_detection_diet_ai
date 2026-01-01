@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Utensils, Apple, Coffee, Droplets, Target, Activity, Calendar, Flame, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Utensils, Apple, Coffee, Droplets, Target, Activity, Calendar, Flame, Loader2, RefreshCw, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { dietService } from '../services/diet/diet.service';
 
 function DietPlanPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
   const [regenerating, setRegenerating] = useState(false);
+  const [yogaSessionData, setYogaSessionData] = useState(null);
 
   // Default stats if user object is missing
   const defaultStats = {
@@ -23,20 +25,19 @@ function DietPlanPage() {
 
   const stats = user?.stats || defaultStats;
 
-  // Fetch diet recommendations
-  const fetchRecommendations = async () => {
+  // Fetch diet recommendations with custom data
+  const fetchRecommendationsWithData = async (customStats) => {
     try {
       setError(null);
       setLoading(true);
 
-      // Prepare user data for the API
       const userData = {
-        age: user?.age || stats.age || 25,
-        height: user?.height || stats.height || 170,
-        weight: user?.weight || stats.weight || 70,
-        activity_level: stats.activityLevel || 'moderately_active',
-        body_type: stats.bodyType || 'mesomorphic',
-        goal: stats.goal || 'maintain'
+        age: user?.age || customStats.age || 25,
+        height: user?.height || customStats.height || 170,
+        weight: user?.weight || customStats.weight || 70,
+        activity_level: customStats.activityLevel || 'moderately_active',
+        body_type: user?.bodyType || customStats.bodyType || 'mesomorphic',
+        goal: user?.goal || customStats.goal || 'maintain'
       };
 
       const response = await dietService.getRecommendation(userData);
@@ -55,12 +56,28 @@ function DietPlanPage() {
     }
   };
 
+  // Fetch diet recommendations
+  const fetchRecommendations = async () => {
+    await fetchRecommendationsWithData(stats);
+  };
+
   useEffect(() => {
-    // Fetch recommendations - will use defaults if user not loaded yet
-    // This allows the page to work even if user data is still loading
-    fetchRecommendations();
+    // Check if coming from yoga session
+    if (location.state?.yogaSession) {
+      setYogaSessionData(location.state.yogaSession);
+      // Adjust activity level based on yoga session
+      const adjustedStats = {
+        ...stats,
+        activityLevel: location.state.yogaSession.caloriesBurned > 100 ? 'very_active' : 'moderately_active'
+      };
+      // Auto-fetch recommendations with adjusted stats
+      fetchRecommendationsWithData(adjustedStats);
+    } else {
+      // Normal flow - fetch recommendations
+      fetchRecommendations();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [location.state]); // Run when location state changes
 
   const handleRegenerate = () => {
     setRegenerating(true);
@@ -150,6 +167,31 @@ function DietPlanPage() {
             </div>
           </div>
         </div>
+
+        {/* Yoga Session Completion Banner */}
+        {yogaSessionData && (
+          <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl p-6 mb-8">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-emerald-400 mb-2">Great Yoga Session! 🧘</h3>
+                <p className="text-slate-300 mb-3">
+                  You just completed a {yogaSessionData.duration} minute session with {yogaSessionData.accuracy}% accuracy, 
+                  burning {yogaSessionData.caloriesBurned} calories. Based on your activity, we've personalized your diet recommendations!
+                </p>
+                <button
+                  onClick={() => navigate('/progress')}
+                  className="text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-2"
+                >
+                  <Activity className="w-4 h-4" />
+                  View Your Progress
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error Banner - Show at top if error exists */}
         {error && (
@@ -322,7 +364,11 @@ function DietPlanPage() {
                                 </div>
                                 {item.Link && (
                                   <img 
-                                    src={item.Link} 
+                                    src={item.Link || '/images/placeholder-food.jpg'}
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EFood Image%3C/text%3E%3C/svg%3E';
+                                    }} 
                                     alt={item.Food_items}
                                     className="w-16 h-16 rounded-lg object-cover ml-3"
                                     onError={(e) => {

@@ -30,7 +30,7 @@ export const yogaService = {
 
   // Save yoga session
   saveSession: (sessionData) => {
-    return apiClient.post('/api/yoga/sessions', sessionData);
+    return apiClient.post('/pose/sessions', sessionData);
   },
 
   // Get user's yoga history

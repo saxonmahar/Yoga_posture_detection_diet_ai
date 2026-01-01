@@ -35,12 +35,35 @@ const loginController = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true, // Cannot be accessed by JS
       secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: "Strict", // CSRF protection
+      sameSite: process.env.NODE_ENV === "production" ? "Strict" : "Lax", // Lax for dev, Strict for prod
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/", // Ensure cookie is available for all paths
     });
 
-    const userData = user.toObject();
-    delete userData.password;
+    // Map user data to match frontend expectations (same structure as getMeController)
+    const userData = {
+      id: user._id,
+      name: user.fullName || user.name,
+      email: user.email,
+      age: user.age,
+      weight: user.weight,
+      height: user.height,
+      isPremium: user.isPremium || false,
+      level: user.fitnessLevel || 'beginner',
+      bodyType: user.bodyType || 'mesomorphic',
+      goal: user.goal || 'maintain',
+      bmi: user.bmi,
+      stats: {
+        totalWorkouts: user.stats?.totalWorkouts || 0,
+        currentStreak: user.stats?.currentStreak || 0,
+        averageAccuracy: user.stats?.averageAccuracy || 0,
+        goal: user.goal || 'maintain',
+        activityLevel: 'moderately_active',
+        weight: user.weight || 70,
+        height: user.height || 170,
+        age: user.age || 25
+      }
+    };
 
     res.status(200).json({
       success: true,

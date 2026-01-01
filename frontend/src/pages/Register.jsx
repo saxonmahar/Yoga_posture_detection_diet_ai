@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, Lock, Eye, EyeOff, Leaf, Heart } from "lucide-react";
+import { User, Mail, Lock, Eye, EyeOff, Leaf, Heart, Ruler, Weight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
@@ -10,6 +10,11 @@ export default function Register() {
     password: "",
     confirmPassword: "",
     level: "beginner",
+    age: "",
+    weight: "",
+    height: "",
+    bodyType: "mesomorphic",
+    goal: "maintain",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -18,12 +23,20 @@ export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // Calculate BMI from weight and height
+  const calculateBMI = (weight, height) => {
+    if (!weight || !height || weight <= 0 || height <= 0) return null;
+    // BMI = weight (kg) / (height (m))^2
+    const heightInMeters = height / 100;
+    return (weight / (heightInMeters * heightInMeters)).toFixed(2);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Frontend validation
-    if (!form.name || !form.email || !form.password || !form.confirmPassword) {
-      return alert("Please fill all fields");
+    if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.age || !form.weight || !form.height) {
+      return alert("Please fill all required fields");
     }
     if (!form.email.includes("@")) {
       return alert("Please enter a valid email");
@@ -34,15 +47,33 @@ export default function Register() {
     if (form.password !== form.confirmPassword) {
       return alert("Passwords do not match");
     }
+    if (form.age < 1 || form.age > 120) {
+      return alert("Please enter a valid age");
+    }
+    if (form.weight < 1 || form.weight > 500) {
+      return alert("Please enter a valid weight (1-500 kg)");
+    }
+    if (form.height < 50 || form.height > 300) {
+      return alert("Please enter a valid height (50-300 cm)");
+    }
 
     setLoading(true);
 
     try {
+      // Calculate BMI
+      const bmi = calculateBMI(parseFloat(form.weight), parseFloat(form.height));
+
       const result = await register({
         name: form.name,
         email: form.email,
         password: form.password,
         level: form.level,
+        age: parseInt(form.age),
+        weight: parseFloat(form.weight),
+        height: parseFloat(form.height),
+        bodyType: form.bodyType,
+        goal: form.goal,
+        bmi: bmi ? parseFloat(bmi) : null,
       });
 
       console.log("Registration successful:", result);
@@ -169,6 +200,121 @@ export default function Register() {
               >
                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+            </div>
+
+            {/* Age, Weight, Height Row */}
+            <div className="grid grid-cols-3 gap-3">
+              {/* Age */}
+              <div className="relative group">
+                <input
+                  type="number"
+                  placeholder="Age"
+                  value={form.age}
+                  onChange={(e) => handleInputChange("age", e.target.value)}
+                  required
+                  min="1"
+                  max="120"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Weight */}
+              <div className="relative group">
+                <input
+                  type="number"
+                  placeholder="Weight (kg)"
+                  value={form.weight}
+                  onChange={(e) => handleInputChange("weight", e.target.value)}
+                  required
+                  min="1"
+                  max="500"
+                  step="0.1"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Height */}
+              <div className="relative group">
+                <input
+                  type="number"
+                  placeholder="Height (cm)"
+                  value={form.height}
+                  onChange={(e) => handleInputChange("height", e.target.value)}
+                  required
+                  min="50"
+                  max="300"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-400/20 transition-all"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* BMI Display */}
+            {form.weight && form.height && parseFloat(form.weight) > 0 && parseFloat(form.height) > 0 && (
+              <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3">
+                <p className="text-sm text-green-400 font-medium">
+                  Your BMI: <span className="text-white">{calculateBMI(parseFloat(form.weight), parseFloat(form.height))}</span>
+                </p>
+              </div>
+            )}
+
+            {/* Body Type */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">
+                Body Type
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "ectomorphic", label: "Ectomorph", desc: "Naturally thin" },
+                  { value: "mesomorphic", label: "Mesomorph", desc: "Athletic build" },
+                  { value: "endomorphic", label: "Endomorph", desc: "Larger frame" },
+                ].map((type) => (
+                  <button
+                    key={type.value}
+                    type="button"
+                    onClick={() => handleInputChange("bodyType", type.value)}
+                    disabled={loading}
+                    className={`py-2.5 px-3 rounded-lg font-medium transition-all text-sm ${
+                      form.bodyType === type.value
+                        ? "bg-gradient-to-r from-green-500 to-cyan-500 text-white shadow-lg shadow-green-500/20"
+                        : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border border-slate-600"
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    title={type.desc}
+                  >
+                    {type.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Goal */}
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">
+                Your Goal
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "weight_loss", label: "Lose Weight" },
+                  { value: "maintain", label: "Maintain" },
+                  { value: "weight_gain", label: "Gain Weight" },
+                ].map((goal) => (
+                  <button
+                    key={goal.value}
+                    type="button"
+                    onClick={() => handleInputChange("goal", goal.value)}
+                    disabled={loading}
+                    className={`py-2.5 px-3 rounded-lg font-medium transition-all text-sm ${
+                      form.goal === goal.value
+                        ? "bg-gradient-to-r from-green-500 to-cyan-500 text-white shadow-lg shadow-green-500/20"
+                        : "bg-slate-700/50 text-slate-300 hover:bg-slate-600/50 border border-slate-600"
+                    } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {goal.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Experience Level */}
