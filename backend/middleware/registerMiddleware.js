@@ -44,6 +44,68 @@ const registerValidation = (req, res, next) => {
         "any.only": "Level must be beginner, intermediate, or advanced",
         "any.required": "Experience level is required",
       }),
+
+    age: Joi.number()
+      .integer()
+      .min(1)
+      .max(120)
+      .required()
+      .messages({
+        "number.base": "Age must be a valid number",
+        "number.min": "Age must be at least 1",
+        "number.max": "Age must not exceed 120",
+        "any.required": "Age is required",
+      }),
+
+    weight: Joi.number()
+      .min(1)
+      .max(500)
+      .required()
+      .messages({
+        "number.base": "Weight must be a valid number",
+        "number.min": "Weight must be at least 1 kg",
+        "number.max": "Weight must not exceed 500 kg",
+        "any.required": "Weight is required",
+      }),
+
+    height: Joi.number()
+      .min(50)
+      .max(300)
+      .required()
+      .messages({
+        "number.base": "Height must be a valid number",
+        "number.min": "Height must be at least 50 cm",
+        "number.max": "Height must not exceed 300 cm",
+        "any.required": "Height is required",
+      }),
+
+    bodyType: Joi.string()
+      .valid("ectomorphic", "mesomorphic", "endomorphic")
+      .optional()
+      .default("mesomorphic")
+      .messages({
+        "string.base": "Body type must be a valid string",
+        "any.only": "Body type must be ectomorphic, mesomorphic, or endomorphic",
+      }),
+
+    goal: Joi.string()
+      .valid("weight_loss", "maintain", "weight_gain", "muscle-gain")
+      .optional()
+      .default("maintain")
+      .messages({
+        "string.base": "Goal must be a valid string",
+        "any.only": "Goal must be weight_loss, maintain, weight_gain, or muscle-gain",
+      }),
+
+    bmi: Joi.number()
+      .min(10)
+      .max(100)
+      .optional()
+      .messages({
+        "number.base": "BMI must be a valid number",
+        "number.min": "BMI must be at least 10",
+        "number.max": "BMI must not exceed 100",
+      }),
   });
 
   const { error } = schema.validate(req.body, {

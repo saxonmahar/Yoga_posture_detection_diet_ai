@@ -5,7 +5,7 @@ import {
   Zap, Target, Users, Award, Activity, Clock,
   RotateCcw, Maximize2, Minimize2, Download, Share2,
   BarChart, TrendingUp, Heart, Star, HelpCircle,
-  Sparkles
+  Sparkles, Utensils, X, Volume2, VolumeX
 } from 'lucide-react';
 import PoseCamera from '../components/pose-detection/PoseCamera';
 import PoseFeedback from '../components/pose-detection/PoseFeedback';
@@ -13,6 +13,7 @@ import PoseInstructions from '../components/pose-detection/PoseInstructions';
 import { AnimatedPage, AnimatedCard, LoadingSpinner } from "../animations/framer-config.jsx";
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { yogaService } from '../services/yoga/yoga.service';
 
 // ML API Configuration
 const ML_API_URL = 'http://localhost:5000';
@@ -46,6 +47,11 @@ const PoseDetectionPage = () => {
   const [caloriesBurned, setCaloriesBurned] = useState(0);
   const [perfectPoses, setPerfectPoses] = useState(0);
   const [totalDetections, setTotalDetections] = useState(0);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [savingSession, setSavingSession] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [lastSpokenMessage, setLastSpokenMessage] = useState('');
   
   // Available yoga poses
   const YOGA_POSES = [
@@ -107,6 +113,10 @@ const PoseDetectionPage = () => {
       }
       if (interval) {
         clearInterval(interval);
+      }
+      // Cleanup TTS on unmount
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
       }
     };
   }, [isTimerRunning]);
@@ -230,6 +240,10 @@ const PoseDetectionPage = () => {
       clearInterval(detectionIntervalRef.current);
       detectionIntervalRef.current = null;
     }
+    // Stop any ongoing TTS
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
     console.log('🛑 Detection stopped');
   };
 
@@ -242,15 +256,41 @@ const PoseDetectionPage = () => {
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
       
+      // Generate TTS-friendly feedback messages
+      const feedbackMessages = [];
+      const isCorrect = Math.random() > 0.3;
+      
+      if (isCorrect) {
+        feedbackMessages.push('Great form! Keep your back straight.');
+        feedbackMessages.push('Perfect balance!');
+      } else {
+        // Generate specific correction messages for TTS
+        const corrections = [
+          'Move your hand to the right',
+          'Move your hand to the left',
+          'Move your hand up',
+          'Move your hand down',
+          'Turn your body to the right',
+          'Turn your body to the left',
+          'Straighten your back',
+          'Bend your knee slightly',
+          'Align your shoulders',
+          'Shift your weight to the right',
+          'Shift your weight to the left',
+          'Lift your arm higher',
+          'Lower your arm slightly'
+        ];
+        const randomCorrection = corrections[Math.floor(Math.random() * corrections.length)];
+        feedbackMessages.push(randomCorrection);
+        feedbackMessages.push('Adjust your posture');
+      }
+      
       const mockResult = {
         success: true,
         pose_type: selectedPose,
         confidence: Math.random() * 0.3 + 0.7,
-        is_correct: Math.random() > 0.3,
-        feedback: [
-          Math.random() > 0.5 ? 'Great form! Keep your back straight.' : 'Try to align your knees better.',
-          Math.random() > 0.5 ? 'Perfect balance!' : 'Shift weight slightly to the right.'
-        ],
+        is_correct: isCorrect,
+        feedback: feedbackMessages,
         landmarks: Array.from({ length: 17 }, () => ({
           x: Math.random(),
           y: Math.random(),
@@ -292,6 +332,17 @@ const PoseDetectionPage = () => {
         icon: getCorrectionIcon(message)
       }));
       setCorrections(newCorrections);
+      
+      // Speak the first feedback message using TTS
+      if (result.feedback && result.feedback.length > 0) {
+        if (!result.is_correct) {
+          // Speak correction feedback
+          speakFeedback(result.feedback[0]);
+        } else if (result.is_correct && (result.confidence || confidence) > 0.8) {
+          // Speak positive feedback for good form
+          speakFeedback('Great form! Keep it up');
+        }
+      }
     }
     
     if (result.timestamp) {
@@ -318,6 +369,70 @@ const PoseDetectionPage = () => {
       } catch (error) {
         console.error('Error updating user stats:', error);
       }
+    }
+  };
+
+  // Text-to-Speech function for pose feedback
+  const speakFeedback = (message) => {
+    if (!ttsEnabled || !message) return;
+    
+    // Don't repeat the same message
+    if (lastSpokenMessage === message) return;
+    
+    // Check if browser supports speech synthesis
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      // Convert feedback message to simpler TTS-friendly text
+      let ttsMessage = message;
+      
+      // Simplify common feedback phrases
+      if (message.toLowerCase().includes('move your hand')) {
+        if (message.toLowerCase().includes('right')) {
+          ttsMessage = 'Move your hand to the right';
+        } else if (message.toLowerCase().includes('left')) {
+          ttsMessage = 'Move your hand to the left';
+        } else if (message.toLowerCase().includes('up')) {
+          ttsMessage = 'Move your hand up';
+        } else if (message.toLowerCase().includes('down')) {
+          ttsMessage = 'Move your hand down';
+        }
+      } else if (message.toLowerCase().includes('turn')) {
+        if (message.toLowerCase().includes('right')) {
+          ttsMessage = 'Turn your body to the right';
+        } else if (message.toLowerCase().includes('left')) {
+          ttsMessage = 'Turn your body to the left';
+        }
+      } else if (message.toLowerCase().includes('straighten')) {
+        ttsMessage = 'Straighten your back';
+      } else if (message.toLowerCase().includes('bend')) {
+        if (message.toLowerCase().includes('knee')) {
+          ttsMessage = 'Bend your knee slightly';
+        }
+      } else if (message.toLowerCase().includes('align')) {
+        ttsMessage = 'Align your posture';
+      } else if (message.toLowerCase().includes('balance')) {
+        ttsMessage = 'Focus on your balance';
+      } else if (message.toLowerCase().includes('great') || message.toLowerCase().includes('perfect') || message.toLowerCase().includes('excellent')) {
+        ttsMessage = 'Great form! Keep it up';
+      } else {
+        // Use the original message but simplify it
+        ttsMessage = message.length > 50 ? message.substring(0, 50) + '...' : message;
+      }
+      
+      const utterance = new SpeechSynthesisUtterance(ttsMessage);
+      utterance.rate = 0.9; // Slightly slower for clarity
+      utterance.pitch = 1.0;
+      utterance.volume = 0.8;
+      utterance.lang = 'en-US';
+      
+      utterance.onend = () => {
+        setLastSpokenMessage('');
+      };
+      
+      window.speechSynthesis.speak(utterance);
+      setLastSpokenMessage(message);
     }
   };
 
@@ -404,6 +519,70 @@ const PoseDetectionPage = () => {
     return Math.round((perfectPoses / totalDetections) * 100);
   };
 
+  // Complete yoga session
+  const handleCompleteSession = async () => {
+    if (sessionTimer === 0) {
+      alert('Please start a session first!');
+      return;
+    }
+
+    setSavingSession(true);
+    try {
+      const sessionData = {
+        userId: user?.id,
+        sessionName: `Yoga Session - ${getCurrentPoseDetails().name}`,
+        sessionType: 'yoga',
+        startTime: new Date(Date.now() - sessionTimer * 1000),
+        endTime: new Date(),
+        duration: Math.floor(sessionTimer / 60), // minutes
+        selectedPose: selectedPose,
+        totalPoses: totalDetections,
+        avgAccuracy: calculateAccuracy(),
+        caloriesBurned: caloriesBurned,
+        poses: poseHistory.map((pose, index) => ({
+          poseName: pose.pose || selectedPose,
+          accuracyScore: pose.confidence || confidence,
+          timestamp: pose.timestamp || new Date().toISOString(),
+          isCorrect: pose.is_correct || false
+        })),
+        status: 'completed'
+      };
+
+      // Save session to backend
+      await yogaService.saveSession(sessionData);
+
+      // Update user stats
+      if (updateUserStats) {
+        updateUserStats({
+          totalWorkouts: (user?.stats?.totalWorkouts || 0) + 1,
+          totalCaloriesBurned: (user?.stats?.totalCaloriesBurned || 0) + caloriesBurned,
+          averageAccuracy: calculateAccuracy()
+        });
+      }
+
+      setSessionCompleted(true);
+      setShowCompletionModal(true);
+    } catch (error) {
+      console.error('Error saving session:', error);
+      alert('Failed to save session. Please try again.');
+    } finally {
+      setSavingSession(false);
+    }
+  };
+
+  // Navigate to diet page with session data
+  const handleGoToDiet = () => {
+    const sessionData = {
+      yogaSession: {
+        duration: Math.floor(sessionTimer / 60),
+        caloriesBurned: caloriesBurned,
+        accuracy: calculateAccuracy(),
+        pose: selectedPose
+      }
+    };
+    navigate('/diet-plan', { state: sessionData });
+  };
+
   // Reset session
   const resetSession = () => {
     stopWebcam();
@@ -417,6 +596,8 @@ const PoseDetectionPage = () => {
     setCorrections([]);
     setCapturedImage(null);
     setIsTimerRunning(false);
+    setSessionCompleted(false);
+    setShowCompletionModal(false);
     autoStartedRef.current = false;
   };
 
@@ -725,6 +906,24 @@ Keep up the great work! 🧘
                     >
                       <Download className="w-5 h-5" />
                       Download Report
+                    </button>
+                    
+                    <button
+                      onClick={handleCompleteSession}
+                      disabled={sessionTimer === 0 || savingSession || sessionCompleted}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white rounded-xl font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {savingSession ? (
+                        <>
+                          <LoadingSpinner size={20} />
+                          <span>Saving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-5 h-5" />
+                          <span>Complete Session</span>
+                        </>
+                      )}
                     </button>
                   </div>
 
@@ -1056,6 +1255,27 @@ Keep up the great work! 🧘
                   </h2>
                   
                   <div className="space-y-3">
+                    {/* TTS Toggle */}
+                    <button
+                      onClick={() => {
+                        setTtsEnabled(!ttsEnabled);
+                        if (ttsEnabled) {
+                          window.speechSynthesis?.cancel();
+                        }
+                      }}
+                      className={`w-full p-3 rounded-xl transition-all flex items-center justify-between ${
+                        ttsEnabled
+                          ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
+                          : 'bg-slate-700/50 border border-slate-600 text-slate-400'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {ttsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+                        <span className="font-medium">Voice Feedback</span>
+                      </div>
+                      <span className="text-sm">{ttsEnabled ? 'ON' : 'OFF'}</span>
+                    </button>
+                    
                     <button
                       onClick={handleStartWebcam}
                       disabled={isWebcamActive}
@@ -1211,6 +1431,97 @@ Keep up the great work! 🧘
           </div>
         </div>
       </div>
+
+      {/* Session Completion Modal */}
+      {showCompletionModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl border border-emerald-500/30 p-8 max-w-2xl w-full shadow-2xl">
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-12 h-12 text-white" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-2">Session Complete! 🎉</h2>
+              <p className="text-slate-400">Great job on your yoga practice!</p>
+            </div>
+
+            {/* Session Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-slate-800/50 p-4 rounded-xl">
+                <p className="text-sm text-slate-400 mb-1">Duration</p>
+                <p className="text-2xl font-bold text-white">{formatTime(sessionTimer)}</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-xl">
+                <p className="text-sm text-slate-400 mb-1">Calories</p>
+                <p className="text-2xl font-bold text-white">{caloriesBurned}</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-xl">
+                <p className="text-sm text-slate-400 mb-1">Accuracy</p>
+                <p className="text-2xl font-bold text-white">{calculateAccuracy()}%</p>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-xl">
+                <p className="text-sm text-slate-400 mb-1">Poses</p>
+                <p className="text-2xl font-bold text-white">{totalDetections}</p>
+              </div>
+            </div>
+
+            {/* Feedback */}
+            <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-6">
+              <h3 className="font-semibold text-emerald-400 mb-2 flex items-center gap-2">
+                <Star className="w-5 h-5" />
+                Your Performance
+              </h3>
+              <p className="text-slate-300">
+                {calculateAccuracy() >= 80 
+                  ? "Excellent form! You maintained great posture throughout the session."
+                  : calculateAccuracy() >= 60
+                  ? "Good work! Keep practicing to improve your form."
+                  : "Keep practicing! Focus on the corrections to improve your accuracy."}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={handleGoToDiet}
+                className="flex-1 px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+              >
+                <Utensils className="w-5 h-5" />
+                Get Diet Recommendations
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompletionModal(false);
+                  navigate('/progress');
+                }}
+                className="flex-1 px-6 py-4 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+              >
+                <BarChart className="w-5 h-5" />
+                View Progress
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompletionModal(false);
+                  navigate('/dashboard');
+                }}
+                className="px-6 py-4 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+              >
+                <ArrowRight className="w-5 h-5 rotate-180" />
+                Back to Dashboard
+              </button>
+              <button
+                onClick={() => {
+                  setShowCompletionModal(false);
+                  resetSession();
+                }}
+                className="px-6 py-4 bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+              >
+                <X className="w-5 h-5" />
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AnimatedPage>
   );
 };

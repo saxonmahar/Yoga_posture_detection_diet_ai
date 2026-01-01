@@ -8,7 +8,7 @@ const registerController = async (req, res) => {
     | 1. Extract validated data from request
     |--------------------------------------------------------------------------
     */
-    const { name, email, password, level } = req.body;
+    const { name, email, password, level, age, weight, height, bodyType, goal, bmi } = req.body;
 
     /*
     |--------------------------------------------------------------------------
@@ -34,7 +34,18 @@ const registerController = async (req, res) => {
 
     /*
     |--------------------------------------------------------------------------
-    | 4. Create user document
+    | 4. Calculate BMI if not provided
+    |--------------------------------------------------------------------------
+    */
+    let calculatedBMI = bmi;
+    if (!calculatedBMI && weight && height) {
+      const heightInMeters = height / 100;
+      calculatedBMI = weight / (heightInMeters * heightInMeters);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | 5. Create user document
     |--------------------------------------------------------------------------
     */
     const user = await User.create({
@@ -42,11 +53,17 @@ const registerController = async (req, res) => {
       email,
       password: hashedPassword,
       fitnessLevel: level,
+      age: age || undefined,
+      weight: weight || undefined,
+      height: height || undefined,
+      bmi: calculatedBMI || undefined,
+      bodyType: bodyType || "mesomorphic",
+      goal: goal || "maintain",
     });
 
     /*
     |--------------------------------------------------------------------------
-    | 5. Send response (password already excluded by schema)
+    | 6. Send response (password already excluded by schema)
     |--------------------------------------------------------------------------
     */
     return res.status(201).json({
@@ -57,7 +74,7 @@ const registerController = async (req, res) => {
   } catch (error) {
     /*
     |--------------------------------------------------------------------------
-    | 6. Handle known MongoDB errors
+    | 7. Handle known MongoDB errors
     |--------------------------------------------------------------------------
     */
     if (error.code === 11000) {

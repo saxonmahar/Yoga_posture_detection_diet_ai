@@ -32,14 +32,13 @@ import {
   Sun,
   Droplets,
   Wind,
-  LogOut,
   AlertCircle // Added AlertCircle icon
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 function Dashboard() {
   const navigate = useNavigate()
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
 
   // Check Flask ML server status
   const checkMLServer = async () => {
@@ -257,11 +256,6 @@ function Dashboard() {
     fats: { consumed: 42, target: 65 }
   }
 
-  // Add this function to handle logout
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -279,7 +273,7 @@ function Dashboard() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-emerald-200 to-blue-200 bg-clip-text text-transparent">
-                  Welcome back, {user?.name || 'Yogi'}!
+                  Welcome back, {user?.name || user?.fullName || 'Yogi'}!
                 </h1>
                 <div className="animate-bounce">👋</div>
               </div>
@@ -322,13 +316,6 @@ function Dashboard() {
                     Upgrade to Premium
                   </>
                 )}
-              </button>
-              <button
-                onClick={handleLogout}
-                className="px-6 py-3 bg-slate-800/50 hover:bg-slate-700/50 backdrop-blur-sm rounded-xl font-semibold transition-all border border-slate-700 shadow-lg flex items-center gap-2"
-              >
-                <LogOut className="w-5 h-5" />
-                Logout
               </button>
             </div>
           </div>

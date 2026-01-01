@@ -1,8 +1,10 @@
 // src/pages/ProgressPage.jsx
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { TrendingUp, Award, Activity, Flame } from 'lucide-react'
 
-function ProgressPage({ onNavigate, user }) {
+function ProgressPage({ user }) {
+  const navigate = useNavigate()
   // 添加默认用户数据以防未传入
   const defaultUser = {
     stats: {
@@ -104,13 +106,13 @@ function ProgressPage({ onNavigate, user }) {
           </p>
           <div className="flex space-x-4">
             <button
-              onClick={() => onNavigate && onNavigate('pose-detection')}
+              onClick={() => navigate('/pose-detection')}
               className="px-4 py-2 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-lg transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40"
             >
               Continue Practice
             </button>
             <button
-              onClick={() => onNavigate && onNavigate('dashboard')}
+              onClick={() => navigate('/dashboard')}
               className="px-4 py-2 bg-slate-700/50 hover:bg-slate-600/50 backdrop-blur-sm text-white rounded-lg transition-all border border-slate-600 hover:border-green-400/50"
             >
               Back to Dashboard

@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // 👈 start true for initial load
 
   // Register
-  const register = async ({ name, email, password, level }) => {
+  const register = async ({ name, email, password, level, age, weight, height, bodyType, goal, bmi }) => {
     setLoading(true);
     try {
       const response = await registerRequest({
@@ -21,7 +21,13 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
         confirmPassword: password,
-        level
+        level,
+        age,
+        weight,
+        height,
+        bodyType,
+        goal,
+        bmi
       });
 
       setUser(response.user);
