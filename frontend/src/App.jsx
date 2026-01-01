@@ -6,7 +6,12 @@ import ScrollToTop from './components/ScrollToTop' // <-- make sure this path is
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <ScrollToTop /> {/* <-- scrolls to top on every route change */}
       <AuthProvider>
         <AppRouter />

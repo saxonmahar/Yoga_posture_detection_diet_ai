@@ -18,9 +18,9 @@
     "react-webcam": "^7.2.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.17",
+    "@tailwindcss/vite": "^4.1.18",
     "@vitejs/plugin-react": "^4.2.1",
-    "tailwindcss": "^4.0.0",
+    "tailwindcss": "^4.1.18",
     "vite": "^5.0.8"
   }
 }
