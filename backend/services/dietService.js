@@ -3,7 +3,7 @@ const axios = require('axios');
 
 class DietService {
     constructor() {
-        this.pythonMLUrl = process.env.PYTHON_ML_URL || 'http://localhost:5001';
+        this.pythonMLUrl = process.env.PYTHON_ML_URL || 'http://localhost:5000';
     }
 
     // Log a meal
@@ -27,11 +27,35 @@ class DietService {
     async getDietRecommendation(userData) {
         try {
             console.log('🍎 Getting diet recommendation from Python ML...');
+            console.log('📤 Sending data to:', `${this.pythonMLUrl}/recommend`);
+            console.log('📦 User data:', userData);
+            
+            // Map user data to Python Flask expected format
+            const pythonData = {
+                age: userData.age || 25,
+                height: userData.height || 170,
+                weight: userData.weight || 70,
+                activity_level: userData.activity_level || userData.activityLevel || 'moderately_active',
+                body_type: userData.body_type || userData.bodyType || 'mesomorphic',
+                goal: userData.goal || 'maintain'
+            };
+
+            // Map goal format if needed
+            if (pythonData.goal === 'weight-loss') {
+                pythonData.goal = 'weight_loss';
+            } else if (pythonData.goal === 'weight-gain' || pythonData.goal === 'muscle-gain') {
+                pythonData.goal = 'weight_gain';
+            }
             
             const response = await axios.post(
-                `${this.pythonMLUrl}/api/diet-recommendation`,
-                userData,
-                { timeout: 15000 }
+                `${this.pythonMLUrl}/recommend`,
+                pythonData,
+                { 
+                    timeout: 15000,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
 
             return {
@@ -42,6 +66,10 @@ class DietService {
 
         } catch (error) {
             console.error('Diet API error:', error.message);
+            if (error.response) {
+                console.error('Response status:', error.response.status);
+                console.error('Response data:', error.response.data);
+            }
             
             // Fallback recommendation
             return {

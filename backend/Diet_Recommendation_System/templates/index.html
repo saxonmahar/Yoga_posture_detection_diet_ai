@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NutriGuide - AI-Powered Diet Recommendations</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        },
+                        secondary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        },
+                        dark: {
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .meal-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            perspective: 1000px;
+        }
+        
+        .meal-card:hover {
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .dark .meal-card {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        
+        .dark .meal-card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+        
+        .nutri-badge {
+            transition: all 0.2s ease;
+        }
+        
+        .nutri-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        .food-image {
+            transition: transform 0.5s ease;
+        }
+        
+        .food-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .glow {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+            }
+            to {
+                box-shadow: 0 0 15px rgba(59, 130, 246, 0.8);
+            }
+        }
+        
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(to right, #3b82f6, #8b5cf6);
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #0ea5e9;
+        }
+        
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #0ea5e9;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-dark-900 dark:text-gray-200 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white dark:bg-dark-800 shadow-sm sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <i class="fas fa-utensils text-primary-600 dark:text-primary-400 text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-gray-800 dark:text-white">NutriGuide</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="themeToggle" class="p-2 rounded-full focus:outline-none hover:bg-gray-100 dark:hover:bg-dark-700 transition">
+                        <i class="fas fa-moon text-gray-400 dark:text-yellow-300 hidden dark:block"></i>
+                        <i class="fas fa-sun text-yellow-400 dark:text-gray-300 block dark:hidden"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Input Page -->
+        <div id="inputPage" class="fade-in">
+            <div class="max-w-4xl mx-auto bg-white dark:bg-dark-800 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-dark-700">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-primary-600 to-secondary-600 text-white py-8 px-8 text-center">
+                    <h1 class="text-3xl font-bold">AI-Powered Diet Recommendations</h1>
+                    <p class="mt-2 opacity-90">Get personalized meal plans tailored to your body and goals</p>
+                </div>
+                
+                <!-- Form Section -->
+                <div class="p-8">
+                    <form id="dietForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Personal Info -->
+                        <div class="md:col-span-2">
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b pb-2 border-gray-200 dark:border-gray-700 flex items-center">
+                                <i class="fas fa-user-circle mr-2 text-primary-500"></i>
+                                Personal Information
+                            </h3>
+                        </div>
+                        
+                        <div>
+                            <label for="age" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Age</label>
+                            <div class="relative">
+                                <input type="number" id="age" name="age" min="10" max="100" 
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3 border" 
+                                    placeholder="e.g. 28" required>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <span class="text-gray-500 text-sm">years</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="gender" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gender</label>
+                            <select id="gender" name="gender" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3 border">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="height" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Height</label>
+                            <div class="relative">
+                                <input type="number" id="height" name="height" min="100" max="250" 
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3 border" 
+                                    placeholder="e.g. 175" required>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <span class="text-gray-500 text-sm">cm</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Weight</label>
+                            <div class="relative">
+                                <input type="number" id="weight" name="weight" min="30" max="200" 
+                                    class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3 border" 
+                                    placeholder="e.g. 70" required>
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <span class="text-gray-500 text-sm">kg</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lifestyle Info -->
+                        <div class="md:col-span-2 mt-4">
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b pb-2 border-gray-200 dark:border-gray-700 flex items-center">
+                                <i class="fas fa-heartbeat mr-2 text-primary-500"></i>
+                                Lifestyle Information
+                            </h3>
+                        </div>
+                        
+                        <div>
+                            <label for="activity_level" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Activity Level</label>
+                            <select id="activity_level" name="activity_level" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3 border" required>
+                                <option value="sedentary">Sedentary (little or no exercise)</option>
+                                <option value="lightly_active">Lightly Active (light exercise 1-3 days/week)</option>
+                                <option value="moderately_active" selected>Moderately Active (moderate exercise 3-5 days/week)</option>
+                                <option value="very_active">Very Active (hard exercise 6-7 days/week)</option>
+                                <option value="extra_active">Extra Active (very hard exercise & physical job)</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="body_type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Body Type</label>
+                            <select id="body_type" name="body_type" class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-dark-700 shadow-sm focus:border-primary-500 focus:ring-primary-500 p-3 border" required>
+                                <option value="endomorphic">Endomorphic (tend to store fat)</option>
+                                <option value="ectomorphic">Ectomorphic (naturally slim)</option>
+                                <option value="mesomorphic" selected>Mesomorphic (naturally muscular)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Goals -->
+                        <div class="md:col-span-2 mt-4">
+                            <h3 class="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b pb-2 border-gray-200 dark:border-gray-700 flex items-center">
+                                <i class="fas fa-bullseye mr-2 text-primary-500"></i>
+                                Your Goals
+                            </h3>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label for="goal" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Primary Goal</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="flex items-center p-4 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-primary-500 cursor-pointer transition">
+                                    <input type="radio" name="goal" value="weight_loss" class="h-4 w-4 text-primary-600 focus:ring-primary-500">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Weight Loss</span>
+                                        <span class="block text-xs text-gray-500 dark:text-gray-400">Reduce body fat</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-4 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-primary-500 cursor-pointer transition">
+                                    <input type="radio" name="goal" value="maintain" class="h-4 w-4 text-primary-600 focus:ring-primary-500" checked>
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Maintain Weight</span>
+                                        <span class="block text-xs text-gray-500 dark:text-gray-400">Stay at current weight</span>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-4 rounded-lg border border-gray-300 dark:border-gray-600 hover:border-primary-500 cursor-pointer transition">
+                                    <input type="radio" name="goal" value="weight_gain" class="h-4 w-4 text-primary-600 focus:ring-primary-500">
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-medium text-gray-700 dark:text-gray-300">Weight Gain</span>
+                                        <span class="block text-xs text-gray-500 dark:text-gray-400">Build muscle mass</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2 mt-6">
+                            <button type="submit" class="w-full bg-gradient-to-r from-primary-600 to-secondary-600 hover:from-primary-700 hover:to-secondary-700 text-white font-bold py-4 px-6 rounded-lg transition duration-300 shadow-lg flex items-center justify-center glow">
+                                <i class="fas fa-magic mr-2"></i>
+                                Generate My Personalized Diet Plan
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="max-w-4xl mx-auto mt-8 text-center text-gray-600 dark:text-gray-400 text-sm">
+                <p><i class="fas fa-lock mr-1"></i> Your data is processed securely and never shared with third parties.</p>
+            </div>
+        </div>
+        
+        <!-- Results Page -->
+        <div id="resultsPage" class="hidden fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <button id="backButton" class="flex items-center text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Input
+                </button>
+                <div class="flex space-x-3">
+                    <button id="saveButton" class="bg-white dark:bg-dark-700 hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 flex items-center">
+                        <i class="fas fa-bookmark mr-2"></i>
+                        Save Plan
+                    </button>
+                    <button id="printButton" class="bg-white dark:bg-dark-700 hover:bg-gray-100 dark:hover:bg-dark-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-lg shadow-sm border border-gray-300 dark:border-gray-600 flex items-center">
+                        <i class="fas fa-print mr-2"></i>
+                        Print Plan
+                    </button>
+                </div>
+            </div>
+            
+            <div class="max-w-6xl mx-auto bg-white dark:bg-dark-800 rounded-xl shadow-lg overflow-hidden mb-8 border border-gray-200 dark:border-dark-700">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-primary-600 to-secondary-600 text-white py-6 px-8">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h1 class="text-2xl font-bold">Your Personalized Diet Plan</h1>
+                            <p class="mt-1 opacity-90" id="planDate"></p>
+                        </div>
+                        <div class="bg-white dark:bg-dark-700 text-primary-600 dark:text-primary-400 px-4 py-2 rounded-full text-sm font-semibold shadow-sm">
+                            <span id="goalBadge"></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary Cards -->
+                <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="bg-gray-50 dark:bg-dark-700 p-5 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">TDEE</h3>
+                            <p class="mt-1 text-3xl font-bold text-primary-600 dark:text-primary-400" id="tdeeDisplay"></p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Estimated daily energy expenditure</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-dark-700 p-5 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Target Calories</h3>
+                            <p class="mt-1 text-3xl font-bold text-secondary-600 dark:text-secondary-400" id="caloriesDisplay"></p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Daily calorie target for your goal</p>
+                        </div>
+                        <div class="bg-gray-50 dark:bg-dark-700 p-5 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Macro Split</h3>
+                            <p class="mt-1 text-xl font-bold text-gray-800 dark:text-gray-200" id="macroSplit"></p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Protein / Carbs / Fats</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Meal Recommendations -->
+                <div class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <!-- Breakfast -->
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 flex items-center">
+                                    <span class="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 p-2 rounded-full mr-3">
+                                        <i class="fas fa-sun"></i>
+                                    </span>
+                                    Breakfast
+                                </h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Start your day with energy</p>
+                            </div>
+                            <div class="bg-green-50 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm font-medium">
+                                <span id="breakfastCalories"></span> kcal
+                            </div>
+                        </div>
+                        
+                        <div id="breakfastItems" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Breakfast items will be inserted here -->
+                            <div class="text-center py-10 text-gray-400">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <p>Loading recommendations...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Lunch -->
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 flex items-center">
+                                    <span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 p-2 rounded-full mr-3">
+                                        <i class="fas fa-sun"></i>
+                                    </span>
+                                    Lunch
+                                </h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Midday fuel for your body</p>
+                            </div>
+                            <div class="bg-yellow-50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-3 py-1 rounded-full text-sm font-medium">
+                                <span id="lunchCalories"></span> kcal
+                            </div>
+                        </div>
+                        
+                        <div id="lunchItems" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Lunch items will be inserted here -->
+                            <div class="text-center py-10 text-gray-400">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <p>Loading recommendations...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dinner -->
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 flex items-center">
+                                    <span class="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 p-2 rounded-full mr-3">
+                                        <i class="fas fa-moon"></i>
+                                    </span>
+                                    Dinner
+                                </h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Finish your day right</p>
+                            </div>
+                            <div class="bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm font-medium">
+                                <span id="dinnerCalories"></span> kcal
+                            </div>
+                        </div>
+                        
+                        <div id="dinnerItems" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Dinner items will be inserted here -->
+                            <div class="text-center py-10 text-gray-400">
+                                <i class="fas fa-spinner fa-spin fa-2x mb-2"></i>
+                                <p>Loading recommendations...</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Snacks (optional) -->
+                    <div class="p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 flex items-center">
+                                    <span class="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 p-2 rounded-full mr-3">
+                                        <i class="fas fa-apple-alt"></i>
+                                    </span>
+                                    Healthy Snacks
+                                </h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Keep your metabolism active</p>
+                            </div>
+                            <div class="bg-purple-50 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm font-medium">
+                                ~200-300 kcal
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-gray-50 dark:bg-dark-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                                <div class="h-32 bg-gray-200 dark:bg-gray-600 rounded-md mb-2 overflow-hidden">
+                                    <img src="https://source.unsplash.com/random/300x200/?yogurt+berries" alt="Greek Yogurt" class="w-full h-full object-cover food-image">
+                                </div>
+                                <h3 class="font-semibold text-gray-800 dark:text-gray-200">Greek Yogurt</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">With berries</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">~150 kcal</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                                <div class="h-32 bg-gray-200 dark:bg-gray-600 rounded-md mb-2 overflow-hidden">
+                                    <img src="https://source.unsplash.com/random/300x200/?mixed+nuts" alt="Mixed Nuts" class="w-full h-full object-cover food-image">
+                                </div>
+                                <h3 class="font-semibold text-gray-800 dark:text-gray-200">Mixed Nuts</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Handful (30g)</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">~200 kcal</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                                <div class="h-32 bg-gray-200 dark:bg-gray-600 rounded-md mb-2 overflow-hidden">
+                                    <img src="https://source.unsplash.com/random/300x200/?vegetable+sticks" alt="Vegetable Sticks" class="w-full h-full object-cover food-image">
+                                </div>
+                                <h3 class="font-semibold text-gray-800 dark:text-gray-200">Vegetable Sticks</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">With hummus</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">~120 kcal</p>
+                            </div>
+                            <div class="bg-gray-50 dark:bg-dark-700 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                                <div class="h-32 bg-gray-200 dark:bg-gray-600 rounded-md mb-2 overflow-hidden">
+                                    <img src="https://source.unsplash.com/random/300x200/?protein+shake" alt="Protein Shake" class="w-full h-full object-cover food-image">
+                                </div>
+                                <h3 class="font-semibold text-gray-800 dark:text-gray-200">Protein Shake</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">With almond milk</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">~180 kcal</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Tips & Notes -->
+                <div class="bg-gray-50 dark:bg-dark-700 p-6 border-t border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-200 mb-3 flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                        Nutrition Tips
+                    </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-white dark:bg-dark-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <i class="fas fa-tint text-blue-400 mr-2"></i>
+                                Hydration
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Drink at least 2-3 liters of water daily. Proper hydration supports metabolism and helps control appetite.</p>
+                        </div>
+                        <div class="bg-white dark:bg-dark-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <i class="fas fa-clock text-purple-400 mr-2"></i>
+                                Meal Timing
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Try to eat every 3-4 hours to maintain energy levels and prevent overeating at main meals.</p>
+                        </div>
+                        <div class="bg-white dark:bg-dark-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <i class="fas fa-balance-scale text-green-400 mr-2"></i>
+                                Portion Control
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Use smaller plates and bowls to help control portion sizes without feeling deprived.</p>
+                        </div>
+                        <div class="bg-white dark:bg-dark-800 p-4 rounded-lg border border-gray-200 dark:border-gray-600 transition hover:shadow-md">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                                <i class="fas fa-utensils text-red-400 mr-2"></i>
+                                Food Variety
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Rotate different foods weekly to ensure a wide range of nutrients and prevent dietary boredom.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="max-w-6xl mx-auto bg-white dark:bg-dark-800 rounded-xl shadow-lg overflow-hidden mt-8 border border-gray-200 dark:border-dark-700">
+                <div class="p-6">
+                    <h2 class="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
+                        <i class="fas fa-calendar-alt text-primary-600 dark:text-primary-400 mr-2"></i>
+                        Weekly Meal Planner
+                    </h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-dark-700">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Day</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Breakfast</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Lunch</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Dinner</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white dark:bg-dark-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Monday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Oatmeal with berries</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Grilled chicken salad</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Salmon with quinoa</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Tuesday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Greek yogurt with nuts</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Turkey wrap</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Stir-fried tofu</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Wednesday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Smoothie bowl</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Quinoa salad</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Grilled shrimp</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Thursday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Avocado toast</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Lentil soup</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Chicken stir-fry</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Friday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Egg white omelet</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Tuna salad</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Beef and broccoli</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Saturday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Pancakes (protein)</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Burger (lean)</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Pasta (whole grain)</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-dark-700 transition">
+                                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-200">Sunday</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Chia pudding</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">BBQ chicken</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">Vegetable curry</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                        <i class="fas fa-info-circle mr-2 text-primary-500"></i>
+                        <p>This is a sample weekly plan. For personalized recommendations, consult with a nutritionist.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="max-w-6xl mx-auto mt-8 text-center text-gray-600 dark:text-gray-400 text-sm bg-white dark:bg-dark-800 p-4 rounded-lg border border-gray-200 dark:border-dark-700">
+                <p><i class="fas fa-exclamation-triangle mr-1 text-yellow-500"></i> This plan is generated based on your inputs and should be used as a general guideline. Consult with a healthcare professional before making significant dietary changes.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        // Form submission
+        document.getElementById('dietForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generating Your Plan...';
+            
+            // Get form data
+            const formData = {
+                age: document.getElementById('age').value,
+                height: document.getElementById('height').value,
+                weight: document.getElementById('weight').value,
+                activity_level: document.getElementById('activity_level').value,
+                body_type: document.getElementById('body_type').value,
+                goal: document.querySelector('input[name="goal"]:checked').value,
+                gender: document.getElementById('gender').value
+            };
+            
+            // Make API call to Flask backend
+            fetch('/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                updateResultsPage(formData, data);
+                document.getElementById('inputPage').classList.add('hidden');
+                document.getElementById('resultsPage').classList.remove('hidden');
+                window.scrollTo(0, 0);
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> Generate My Personalized Diet Plan';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while generating recommendations. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-magic mr-2"></i> Generate My Personalized Diet Plan';
+            });
+        });
+
+        // Back button functionality
+        document.getElementById('backButton').addEventListener('click', function() {
+            document.getElementById('resultsPage').classList.add('hidden');
+            document.getElementById('inputPage').classList.remove('hidden');
+            window.scrollTo(0, 0);
+        });
+
+        // Print button functionality
+        document.getElementById('printButton').addEventListener('click', function() {
+            window.print();
+        });
+
+        // Save button functionality
+        document.getElementById('saveButton').addEventListener('click', function() {
+            alert('Your plan has been saved to your account!');
+        });
+
+        // Update results page with data
+        function updateResultsPage(formData, data) {
+            // Set current date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('planDate').textContent = new Date().toLocaleDateString('en-US', options);
+            
+            // Update goal badge
+            const goalText = {
+                'weight_loss': 'Weight Loss',
+                'maintain': 'Maintain Weight',
+                'weight_gain': 'Weight Gain'
+            };
+            document.getElementById('goalBadge').textContent = goalText[formData.goal];
+            
+            // Update summary cards
+            document.getElementById('tdeeDisplay').textContent = data.tdee + ' kcal';
+            document.getElementById('caloriesDisplay').textContent = data.total_calories + ' kcal';
+            
+            // Set macro split based on goal
+            let macroSplit;
+            if (formData.goal === 'weight_loss') {
+                macroSplit = '40% / 30% / 30%';
+            } else if (formData.goal === 'weight_gain') {
+                macroSplit = '30% / 40% / 30%';
+            } else {
+                macroSplit = '30% / 35% / 35%';
+            }
+            document.getElementById('macroSplit').textContent = macroSplit;
+            
+            // Process meal recommendations
+            processMealRecommendations('breakfast', data.Breakfast);
+            processMealRecommendations('lunch', data.Lunch);
+            processMealRecommendations('dinner', data.Dinner);
+            
+            // Calculate and display meal totals
+            document.getElementById('breakfastCalories').textContent = 
+                data.Breakfast.reduce((sum, item) => sum + (item.Calories || 0), 0).toFixed(0);
+            document.getElementById('lunchCalories').textContent = 
+                data.Lunch.reduce((sum, item) => sum + (item.Calories || 0), 0).toFixed(0);
+            document.getElementById('dinnerCalories').textContent = 
+                data.Dinner.reduce((sum, item) => sum + (item.Calories || 0), 0).toFixed(0);
+        }
+
+        function processMealRecommendations(mealType, items) {
+            const container = document.getElementById(mealType + 'Items');
+            container.innerHTML = '';
+            
+            if (!items || items.length === 0) {
+                container.innerHTML = `
+                    <div class="md:col-span-3 text-center py-10 text-gray-400">
+                        <i class="fas fa-utensils fa-2x mb-2"></i>
+                        <p>No recommendations available for this meal</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            items.forEach(item => {
+                const itemName = item.Food_Item || item.Item || item.Meal || item.Name || item.Food_items || 'Healthy Meal';
+                // Use the item.Link if available, otherwise create a fallback image URL
+                const imageLink = item.Link || `https://source.unsplash.com/random/300x200/?${encodeURIComponent(itemName)}`;
+                
+                const card = document.createElement('div');
+                card.className = 'meal-card bg-white dark:bg-dark-700 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-600';
+                card.innerHTML = `
+                    <div class="h-48 bg-gray-200 dark:bg-gray-600 rounded-md mb-3 overflow-hidden">
+                        <img src="${imageLink}" alt="${itemName}" class="w-full h-full object-cover food-image" 
+                            onerror="this.onerror=null;this.src='https://source.unsplash.com/random/300x200/?food'">
+                    </div>
+                    <h4 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-1">${itemName}</h4>
+                    <p class="text-gray-600 dark:text-gray-400 mb-2"><span class="font-semibold">${(item.Calories || 0).toFixed(0)}</span> kcal</p>
+                    <div class="grid grid-cols-3 gap-2 text-xs">
+                        <div class="nutri-badge bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 p-1 rounded text-center">
+                            <div class="font-bold">${(item.Proteins || 0).toFixed(1)}g</div>
+                            <div>Protein</div>
+                        </div>
+                        <div class="nutri-badge bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 p-1 rounded text-center">
+                            <div class="font-bold">${(item.Carbohydrates || 0).toFixed(1)}g</div>
+                            <div>Carbs</div>
+                        </div>
+                        <div class="nutri-badge bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 p-1 rounded text-center">
+                            <div class="font-bold">${(item.Fats || 0).toFixed(1)}g</div>
+                            <div>Fat</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-between items-center">
+                        <span class="text-xs text-gray-500 dark:text-gray-400">Serving: ${item.Serving_Size || '1 portion'}</span>
+                        <button class="text-xs text-primary-600 dark:text-primary-400 hover:underline">View Details</button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>

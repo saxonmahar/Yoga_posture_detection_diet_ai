@@ -191,7 +191,7 @@ function Dashboard() {
       icon: Utensils,
       gradient: 'from-green-500 to-emerald-400',
       badge: 'New',
-      onClick: () => navigate('/nutrition')
+      onClick: () => navigate('/diet-plan')
     },
     {
       id: 'progress',

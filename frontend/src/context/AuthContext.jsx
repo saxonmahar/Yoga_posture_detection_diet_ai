@@ -89,9 +89,19 @@ export const AuthProvider = ({ children }) => {
   const loadUser = async () => {
     try {
       const response = await getMeRequest();
-      setUser(response.data.user);
+      if (response?.data?.user) {
+        setUser(response.data.user);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
-      setUser(null);
+      console.error('Error loading user:', error);
+      // Only set user to null if it's a 401 (unauthorized)
+      // For other errors, keep existing user state if available
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setUser(null);
+      }
+      // For network errors, don't clear user - might be temporary
     } finally {
       setLoading(false); // 👈 CRITICAL
     }
