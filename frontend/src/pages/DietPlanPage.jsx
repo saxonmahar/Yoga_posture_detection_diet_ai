@@ -363,19 +363,17 @@ function DietPlanPage() {
                                   </div>
                                 </div>
                                 {item.Link && (
-                                  <img 
-                                    src={item.Link || '/images/placeholder-food.jpg'}
-                                    onError={(e) => {
-                                      e.target.onerror = null;
-                                      e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="14" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EFood Image%3C/text%3E%3C/svg%3E';
-                                    }} 
-                                    alt={item.Food_items}
-                                    className="w-16 h-16 rounded-lg object-cover ml-3"
-                                    onError={(e) => {
-                                      e.target.style.display = 'none';
-                                    }}
-                                  />
-                                )}
+  <img
+    src={item.Link}
+    alt={item.Food_items || 'Food item'}
+    className="w-16 h-16 rounded-lg object-cover ml-3"
+    onError={(e) => {
+      e.target.onerror = null;
+      e.target.style.display = 'none';
+    }}
+  />
+)}
+
                               </div>
                             ))}
                           </div>
