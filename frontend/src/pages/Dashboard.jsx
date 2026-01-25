@@ -86,7 +86,7 @@ function Dashboard() {
         '🧘 AI Pose Detection requires the ML Server to be running.\n\n' +
         'To start the ML Server:\n' +
         '1. Open Terminal/CMD\n' +
-        '2. Navigate to: cd ai-ml\n' +
+        '2. Navigate to: cd backend/Ml\n' +
         '3. Run: python app.py\n\n' +
         'The server should start on http://localhost:5000\n\n' +
         'Click OK to open pose detection anyway, or Cancel to stay here.'

@@ -1,4 +1,7 @@
 const poseService = require('../services/poseService');
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
 
 exports.createSession = async (req, res) => {
     try {
@@ -25,6 +28,168 @@ exports.createSession = async (req, res) => {
         res.status(500).json({
             success: false,
             error: 'Failed to create session'
+        });
+    }
+};
+
+// MediaPipe AI Pose Detection
+exports.detectPoseWithMediaPipe = async (req, res) => {
+    try {
+        const { image, poseType = 'warrior', enableTTS = true } = req.body;
+        
+        if (!image) {
+            return res.status(400).json({
+                success: false,
+                error: 'Image data is required'
+            });
+        }
+
+        // Save base64 image to temporary file
+        const imageBuffer = Buffer.from(image.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+        const tempImagePath = path.join(__dirname, '../temp', `pose_${Date.now()}.jpg`);
+        
+        // Ensure temp directory exists
+        const tempDir = path.dirname(tempImagePath);
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+        
+        fs.writeFileSync(tempImagePath, imageBuffer);
+
+        // Call MediaPipe pose detector
+        const scriptPath = path.join(__dirname, '../Ml/mediapipe_pose_detector.py');
+        
+        const pythonProcess = spawn('python', [
+            scriptPath,
+            '--image', tempImagePath,
+            '--pose', poseType,
+            '--tts', enableTTS.toString()
+        ]);
+
+        let stdout = '';
+        let stderr = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            stdout += data.toString();
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            stderr += data.toString();
+        });
+
+        pythonProcess.on('close', (code) => {
+            // Clean up temp file
+            if (fs.existsSync(tempImagePath)) {
+                fs.unlinkSync(tempImagePath);
+            }
+
+            if (code === 0) {
+                try {
+                    const result = JSON.parse(stdout);
+                    res.json({
+                        success: true,
+                        message: 'Pose detected successfully',
+                        ...result
+                    });
+                } catch (parseError) {
+                    res.status(500).json({
+                        success: false,
+                        error: 'Failed to parse detection result',
+                        details: stdout
+                    });
+                }
+            } else {
+                res.status(500).json({
+                    success: false,
+                    error: 'Pose detection failed',
+                    details: stderr
+                });
+            }
+        });
+
+        pythonProcess.on('error', (error) => {
+            // Clean up temp file
+            if (fs.existsSync(tempImagePath)) {
+                fs.unlinkSync(tempImagePath);
+            }
+            
+            res.status(500).json({
+                success: false,
+                error: 'Failed to start pose detection',
+                details: error.message
+            });
+        });
+
+    } catch (error) {
+        console.error('MediaPipe pose detection error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+};
+
+// Real-time pose detection endpoint
+exports.startRealTimePoseDetection = async (req, res) => {
+    try {
+        const { poseType = 'warrior' } = req.body;
+        
+        console.log(`Starting real-time ${poseType} pose detection...`);
+        
+        const scriptPath = path.join(__dirname, '../Ml/mediapipe_pose_detector.py');
+        
+        const pythonProcess = spawn('python', [scriptPath, '--realtime', '--pose', poseType], {
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        let stdout = '';
+        let stderr = '';
+
+        pythonProcess.stdout.on('data', (data) => {
+            const output = data.toString();
+            stdout += output;
+            console.log(`Real-time detection output:`, output);
+        });
+
+        pythonProcess.stderr.on('data', (data) => {
+            const error = data.toString();
+            stderr += error;
+            console.error(`Real-time detection error:`, error);
+        });
+
+        pythonProcess.on('close', (code) => {
+            console.log(`Real-time pose detection finished with code ${code}`);
+            
+            if (code === 0) {
+                res.status(200).json({
+                    success: true,
+                    message: `Real-time ${poseType} detection completed successfully`,
+                    output: stdout
+                });
+            } else {
+                res.status(500).json({
+                    success: false,
+                    message: `Real-time ${poseType} detection failed`,
+                    error: stderr,
+                    output: stdout
+                });
+            }
+        });
+
+        pythonProcess.on('error', (error) => {
+            console.error(`Failed to start real-time pose detection:`, error);
+            res.status(500).json({
+                success: false,
+                message: 'Failed to start real-time pose detection',
+                error: error.message
+            });
+        });
+
+    } catch (error) {
+        console.error('Real-time pose detection error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to initialize real-time detection'
         });
     }
 };

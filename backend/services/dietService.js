@@ -3,7 +3,9 @@ const axios = require('axios');
 
 class DietService {
     constructor() {
-        this.pythonMLUrl = process.env.PYTHON_ML_URL || 'http://localhost:5000';
+        // Use separate URLs for ML API and Diet Recommendation API
+        this.mlApiUrl = process.env.ML_API_URL || 'http://localhost:5000';
+        this.dietApiUrl = process.env.DIET_API_URL || 'http://localhost:5002';
     }
 
     // Log a meal
@@ -23,11 +25,11 @@ class DietService {
         }
     }
 
-    // Get diet recommendation from Python ML
+    // Get diet recommendation from Python Diet API
     async getDietRecommendation(userData) {
         try {
-            console.log('🍎 Getting diet recommendation from Python ML...');
-            console.log('📤 Sending data to:', `${this.pythonMLUrl}/recommend`);
+            console.log('🍎 Getting diet recommendation from Python Diet API...');
+            console.log('📤 Sending data to:', `${this.dietApiUrl}/recommend`);
             console.log('📦 User data:', userData);
             
             // Map user data to Python Flask expected format
@@ -48,7 +50,7 @@ class DietService {
             }
             
             const response = await axios.post(
-                `${this.pythonMLUrl}/recommend`,
+                `${this.dietApiUrl}/recommend`,
                 pythonData,
                 { 
                     timeout: 15000,
