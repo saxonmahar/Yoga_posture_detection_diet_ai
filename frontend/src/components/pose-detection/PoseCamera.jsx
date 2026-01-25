@@ -1,4 +1,4 @@
-// WORKING REAL-TIME MEDIAPIPE LANDMARKS - 100% GUARANTEED
+// WORKING REAL-TIME MEDIAPIPE LANDMARKS - REGULAR WEBCAM
 import React, { useRef, useEffect, useState } from 'react';
 import Webcam from 'react-webcam';
 
@@ -21,7 +21,7 @@ const PoseCamera = ({
   onCapture,
   showLandmarks = true,
   mirrored = true,
-  selectedPose = 'yog3',
+  selectedPose = 'yog2',
   onPoseDetection
 }) => {
   const webcamRef = useRef(null);
@@ -32,15 +32,8 @@ const PoseCamera = ({
   const [isDetecting, setIsDetecting] = useState(false);
   const [debugInfo, setDebugInfo] = useState('');
   const [landmarkCount, setLandmarkCount] = useState(0);
-
-  // Start webcam when active
-  useEffect(() => {
-    if (isActive && !isStreaming) {
-      startWebcam();
-    } else if (!isActive && isStreaming) {
-      stopWebcam();
-    }
-  }, [isActive]);
+  const [poseCompleted, setPoseCompleted] = useState(false);
+  const [perfectPoseCount, setPerfectPoseCount] = useState(0);
 
   // Auto-start detection when webcam is ready
   useEffect(() => {
@@ -50,44 +43,6 @@ const PoseCamera = ({
       }, 1000);
     }
   }, [isStreaming, showLandmarks]);
-
-  const startWebcam = async () => {
-    try {
-      setError(null);
-      setDebugInfo('Starting webcam...');
-      
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          width: { ideal: 1280, min: 640 }, 
-          height: { ideal: 720, min: 480 }, 
-          facingMode: 'user',
-          aspectRatio: 16/9
-        }
-      });
-
-      setIsStreaming(true);
-      setDebugInfo('Webcam started successfully');
-      onWebcamStart?.();
-      
-      // TTS Welcome with user name
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const userName = userData.name || userData.username || 'User';
-      const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'yoga pose';
-      speak(`Welcome ${userName}! Let's practice ${poseName}. Position yourself 6 feet back so I can see your full body.`);
-      
-    } catch (err) {
-      setError(`Webcam error: ${err.message}`);
-      setDebugInfo(`Webcam failed: ${err.message}`);
-    }
-  };
-
-  const stopWebcam = () => {
-    setDebugInfo('Stopping webcam...');
-    stopDetection();
-    setIsStreaming(false);
-    setLandmarkCount(0);
-    onWebcamStop?.();
-  };
 
   const startDetection = () => {
     if (isDetecting) return;
@@ -107,12 +62,33 @@ const PoseCamera = ({
       detectionIntervalRef.current = null;
     }
     setIsDetecting(false);
+    setPoseCompleted(false);
+    setPerfectPoseCount(0);
+    
+    // STOP ALL TTS IMMEDIATELY
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
     
     // Clear canvas
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
       ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
     }
+  };
+
+  const stopWebcam = () => {
+    // STOP ALL TTS IMMEDIATELY
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    
+    stopDetection();
+    setIsStreaming(false);
+    setLandmarkCount(0);
+    setPoseCompleted(false);
+    setPerfectPoseCount(0);
+    onWebcamStop?.();
   };
 
   const detectPose = async () => {
@@ -131,7 +107,7 @@ const PoseCamera = ({
       
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
       
-      setDebugInfo('Sending frame to MediaPipe API...');
+      setDebugInfo('Sending webcam frame to MediaPipe API...');
 
       // Call MediaPipe API
       const response = await fetch(`${ML_API_URL}/api/ml/detect-pose`, {
@@ -158,28 +134,45 @@ const PoseCamera = ({
         // DRAW LANDMARKS IMMEDIATELY
         drawLandmarks(result.landmarks, result);
         
-        // TTS Feedback with pose-specific corrections
-        if (result.accuracy_score < 60 && result.feedback?.length > 0) {
-          const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
-          const feedback = result.feedback[0];
-          speak(`For ${poseName}: ${feedback}`);
-        } else if (result.accuracy_score >= 85) {
-          if (Math.random() < 0.3) { // Less frequent positive feedback
-            const encouragements = [
-              'Perfect form! Excellent!',
-              'Outstanding pose!',
-              'You nailed it!',
-              'Beautiful alignment!',
-              'Keep holding that perfect pose!'
-            ];
-            speak(encouragements[Math.floor(Math.random() * encouragements.length)]);
+        // AUTO-STOP WHEN POSE IS PERFECT
+        if (result.accuracy_score >= 90) {
+          setPerfectPoseCount(prev => prev + 1);
+          
+          // If perfect pose held for 3 consecutive detections (about 1 second)
+          if (perfectPoseCount >= 2 && !poseCompleted) {
+            setPoseCompleted(true);
+            const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
+            speak(`Bravo! Your ${poseName} is perfect! Well done!`);
+            
+            // Auto-stop detection after 3 seconds
+            setTimeout(() => {
+              if (isDetecting) {
+                stopDetection();
+                setDebugInfo('Pose completed successfully! Detection stopped.');
+              }
+            }, 3000);
           }
-        } else if (result.accuracy_score >= 70 && Math.random() < 0.2) {
-          speak('Good form! Minor adjustments needed.');
+        } else {
+          setPerfectPoseCount(0); // Reset if pose becomes imperfect
+        }
+        
+        // TTS Feedback - only if not completed and detecting
+        if (!poseCompleted && isDetecting) {
+          if (result.accuracy_score < 60 && result.feedback?.length > 0) {
+            const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
+            const feedback = result.feedback[0];
+            speak(`For ${poseName}: ${feedback}`);
+          } else if (result.accuracy_score >= 85 && result.accuracy_score < 90) {
+            if (Math.random() < 0.2) {
+              speak('Almost perfect! Hold steady!');
+            }
+          } else if (result.accuracy_score >= 70 && Math.random() < 0.1) {
+            speak('Good form! Minor adjustments needed.');
+          }
         }
         
       } else {
-        setDebugInfo('No pose detected in frame');
+        setDebugInfo('No pose detected in webcam frame');
         setLandmarkCount(0);
       }
 
@@ -347,7 +340,8 @@ const PoseCamera = ({
   };
 
   const speak = (text) => {
-    if ('speechSynthesis' in window) {
+    // Only speak if detection is active and pose not completed
+    if ('speechSynthesis' in window && isDetecting && !poseCompleted) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.9;
@@ -365,17 +359,17 @@ const PoseCamera = ({
         </div>
       )}
 
-      {/* Instructions for full body view */}
+      {/* Instructions for PC camera setup */}
       <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg">
         <p className="text-green-300 text-sm">
-          📏 <strong>Full Body Setup:</strong> Step back 6-8 feet from camera so your entire body (head to feet) is visible for accurate pose detection.
+          📏 <strong>PC Camera Setup:</strong> Position yourself 1-2 meters back from your PC camera. Don't worry if you can't see your full body - the system will work with partial body detection too.
         </p>
       </div>
 
       {/* Debug Info */}
       <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg">
         <p className="text-blue-300 text-sm">
-          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'}
+          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 {poseCompleted ? '✅ COMPLETED!' : ''}
         </p>
       </div>
 
@@ -395,7 +389,9 @@ const PoseCamera = ({
                 height: { ideal: 1080, min: 720 },
                 facingMode: "user",
                 aspectRatio: 16/9,
-                frameRate: { ideal: 30, min: 15 }
+                frameRate: { ideal: 30, min: 15 },
+                // WIDER FIELD OF VIEW for better full body capture
+                zoom: 0.5 // Try to zoom out if supported
               }}
               style={{
                 width: '100%',
@@ -407,6 +403,13 @@ const PoseCamera = ({
                 setIsStreaming(true);
                 setDebugInfo('Webcam stream active - Full body view ready');
                 console.log('📹 Webcam started with full body view');
+                onWebcamStart?.();
+                
+                // TTS Welcome with user name
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                const userName = userData.name || userData.username || 'User';
+                const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'yoga pose';
+                speak(`Welcome ${userName}! Let's practice ${poseName}. Position yourself as far back as possible so I can see your full body. Even 1-2 meters is fine.`);
               }}
               onUserMediaError={(err) => {
                 setError(`Webcam failed: ${err.message}`);
@@ -430,7 +433,7 @@ const PoseCamera = ({
               <div className="bg-black/80 px-3 py-2 rounded-lg">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 text-sm font-bold">LIVE</span>
+                  <span className="text-green-400 text-sm font-bold">WEBCAM LIVE</span>
                 </div>
               </div>
               
@@ -470,11 +473,12 @@ const PoseCamera = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">Full Body Pose Detection Ready</h3>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">PC Camera Pose Detection Ready</h3>
               <p className="text-gray-500 mb-4">Click "Start Pose" to begin landmark detection</p>
               <div className="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-lg">
-                <strong>📏 Important:</strong> Position yourself 6-8 feet from camera<br/>
-                Make sure your entire body (head to feet) is visible
+                <strong>📏 PC Camera:</strong> Position yourself 1-2 meters back<br/>
+                Partial body detection works fine - don't worry about full body<br/>
+                When pose is perfect, detection will auto-stop with "Bravo!"
               </div>
             </div>
           </div>
