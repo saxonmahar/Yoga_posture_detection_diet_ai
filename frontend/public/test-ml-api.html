@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔍 Test ML API Connection (via Frontend Server)</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #1a1a1a; color: white; }
+        button { margin: 10px; padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px; cursor: pointer; background: #3b82f6; color: white; }
+        button:hover { background: #2563eb; }
+        #results { margin-top: 20px; padding: 20px; background: #2a2a2a; border-radius: 10px; max-height: 400px; overflow-y: auto; }
+        .success { color: #10b981; }
+        .error { color: #ef4444; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test ML API Connection (CORS Fixed)</h1>
+    <p>This page is served through the frontend server to avoid CORS issues</p>
+    
+    <div>
+        <button onclick="testHealth()">🏥 Test Health Endpoint</button>
+        <button onclick="testSupportedPoses()">🧘 Test Supported Poses</button>
+        <button onclick="testDetectPoseEndpoint()">🎯 Test Detect-Pose Endpoint</button>
+        <button onclick="testWithRealWebcam()">📹 Test with Real Webcam</button>
+    </div>
+    
+    <div>
+        <video id="webcam" width="320" height="240" autoplay muted style="border: 2px solid #3b82f6; border-radius: 8px; margin: 10px;"></video>
+        <canvas id="canvas" width="320" height="240" style="border: 2px solid #10b981; border-radius: 8px; margin: 10px;"></canvas>
+    </div>
+    
+    <div id="results">
+        <p>Click buttons above to test ML API connectivity...</p>
+    </div>
+
+    <script>
+        const ML_API_URL = 'http://localhost:5000';
+        let webcamStream = null;
+        
+        function showResult(title, data, isError = false) {
+            const results = document.getElementById('results');
+            const className = isError ? 'error' : 'success';
+            const timestamp = new Date().toLocaleTimeString();
+            
+            results.innerHTML += `
+                <div style="margin: 10px 0; padding: 10px; border-left: 4px solid ${isError ? '#ef4444' : '#10b981'};">
+                    <h4 class="${className}">[${timestamp}] ${title}</h4>
+                    <pre style="font-size: 12px; max-height: 200px; overflow-y: auto;">${JSON.stringify(data, null, 2)}</pre>
+                </div>
+            `;
+            results.scrollTop = results.scrollHeight;
+        }
+        
+        async function testHealth() {
+            try {
+                console.log('Testing health endpoint...');
+                const response = await fetch(`${ML_API_URL}/health`);
+                console.log('Health response status:', response.status);
+                const data = await response.json();
+                showResult('✅ Health Check Success', data);
+            } catch (error) {
+                console.error('Health check error:', error);
+                showResult('❌ Health Check Failed', { error: error.message, stack: error.stack }, true);
+            }
+        }
+        
+        async function testSupportedPoses() {
+            try {
+                console.log('Testing supported poses endpoint...');
+                const response = await fetch(`${ML_API_URL}/api/ml/supported-poses`);
+                console.log('Supported poses response status:', response.status);
+                const data = await response.json();
+                showResult('✅ Supported Poses Success', data);
+            } catch (error) {
+                console.error('Supported poses error:', error);
+                showResult('❌ Supported Poses Failed', { error: error.message, stack: error.stack }, true);
+            }
+        }
+        
+        async function testDetectPoseEndpoint() {
+            try {
+                console.log('Testing detect-pose endpoint...');
+                // Test with minimal data to see if endpoint is reachable
+                const response = await fetch(`${ML_API_URL}/api/ml/detect-pose`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pose_type: 'tree_pose',
+                        user_id: 'test'
+                        // No image data to test endpoint accessibility
+                    })
+                });
+                
+                console.log('Detect-pose response status:', response.status);
+                const data = await response.json();
+                showResult('📡 Detect-Pose Endpoint Response', data);
+            } catch (error) {
+                console.error('Detect-pose endpoint error:', error);
+                showResult('❌ Detect-Pose Endpoint Failed', { error: error.message, stack: error.stack }, true);
+            }
+        }
+        
+        async function testWithRealWebcam() {
+            try {
+                // Start webcam
+                if (!webcamStream) {
+                    webcamStream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 320, height: 240, facingMode: 'user' }
+                    });
+                    
+                    const video = document.getElementById('webcam');
+                    video.srcObject = webcamStream;
+                    
+                    showResult('📹 Webcam Started', { message: 'Webcam is now active' });
+                }
+                
+                // Capture frame
+                const video = document.getElementById('webcam');
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Draw current video frame
+                ctx.drawImage(video, 0, 0, 320, 240);
+                
+                // Convert to base64
+                const imageData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                showResult('📸 Frame Captured', { 
+                    message: 'Sending frame to ML API for pose detection...',
+                    image_size: imageData.length + ' bytes'
+                });
+                
+                // Send to ML API
+                console.log('Sending image to ML API...');
+                const response = await fetch(`${ML_API_URL}/api/ml/detect-pose`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pose_type: 'tree_pose',
+                        user_id: 'webcam_test',
+                        image: imageData
+                    })
+                });
+                
+                console.log('ML API response status:', response.status);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showResult('🎯 Pose Detection Success!', {
+                        pose_type: result.pose_type,
+                        accuracy_score: result.accuracy_score,
+                        confidence: result.confidence,
+                        landmarks_count: result.landmarks?.length || 0,
+                        detector: result.detector,
+                        feedback: result.feedback?.slice(0, 3) // First 3 feedback items
+                    });
+                    
+                    // Draw landmarks on canvas if available
+                    if (result.landmarks && result.landmarks.length > 0) {
+                        drawLandmarks(result.landmarks, ctx, 320, 240);
+                        showResult('🎨 Landmarks Drawn', { 
+                            message: `Drew ${result.landmarks.length} landmarks on canvas`
+                        });
+                    }
+                } else {
+                    showResult('❌ Detection Failed', result, true);
+                }
+                
+            } catch (error) {
+                console.error('Webcam test error:', error);
+                showResult('❌ Webcam Test Failed', { error: error.message, stack: error.stack }, true);
+            }
+        }
+        
+        function drawLandmarks(landmarks, ctx, width, height) {
+            // Draw landmarks
+            landmarks.forEach((landmark, index) => {
+                const x = landmark.x * width;
+                const y = landmark.y * height;
+                const visibility = landmark.visibility || 0.5;
+                
+                if (visibility > 0.3) {
+                    // Draw landmark circle
+                    ctx.beginPath();
+                    ctx.arc(x, y, 5, 0, 2 * Math.PI);
+                    
+                    // Color based on visibility
+                    if (visibility > 0.7) {
+                        ctx.fillStyle = '#10B981'; // Green
+                    } else if (visibility > 0.5) {
+                        ctx.fillStyle = '#F59E0B'; // Yellow
+                    } else {
+                        ctx.fillStyle = '#EF4444'; // Red
+                    }
+                    
+                    ctx.fill();
+                    
+                    // White border
+                    ctx.strokeStyle = 'white';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    // Draw landmark number
+                    ctx.fillStyle = 'white';
+                    ctx.font = '10px Arial';
+                    ctx.fillText(index.toString(), x + 8, y - 8);
+                }
+            });
+        }
+        
+        // Auto-start health check
+        window.onload = () => {
+            setTimeout(testHealth, 1000);
+        };
+    </script>
+</body>
+</html>

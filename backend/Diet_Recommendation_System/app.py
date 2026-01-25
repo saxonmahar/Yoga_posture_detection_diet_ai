@@ -46,9 +46,9 @@ class DietRecommendationSystem:
     def __init__(self, user):
         self.user = user
         # Load data with proper error handling
-        self.breakfast_items = self._load_data("Data_sets/Breakfast_data.csv")
-        self.lunch_items = self._load_data("Data_sets/Lunch_data.csv")
-        self.dinner_items = self._load_data("Data_sets/Dinner_data.csv")
+        self.breakfast_items = self._load_data("Data_sets/breakfast_data.csv")
+        self.lunch_items = self._load_data("Data_sets/lunch_data.csv")
+        self.dinner_items = self._load_data("Data_sets/dinner_data.csv")
 
     def _load_data(self, filepath):
         """Load data with proper error handling and ensure required columns exist"""
@@ -221,4 +221,4 @@ if __name__ == '__main__':
         os.makedirs('Data_sets')
         print("Created Data_sets directory - please add your CSV files here")
     
-    app.run(debug=True)
+    app.run(debug=True, port=5002)
