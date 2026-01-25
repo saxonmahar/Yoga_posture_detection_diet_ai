@@ -47,7 +47,7 @@ except (ImportError, AttributeError) as e:
     USE_NEW_MEDIAPIPE = False
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:3001", "http://localhost:3000", "http://localhost:5173"])
+CORS(app, origins=["http://localhost:3002", "http://localhost:3001", "http://localhost:3000", "http://localhost:5173"])
 
 print("=" * 60)
 print("🧘 YOGA AI POSE DETECTION ML API - REAL MEDIAPIPE")
