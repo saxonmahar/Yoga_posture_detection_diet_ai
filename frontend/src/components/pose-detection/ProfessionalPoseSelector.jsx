@@ -16,6 +16,7 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
   const [activePose, setActivePose] = useState(null);
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [showImageModal, setShowImageModal] = useState(null);
+  const [lastSpokenMessage, setLastSpokenMessage] = useState('');
 
   // Professional yoga poses with real images from pose folder
   const PROFESSIONAL_POSES = [
@@ -290,8 +291,8 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
           </button>
         </div>
 
-        {/* Pose Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+        {/* Pose Grid - Smaller, More Compact Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
           {PROFESSIONAL_POSES.map((pose) => {
             const isSelected = selectedPose === pose.id;
             const isStarting = startingPose === pose.id;
@@ -303,7 +304,7 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
                 onClick={() => !isStarting && onPoseSelect?.(pose.id)}
                 onMouseEnter={() => setHoveredPose(pose.id)}
                 onMouseLeave={() => setHoveredPose(null)}
-                className={`relative p-6 rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
+                className={`relative p-4 rounded-xl cursor-pointer transition-all duration-300 border-2 ${
                   isSelected
                     ? `bg-gradient-to-br ${pose.color}/20 border-emerald-500/50 shadow-lg shadow-emerald-500/20 transform scale-105`
                     : 'bg-slate-800/40 border-slate-700/50 hover:border-slate-600/50 hover:bg-slate-800/60 hover:transform hover:scale-102'
@@ -311,26 +312,26 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
               >
                 {/* Selection Indicator */}
                 {isSelected && (
-                  <div className="absolute top-3 right-3 z-10">
+                  <div className="absolute top-2 right-2 z-10">
                     <div className="bg-emerald-500 rounded-full p-1">
-                      <CheckCircle className="w-5 h-5 text-white" />
+                      <CheckCircle className="w-4 h-4 text-white" />
                     </div>
                   </div>
                 )}
 
                 {/* Professional Badge */}
-                <div className="absolute top-3 left-3 z-10">
-                  <div className="bg-gradient-to-r from-yellow-500 to-amber-500 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg">
+                <div className="absolute top-2 left-2 z-10">
+                  <div className="bg-gradient-to-r from-yellow-500 to-amber-500 backdrop-blur-sm px-2 py-1 rounded-full shadow-lg">
                     <div className="flex items-center gap-1">
-                      <Zap className="w-3 h-3 text-white" />
+                      <Zap className="w-2 h-2 text-white" />
                       <span className="text-xs text-white font-bold">PRO</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Pose Image - Larger and Better Aspect Ratio */}
+                {/* Pose Image - Smaller and Compact */}
                 <div 
-                  className="w-full h-56 mb-4 mt-8 rounded-xl overflow-hidden bg-gradient-to-br from-slate-700/30 to-slate-800/30 shadow-lg border border-slate-600/20 cursor-pointer group"
+                  className="w-full h-32 mb-3 mt-6 rounded-lg overflow-hidden bg-gradient-to-br from-slate-700/30 to-slate-800/30 shadow-lg border border-slate-600/20 cursor-pointer group"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowImageModal(pose);
@@ -363,83 +364,56 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
                   </div>
                 </div>
 
-                {/* Pose Header */}
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="text-3xl flex-shrink-0">{pose.icon}</span>
+                {/* Pose Header - Compact */}
+                <div className="flex items-start gap-2 mb-3">
+                  <span className="text-2xl flex-shrink-0">{pose.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-base leading-tight mb-2">{pose.name}</h3>
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold ${getDifficultyColor(pose.difficulty)}`}>
+                    <h3 className="font-bold text-white text-sm leading-tight mb-1">{pose.name}</h3>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${getDifficultyColor(pose.difficulty)}`}>
                         {pose.difficulty}
                       </span>
-                      <div className="flex items-center gap-1">
-                        <Star className="w-3 h-3 text-yellow-400" />
-                        <span className="text-xs text-slate-400 font-medium">{apiPose ? 'Ready' : 'Loading...'}</span>
-                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Pose Description */}
-                <p className="text-sm text-slate-300 mb-4 leading-relaxed">{pose.description}</p>
+                {/* Pose Description - Shorter */}
+                <p className="text-xs text-slate-300 mb-3 leading-relaxed line-clamp-2">{pose.description}</p>
 
-                {/* Benefits Preview */}
-                <div className="space-y-2 mb-4">
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide">Key Benefits</h4>
-                  {pose.benefits.slice(0, 2).map((benefit, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm text-slate-300">
-                      <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full flex-shrink-0"></div>
-                      <span>{benefit}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Duration */}
-                <div className="flex items-center gap-2 text-sm text-slate-400 mb-4">
-                  <Clock className="w-4 h-4 text-blue-400" />
+                {/* Duration - Compact */}
+                <div className="flex items-center gap-2 text-xs text-slate-400 mb-3">
+                  <Clock className="w-3 h-3 text-blue-400" />
                   <span className="font-medium">{pose.duration}</span>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleStartPose(pose.id);
-                    }}
-                    disabled={isStarting}
-                    className={`
-                      flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm
-                      transition-all duration-200 shadow-lg
-                      ${isStarting 
-                        ? 'bg-slate-600/50 text-slate-400 cursor-not-allowed' 
-                        : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white hover:scale-105 active:scale-95 shadow-emerald-500/25'
-                      }
-                    `}
-                  >
-                    {isStarting ? (
-                      <>
-                        <div className="w-4 h-4 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin"></div>
-                        Starting...
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="w-4 h-4" />
-                        Start Pose
-                      </>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      alert(`📋 ${pose.name}\n\n🎯 Instructions:\n${pose.instructions}\n\n✨ Benefits:\n${pose.benefits.join(', ')}\n\n⏱️ Duration: ${pose.duration}`);
-                    }}
-                    className="px-4 py-3 bg-slate-700/60 hover:bg-slate-600/60 text-slate-300 hover:text-white rounded-xl transition-all duration-200 shadow-lg"
-                  >
-                    <Info className="w-4 h-4" />
-                  </button>
-                </div>
+                {/* Action Button - Smaller */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStartPose(pose.id);
+                  }}
+                  disabled={isStarting}
+                  className={`
+                    w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg font-bold text-xs
+                    transition-all duration-200 shadow-lg
+                    ${isStarting 
+                      ? 'bg-slate-600/50 text-slate-400 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white hover:scale-105 active:scale-95 shadow-emerald-500/25'
+                    }
+                  `}
+                >
+                  {isStarting ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-slate-400/30 border-t-slate-400 rounded-full animate-spin"></div>
+                      Starting...
+                    </>
+                  ) : (
+                    <>
+                      <Camera className="w-3 h-3" />
+                      Start Pose
+                    </>
+                  )}
+                </button>
 
                 {/* Hover Effect */}
                 {hoveredPose === pose.id && (
