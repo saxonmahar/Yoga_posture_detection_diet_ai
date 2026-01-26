@@ -4,7 +4,7 @@ import Webcam from 'react-webcam';
 
 const ML_API_URL = 'http://localhost:5000';
 
-// Professional yoga poses data for TTS feedback
+// Professional yoga poses data for TTS feedback and live guidance
 const PROFESSIONAL_POSES = [
   { id: 'yog1', name: 'Warrior II' },
   { id: 'yog2', name: 'T Pose' },
@@ -13,6 +13,76 @@ const PROFESSIONAL_POSES = [
   { id: 'yog5', name: 'Downward Facing Dog' },
   { id: 'yog6', name: 'Plank Pose' }
 ];
+
+// Live guided instructions for each pose
+const LIVE_INSTRUCTIONS = {
+  'yog1': {
+    name: 'Warrior II',
+    steps: [
+      { instruction: "Welcome! Let's practice Warrior II together. Stand in the center of the camera.", duration: 4000 },
+      { instruction: "Great! Now step your feet wide apart, about 4 feet distance.", duration: 5000 },
+      { instruction: "Perfect! Turn your right foot out 90 degrees to the right.", duration: 4000 },
+      { instruction: "Excellent! Now bend your right knee directly over your ankle.", duration: 5000 },
+      { instruction: "Amazing! Raise both arms parallel to the floor, reaching in opposite directions.", duration: 5000 },
+      { instruction: "Beautiful! Hold this strong Warrior II position. I'm now analyzing your form.", duration: 2000 }
+    ]
+  },
+  'yog2': {
+    name: 'T Pose',
+    steps: [
+      { instruction: "Welcome! Let's practice T Pose together. Stand straight in the center of the camera.", duration: 4000 },
+      { instruction: "Great! Keep your feet hip-width apart and engage your core.", duration: 4000 },
+      { instruction: "Perfect! Now slowly lift both arms out to your sides.", duration: 5000 },
+      { instruction: "Excellent! Bring your arms to shoulder height, parallel to the floor.", duration: 4000 },
+      { instruction: "Amazing! Extend your arms fully, reaching through your fingertips.", duration: 4000 },
+      { instruction: "Beautiful T Pose! Hold this position steady. I'm now analyzing your form.", duration: 2000 }
+    ]
+  },
+  'yog3': {
+    name: 'Tree Pose',
+    steps: [
+      { instruction: "Welcome! Let's practice Tree Pose together. Stand tall in the center of the camera.", duration: 4000 },
+      { instruction: "Great! Find a focal point ahead to help with balance.", duration: 3000 },
+      { instruction: "Perfect! Shift your weight onto your left foot and ground it firmly.", duration: 4000 },
+      { instruction: "Excellent! Lift your right foot and place it on your inner left thigh.", duration: 6000 },
+      { instruction: "Amazing! Bring your palms together in prayer position at your heart.", duration: 4000 },
+      { instruction: "Beautiful Tree Pose! Find your balance and breathe. I'm analyzing your form.", duration: 2000 }
+    ]
+  },
+  'yog4': {
+    name: 'Goddess Pose',
+    steps: [
+      { instruction: "Welcome! Let's practice Goddess Pose together. Stand with feet wide apart.", duration: 4000 },
+      { instruction: "Great! Turn both feet out at 45-degree angles.", duration: 4000 },
+      { instruction: "Perfect! Lower into a wide squat, keeping your back straight.", duration: 5000 },
+      { instruction: "Excellent! Lift your arms up and bend your elbows at 90 degrees.", duration: 5000 },
+      { instruction: "Amazing! Make strong goal post arms and sink deeper into the squat.", duration: 4000 },
+      { instruction: "Powerful Goddess Pose! Hold this strength. I'm analyzing your form.", duration: 2000 }
+    ]
+  },
+  'yog5': {
+    name: 'Downward Facing Dog',
+    steps: [
+      { instruction: "Welcome! Let's practice Downward Dog. Start on your hands and knees.", duration: 5000 },
+      { instruction: "Great! Place your hands under your shoulders, knees under hips.", duration: 4000 },
+      { instruction: "Perfect! Curl your toes under and prepare to lift your hips.", duration: 4000 },
+      { instruction: "Excellent! Straighten your legs and lift your hips up and back.", duration: 5000 },
+      { instruction: "Amazing! Create an inverted V-shape, pressing through your hands.", duration: 5000 },
+      { instruction: "Beautiful Downward Dog! Hold steady. I'm analyzing your form.", duration: 2000 }
+    ]
+  },
+  'yog6': {
+    name: 'Plank Pose',
+    steps: [
+      { instruction: "Welcome! Let's practice Plank Pose. Start in a push-up position.", duration: 4000 },
+      { instruction: "Great! Place your hands directly under your shoulders.", duration: 4000 },
+      { instruction: "Perfect! Create a straight line from your head to your heels.", duration: 4000 },
+      { instruction: "Excellent! Engage your core muscles strongly.", duration: 4000 },
+      { instruction: "Amazing! Keep your body straight and strong like a plank.", duration: 4000 },
+      { instruction: "Perfect Plank! Hold this strength. I'm analyzing your form.", duration: 2000 }
+    ]
+  }
+};
 
 const PoseCamera = ({ 
   isActive = false, 
@@ -41,15 +111,76 @@ const PoseCamera = ({
     feedbackGiven: [],
     correctionsNeeded: []
   });
+  
+  // Live Guided Instructions State
+  const [guidancePhase, setGuidancePhase] = useState('preparation'); // 'preparation', 'guidance', 'analysis', 'completed'
+  const [currentInstructionStep, setCurrentInstructionStep] = useState(0);
+  const [instructionTimer, setInstructionTimer] = useState(null);
+  const [isGivingInstructions, setIsGivingInstructions] = useState(true);
 
   // Auto-start detection when webcam is ready
   useEffect(() => {
     if (isStreaming && showLandmarks && !isDetecting) {
       setTimeout(() => {
-        startDetection();
+        startLiveGuidedSession();
       }, 1000);
     }
   }, [isStreaming, showLandmarks]);
+
+  // Live Guided Session Management
+  const startLiveGuidedSession = () => {
+    console.log('🎯 Starting Live Guided Session for:', selectedPose);
+    setGuidancePhase('preparation');
+    setCurrentInstructionStep(0);
+    setIsGivingInstructions(true);
+    
+    // Start with first instruction
+    setTimeout(() => {
+      startInstructionSequence();
+    }, 1000);
+  };
+
+  const startInstructionSequence = () => {
+    const poseInstructions = LIVE_INSTRUCTIONS[selectedPose] || LIVE_INSTRUCTIONS['yog2'];
+    const currentStep = poseInstructions.steps[currentInstructionStep];
+    
+    if (currentStep) {
+      console.log(`📢 Step ${currentInstructionStep + 1}: ${currentStep.instruction}`);
+      
+      // Speak the instruction
+      speak(currentStep.instruction);
+      
+      // Set timer for next instruction
+      const timer = setTimeout(() => {
+        if (currentInstructionStep < poseInstructions.steps.length - 1) {
+          setCurrentInstructionStep(prev => prev + 1);
+        } else {
+          // All instructions completed, start pose analysis
+          setGuidancePhase('analysis');
+          setIsGivingInstructions(false);
+          startDetection();
+        }
+      }, currentStep.duration);
+      
+      setInstructionTimer(timer);
+    }
+  };
+
+  // Auto-advance to next instruction
+  useEffect(() => {
+    if (isGivingInstructions && guidancePhase === 'preparation') {
+      startInstructionSequence();
+    }
+  }, [currentInstructionStep]);
+
+  // Clean up timers
+  useEffect(() => {
+    return () => {
+      if (instructionTimer) {
+        clearTimeout(instructionTimer);
+      }
+    };
+  }, [instructionTimer]);
 
   const startDetection = () => {
     if (isDetecting) return;
@@ -78,6 +209,12 @@ const PoseCamera = ({
       detectionIntervalRef.current = null;
     }
     
+    // Clean up instruction timers
+    if (instructionTimer) {
+      clearTimeout(instructionTimer);
+      setInstructionTimer(null);
+    }
+    
     // Record session data even if not completed perfectly
     if (sessionData.startTime && sessionData.attempts > 0) {
       recordYogaSession(poseCompleted);
@@ -86,6 +223,9 @@ const PoseCamera = ({
     setIsDetecting(false);
     setPoseCompleted(false);
     setPerfectPoseCount(0);
+    setGuidancePhase('preparation');
+    setCurrentInstructionStep(0);
+    setIsGivingInstructions(false);
     
     // STOP ALL TTS IMMEDIATELY
     if ('speechSynthesis' in window) {
@@ -377,12 +517,13 @@ const PoseCamera = ({
   };
 
   const speak = (text) => {
-    // Only speak if detection is active and pose not completed
-    if ('speechSynthesis' in window && isDetecting && !poseCompleted) {
+    // Speak during guidance phase or analysis phase (but not when completed)
+    if ('speechSynthesis' in window && (isGivingInstructions || (isDetecting && !poseCompleted))) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.volume = 0.8;
+      utterance.rate = 0.8; // Slightly slower for better understanding
+      utterance.volume = 0.9;
+      utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -453,30 +594,30 @@ const PoseCamera = ({
   };
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto">
+    <div className="relative w-full max-w-6xl mx-auto">
       {/* Error Display */}
       {error && (
-        <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg">
-          <p className="text-red-400">{error}</p>
+        <div className="mb-2 p-2 bg-red-500/20 border border-red-500 rounded-lg">
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Instructions for PC camera setup */}
-      <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg">
-        <p className="text-green-300 text-sm">
-          📏 <strong>PC Camera Setup:</strong> Position yourself 1-2 meters back from your PC camera. Don't worry if you can't see your full body - the system will work with partial body detection too.
+      {/* Instructions for PC camera setup - Compact */}
+      <div className="mb-2 p-2 bg-green-500/20 border border-green-500 rounded-lg">
+        <p className="text-green-300 text-xs">
+          📏 <strong>Live Guidance:</strong> I'll guide you step-by-step with voice instructions. Position yourself 1-2 meters back for best results.
         </p>
       </div>
 
-      {/* Debug Info */}
-      <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg">
-        <p className="text-blue-300 text-sm">
-          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 {poseCompleted ? '✅ COMPLETED!' : ''}
+      {/* Debug Info - Compact */}
+      <div className="mb-2 p-2 bg-blue-500/20 border border-blue-500 rounded-lg">
+        <p className="text-blue-300 text-xs">
+          Phase: {guidancePhase} | Step: {currentInstructionStep + 1} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 {poseCompleted ? '✅ COMPLETED!' : ''}
         </p>
       </div>
 
-      {/* Webcam Container - FULL BODY VIEW */}
-      <div className="relative bg-black rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '80vh' }}>
+      {/* Webcam Container - Optimized Height */}
+      <div className="relative bg-black rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', height: '65vh' }}>
         {isActive ? (
           <>
             {/* Webcam Video - Full Body View */}
@@ -503,15 +644,15 @@ const PoseCamera = ({
               }}
               onUserMedia={() => {
                 setIsStreaming(true);
-                setDebugInfo('Webcam stream active - Full body view ready');
-                console.log('📹 Webcam started with full body view');
+                setDebugInfo('Webcam stream active - Live guidance will begin shortly');
+                console.log('📹 Webcam started - Live Guided Session will begin');
                 onWebcamStart?.();
                 
-                // TTS Welcome with user name
+                // Welcome message - guidance will start automatically
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 const userName = userData.name || userData.username || 'User';
                 const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'yoga pose';
-                speak(`Welcome ${userName}! Let's practice ${poseName}. Position yourself as far back as possible so I can see your full body. Even 1-2 meters is fine.`);
+                speak(`Hello ${userName}! Get ready for live guided ${poseName} practice. I'll guide you step by step.`);
               }}
               onUserMediaError={(err) => {
                 setError(`Webcam failed: ${err.message}`);
@@ -530,6 +671,49 @@ const PoseCamera = ({
               }}
             />
 
+            {/* Live Guidance Overlay */}
+            {isGivingInstructions && guidancePhase === 'preparation' && (
+              <div className="absolute top-4 left-4 right-4 z-30">
+                <div className="bg-black/80 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/50">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span className="text-emerald-400 font-bold text-sm">LIVE GUIDANCE</span>
+                    <span className="text-slate-400 text-sm">
+                      Step {currentInstructionStep + 1} of {LIVE_INSTRUCTIONS[selectedPose]?.steps.length || 6}
+                    </span>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-slate-700 rounded-full h-2 mb-3">
+                    <div 
+                      className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${((currentInstructionStep + 1) / (LIVE_INSTRUCTIONS[selectedPose]?.steps.length || 6)) * 100}%` 
+                      }}
+                    ></div>
+                  </div>
+                  
+                  {/* Current Instruction */}
+                  <div className="text-white text-sm leading-relaxed">
+                    {LIVE_INSTRUCTIONS[selectedPose]?.steps[currentInstructionStep]?.instruction || 'Follow the guidance...'}
+                  </div>
+                  
+                  {/* Skip Button */}
+                  <button
+                    onClick={() => {
+                      setIsGivingInstructions(false);
+                      setGuidancePhase('analysis');
+                      if (instructionTimer) clearTimeout(instructionTimer);
+                      startDetection();
+                    }}
+                    className="mt-3 px-3 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 text-xs rounded-lg transition-colors"
+                  >
+                    Skip to Analysis
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Status Indicators */}
             <div className="absolute top-4 left-4 space-y-2">
               <div className="bg-black/80 px-3 py-2 rounded-lg">
@@ -539,11 +723,20 @@ const PoseCamera = ({
                 </div>
               </div>
               
-              {isDetecting && (
+              {guidancePhase === 'analysis' && isDetecting && (
                 <div className="bg-black/80 px-3 py-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span className="text-blue-400 text-sm font-bold">MediaPipe ACTIVE</span>
+                    <span className="text-blue-400 text-sm font-bold">ANALYZING POSE</span>
+                  </div>
+                </div>
+              )}
+
+              {guidancePhase === 'preparation' && isGivingInstructions && (
+                <div className="bg-black/80 px-3 py-2 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span className="text-emerald-400 text-sm font-bold">LIVE GUIDANCE</span>
                   </div>
                 </div>
               )}
@@ -555,16 +748,32 @@ const PoseCamera = ({
 
             {/* Controls */}
             <div className="absolute bottom-4 right-4 space-x-2">
-              <button
-                onClick={isDetecting ? stopDetection : startDetection}
-                className={`px-4 py-2 rounded-lg font-bold ${
-                  isDetecting
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                {isDetecting ? '⏹️ Stop' : '▶️ Start'} Detection
-              </button>
+              {guidancePhase === 'analysis' && (
+                <button
+                  onClick={isDetecting ? stopDetection : startDetection}
+                  className={`px-4 py-2 rounded-lg font-bold ${
+                    isDetecting
+                      ? 'bg-red-500 hover:bg-red-600 text-white'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
+                >
+                  {isDetecting ? '⏹️ Stop' : '▶️ Start'} Analysis
+                </button>
+              )}
+              
+              {guidancePhase === 'preparation' && isGivingInstructions && (
+                <button
+                  onClick={() => {
+                    setIsGivingInstructions(false);
+                    setGuidancePhase('analysis');
+                    if (instructionTimer) clearTimeout(instructionTimer);
+                    startDetection();
+                  }}
+                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold"
+                >
+                  ⏭️ Skip to Analysis
+                </button>
+              )}
             </div>
           </>
         ) : (
@@ -575,12 +784,12 @@ const PoseCamera = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">PC Camera Pose Detection Ready</h3>
-              <p className="text-gray-500 mb-4">Click "Start Pose" to begin landmark detection</p>
-              <div className="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-lg">
-                <strong>📏 PC Camera:</strong> Position yourself 1-2 meters back<br/>
-                Partial body detection works fine - don't worry about full body<br/>
-                When pose is perfect, detection will auto-stop with "Bravo!"
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">Live Guided Yoga Practice Ready</h3>
+              <p className="text-gray-500 mb-4">Click "Start Pose" to begin live step-by-step guidance</p>
+              <div className="text-sm text-emerald-400 bg-emerald-400/10 p-3 rounded-lg">
+                <strong>🎤 Live Guidance:</strong> I'll guide you through each step with voice instructions<br/>
+                <strong>📏 Camera Setup:</strong> Position yourself 1-2 meters back for best results<br/>
+                <strong>🎯 Auto-Analysis:</strong> After guidance, I'll analyze your pose automatically
               </div>
             </div>
           </div>
@@ -589,7 +798,7 @@ const PoseCamera = ({
 
       {/* Stop Camera Button */}
       {isActive && (
-        <div className="mt-4 text-center">
+        <div className="mt-2 text-center">
           <button
             onClick={stopWebcam}
             className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30"
