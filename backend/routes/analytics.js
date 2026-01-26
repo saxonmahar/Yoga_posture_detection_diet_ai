@@ -1,21 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const analyticsController = require('../controllers/analyticsController');
-const authMiddleware = require('../middleware/authMiddleware');
-
-// Import our new analytics functions
 const {
   recordYogaSession,
   getUserAnalytics,
   getDashboardSummary
 } = require('../controllers/analyticsController');
 
-// Public endpoints (no auth required for testing)
+// Record a new yoga session
 router.post('/session', recordYogaSession);
-router.get('/dashboard', getDashboardSummary);
 
-// User-specific endpoints (with auth)
+// Get user analytics
 router.get('/user/:user_id', getUserAnalytics);
+
+// Get dashboard summary (leaderboard)
+router.get('/dashboard', getDashboardSummary);
 
 // Get user progress for specific pose
 router.get('/user/:user_id/pose/:pose_id', async (req, res) => {
@@ -87,11 +85,5 @@ router.get('/user/:user_id/sessions', async (req, res) => {
     });
   }
 });
-
-// Legacy endpoints (keep for backward compatibility) - commented out until implemented
-// router.get('/overview', authMiddleware.verifyToken, analyticsController.getUserAnalytics);
-// router.get('/streaks', authMiddleware.verifyToken, analyticsController.getStreaks);
-// router.get('/progress-history', authMiddleware.verifyToken, analyticsController.getProgressHistory);
-// router.post('/progress', authMiddleware.verifyToken, analyticsController.saveProgress);
 
 module.exports = router;
