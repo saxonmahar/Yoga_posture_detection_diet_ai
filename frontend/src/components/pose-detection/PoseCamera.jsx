@@ -34,6 +34,13 @@ const PoseCamera = ({
   const [landmarkCount, setLandmarkCount] = useState(0);
   const [poseCompleted, setPoseCompleted] = useState(false);
   const [perfectPoseCount, setPerfectPoseCount] = useState(0);
+  const [sessionData, setSessionData] = useState({
+    startTime: null,
+    attempts: 0,
+    accuracyScores: [],
+    feedbackGiven: [],
+    correctionsNeeded: []
+  });
 
   // Auto-start detection when webcam is ready
   useEffect(() => {
@@ -50,6 +57,15 @@ const PoseCamera = ({
     setIsDetecting(true);
     setDebugInfo('Starting MediaPipe detection...');
     
+    // Initialize session data
+    setSessionData({
+      startTime: new Date(),
+      attempts: 0,
+      accuracyScores: [],
+      feedbackGiven: [],
+      correctionsNeeded: []
+    });
+    
     // Start detection loop - every 200ms
     detectionIntervalRef.current = setInterval(async () => {
       await detectPose();
@@ -61,6 +77,12 @@ const PoseCamera = ({
       clearInterval(detectionIntervalRef.current);
       detectionIntervalRef.current = null;
     }
+    
+    // Record session data even if not completed perfectly
+    if (sessionData.startTime && sessionData.attempts > 0) {
+      recordYogaSession(poseCompleted);
+    }
+    
     setIsDetecting(false);
     setPoseCompleted(false);
     setPerfectPoseCount(0);
@@ -134,6 +156,15 @@ const PoseCamera = ({
         // DRAW LANDMARKS IMMEDIATELY
         drawLandmarks(result.landmarks, result);
         
+        // Record session data
+        setSessionData(prev => ({
+          ...prev,
+          attempts: prev.attempts + 1,
+          accuracyScores: [...prev.accuracyScores, result.accuracy_score],
+          feedbackGiven: result.feedback ? [...prev.feedbackGiven, ...result.feedback] : prev.feedbackGiven,
+          correctionsNeeded: result.corrections ? [...prev.correctionsNeeded, ...result.corrections] : prev.correctionsNeeded
+        }));
+        
         // AUTO-STOP WHEN POSE IS PERFECT
         if (result.accuracy_score >= 90) {
           setPerfectPoseCount(prev => prev + 1);
@@ -143,6 +174,9 @@ const PoseCamera = ({
             setPoseCompleted(true);
             const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
             speak(`Bravo! Your ${poseName} is perfect! Well done!`);
+            
+            // Record successful completion
+            await recordYogaSession(true);
             
             // Auto-stop detection after 3 seconds
             setTimeout(() => {
@@ -215,7 +249,8 @@ const PoseCamera = ({
     
     connections.forEach(([start, end]) => {
       if (landmarks[start] && landmarks[end]) {
-        // Fix mirroring issue - flip X coordinates if mirrored
+        // MediaPipe returns non-mirrored coordinates, but webcam is mirrored
+        // So we need to flip X coordinates to match the mirrored video
         const startX = mirrored ? (1 - landmarks[start].x) * canvas.width : landmarks[start].x * canvas.width;
         const startY = landmarks[start].y * canvas.height;
         const endX = mirrored ? (1 - landmarks[end].x) * canvas.width : landmarks[end].x * canvas.width;
@@ -234,7 +269,8 @@ const PoseCamera = ({
 
     // Draw landmark points (BRIGHT RED circles with glow)
     landmarks.forEach((landmark, index) => {
-      // Fix mirroring issue - flip X coordinates if mirrored
+      // MediaPipe returns non-mirrored coordinates, but webcam is mirrored
+      // So we need to flip X coordinates to match the mirrored video
       const x = mirrored ? (1 - landmark.x) * canvas.width : landmark.x * canvas.width;
       const y = landmark.y * canvas.height;
       const visibility = landmark.visibility || 0.8;
@@ -275,7 +311,8 @@ const PoseCamera = ({
       result.corrections.forEach(correction => {
         if (correction.joint_index !== undefined && landmarks[correction.joint_index]) {
           const landmark = landmarks[correction.joint_index];
-          // Fix mirroring issue - flip X coordinates if mirrored
+          // MediaPipe returns non-mirrored coordinates, but webcam is mirrored
+          // So we need to flip X coordinates to match the mirrored video
           const x = mirrored ? (1 - landmark.x) * canvas.width : landmark.x * canvas.width;
           const y = landmark.y * canvas.height;
           
@@ -350,6 +387,71 @@ const PoseCamera = ({
     }
   };
 
+  // Record yoga session data to backend
+  const recordYogaSession = async (completedSuccessfully = false) => {
+    try {
+      const userData = JSON.parse(localStorage.getItem('user') || '{}');
+      const userId = userData._id || userData.id;
+      
+      if (!userId || !sessionData.startTime) {
+        console.log('No user ID or session data to record');
+        return;
+      }
+
+      const endTime = new Date();
+      const duration = Math.round((endTime - sessionData.startTime) / 1000 / 60); // minutes
+      const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'Unknown Pose';
+      
+      const sessionPayload = {
+        user_id: userId,
+        total_duration: Math.max(duration, 1), // At least 1 minute
+        poses_practiced: [{
+          pose_id: selectedPose,
+          pose_name: poseName,
+          accuracy_score: sessionData.accuracyScores.length > 0 ? 
+            Math.max(...sessionData.accuracyScores) : 0,
+          attempts_count: sessionData.attempts,
+          hold_duration: duration * 60, // seconds
+          completed_successfully: completedSuccessfully,
+          feedback_given: [...new Set(sessionData.feedbackGiven)], // Remove duplicates
+          corrections_needed: sessionData.correctionsNeeded.map(c => ({
+            joint: c.joint_index?.toString() || 'unknown',
+            message: c.message || 'Adjustment needed'
+          })),
+          timestamp: new Date()
+        }],
+        session_notes: `${poseName} practice session - ${completedSuccessfully ? 'Completed successfully' : 'Practice session'}`
+      };
+
+      console.log('📊 Recording yoga session:', sessionPayload);
+
+      const response = await fetch('http://localhost:5001/api/analytics/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sessionPayload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Session recorded successfully:', result);
+        
+        // Show achievement notifications if any
+        if (result.new_achievements && result.new_achievements.length > 0) {
+          result.new_achievements.forEach(achievement => {
+            speak(`Achievement unlocked: ${achievement.name}!`);
+          });
+        }
+      } else {
+        console.error('❌ Failed to record session:', response.statusText);
+      }
+
+    } catch (error) {
+      console.error('❌ Error recording yoga session:', error);
+    }
+  };
+
   return (
     <div className="relative w-full max-w-4xl mx-auto">
       {/* Error Display */}
@@ -396,8 +498,8 @@ const PoseCamera = ({
               style={{
                 width: '100%',
                 height: '100%',
-                objectFit: 'contain',
-                transform: mirrored ? 'scaleX(-1)' : 'none'
+                objectFit: 'contain'
+                // Remove the transform since mirrored prop handles it
               }}
               onUserMedia={() => {
                 setIsStreaming(true);
