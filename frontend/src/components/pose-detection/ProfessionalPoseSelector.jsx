@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Star, Target, Clock, Zap, Play, Info, X, Camera, Volume2, VolumeX } from 'lucide-react';
 import axios from 'axios';
 import PoseCamera from './PoseCamera';
+import PrePoseInstructions from './PrePoseInstructions';
 
 const ML_API_URL = 'http://localhost:5000';
 
@@ -17,6 +18,8 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const [showImageModal, setShowImageModal] = useState(null);
   const [lastSpokenMessage, setLastSpokenMessage] = useState('');
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [instructionPose, setInstructionPose] = useState(null);
 
   // Professional yoga poses with real images from pose folder
   const PROFESSIONAL_POSES = [
@@ -158,14 +161,14 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
     }
   };
 
-  // Start professional pose detection with camera modal
+  // Start professional pose detection directly with live guidance
   const handleStartPose = async (poseId) => {
     if (startingPose) return;
     
     setStartingPose(poseId);
     
     try {
-      console.log(`🧘 Starting professional pose detection for: ${poseId}`);
+      console.log(`🧘 Starting live guided pose detection for: ${poseId}`);
       
       // Call the professional ML API endpoint
       const response = await axios.post(`${ML_API_URL}/api/ml/pose/${poseId}`);
@@ -173,7 +176,7 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
       if (response.data.success) {
         console.log('✅ Professional pose detection started:', response.data.message);
         
-        // Set active pose and show camera modal
+        // Set active pose and show camera modal directly (no pre-instructions)
         setActivePose(poseId);
         setShowCameraModal(true);
         
@@ -184,7 +187,7 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
         // Speak welcome message
         const pose = PROFESSIONAL_POSES.find(p => p.id === poseId);
         if (pose) {
-          speakFeedback(`Starting ${pose.name}. ${pose.instructions}`);
+          speakFeedback(`Starting live guided ${pose.name} practice. Get ready for step-by-step instructions.`);
         }
       } else {
         throw new Error(response.data.error || 'Failed to start pose detection');
@@ -631,29 +634,29 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
 
       {/* Camera Modal */}
       {showCameraModal && activePose && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-900 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-slate-700">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">{PROFESSIONAL_POSES.find(p => p.id === activePose)?.icon}</span>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-1 px-2">
+          <div className="bg-slate-900 rounded-2xl border border-slate-700 max-w-6xl w-full max-h-[98vh] overflow-hidden mt-1">
+            {/* Modal Header - Compact */}
+            <div className="flex items-center justify-between p-3 border-b border-slate-700 bg-slate-800/50">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{PROFESSIONAL_POSES.find(p => p.id === activePose)?.icon}</span>
                 <div>
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-base font-semibold text-white">
                     {PROFESSIONAL_POSES.find(p => p.id === activePose)?.name}
                   </h2>
-                  <p className="text-sm text-slate-400">Professional Pose Detection Active</p>
+                  <p className="text-xs text-slate-400">Live Guided Practice</p>
                 </div>
               </div>
               <button
                 onClick={closeCameraModal}
-                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors"
               >
-                <X className="w-6 h-6 text-slate-400" />
+                <X className="w-4 h-4 text-slate-400" />
               </button>
             </div>
 
-            {/* Camera Feed */}
-            <div className="p-6">
+            {/* Camera Feed - Larger and Higher */}
+            <div className="p-2">
               <PoseCamera
                 isActive={true}
                 onWebcamStart={() => console.log('Camera started')}
@@ -666,16 +669,12 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
               />
             </div>
 
-            {/* Instructions */}
-            <div className="px-6 pb-6">
-              <div className="bg-slate-800/50 rounded-xl p-4">
-                <h3 className="font-semibold text-white mb-2">Instructions:</h3>
-                <p className="text-slate-300 text-sm">
-                  {PROFESSIONAL_POSES.find(p => p.id === activePose)?.instructions}
-                </p>
-                <div className="mt-3 flex items-center gap-4 text-xs text-slate-400">
-                  <span>🎯 Follow the visual corrections</span>
-                  <span>🔊 Listen to voice feedback</span>
+            {/* Instructions - Compact */}
+            <div className="px-2 pb-2">
+              <div className="bg-slate-800/50 rounded-xl p-2">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span>🎯 Follow the live guidance</span>
+                  <span>🔊 Listen to voice instructions</span>
                   <span>⏱️ Hold for {PROFESSIONAL_POSES.find(p => p.id === activePose)?.duration}</span>
                 </div>
               </div>
