@@ -104,6 +104,9 @@ const PoseCamera = ({
   const [landmarkCount, setLandmarkCount] = useState(0);
   const [poseCompleted, setPoseCompleted] = useState(false);
   const [perfectPoseCount, setPerfectPoseCount] = useState(0);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [consecutiveFrames, setConsecutiveFrames] = useState(0);
+  const [lastPoseState, setLastPoseState] = useState(false);
   const [sessionData, setSessionData] = useState({
     startTime: null,
     attempts: 0,
@@ -120,12 +123,12 @@ const PoseCamera = ({
 
   // Auto-start detection when webcam is ready
   useEffect(() => {
-    if (isStreaming && showLandmarks && !isDetecting) {
+    if (isStreaming && showLandmarks && !isDetecting && !showCelebration) {
       setTimeout(() => {
         startLiveGuidedSession();
       }, 1000);
     }
-  }, [isStreaming, showLandmarks]);
+  }, [isStreaming, showLandmarks, showCelebration]);
 
   // Live Guided Session Management
   const startLiveGuidedSession = () => {
@@ -223,6 +226,9 @@ const PoseCamera = ({
     setIsDetecting(false);
     setPoseCompleted(false);
     setPerfectPoseCount(0);
+    setShowCelebration(false);
+    setConsecutiveFrames(0);
+    setLastPoseState(false);
     setGuidancePhase('preparation');
     setCurrentInstructionStep(0);
     setIsGivingInstructions(false);
@@ -250,6 +256,9 @@ const PoseCamera = ({
     setLandmarkCount(0);
     setPoseCompleted(false);
     setPerfectPoseCount(0);
+    setShowCelebration(false);
+    setConsecutiveFrames(0);
+    setLastPoseState(false);
     onWebcamStop?.();
   };
 
@@ -296,6 +305,9 @@ const PoseCamera = ({
         // DRAW LANDMARKS IMMEDIATELY
         drawLandmarks(result.landmarks, result);
 
+        // Debug logging for pose accuracy
+        console.log(`🎯 Pose accuracy: ${result.accuracy_score}% | Perfect count: ${perfectPoseCount}/3 | Consecutive frames: ${consecutiveFrames}`);
+
         // Record session data
         setSessionData(prev => ({
           ...prev,
@@ -305,43 +317,82 @@ const PoseCamera = ({
           correctionsNeeded: result.corrections ? [...prev.correctionsNeeded, ...result.corrections] : prev.correctionsNeeded
         }));
 
-        // AUTO-STOP WHEN POSE IS PERFECT
-        if (result.accuracy_score >= 90) {
-          setPerfectPoseCount(prev => prev + 1);
-
-          // If perfect pose held for 3 consecutive detections (about 1 second)
-          if (perfectPoseCount >= 2 && !poseCompleted) {
-            setPoseCompleted(true);
-            const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
-            speak(`Bravo! Your ${poseName} is perfect! Well done!`);
-
-            // Record successful completion
-            await recordYogaSession(true);
-
-            // Auto-stop detection after 3 seconds
-            setTimeout(() => {
-              if (isDetecting) {
-                stopDetection();
-                setDebugInfo('Pose completed successfully! Detection stopped.');
-              }
-            }, 3000);
-          }
+        // AUTO-STOP WHEN POSE IS PERFECT - Count perfect poses (95% threshold for real yoga)
+        if (result.accuracy_score >= 95) {
+          setConsecutiveFrames(prev => {
+            const newFrames = prev + 1;
+            console.log(`🔥 PERFECT POSE DETECTED! Accuracy: ${result.accuracy_score}% | Consecutive frames: ${newFrames} | Last state: ${lastPoseState}`);
+            
+            // If pose held for 3 consecutive frames (about 0.6 seconds) and we haven't counted this pose yet
+            if (newFrames >= 3 && !lastPoseState) {
+              // TTS for perfect pose achievement
+              speak("Perfect pose!");
+              
+              setPerfectPoseCount(prevCount => {
+                const newCount = prevCount + 1;
+                console.log(`🎯 COUNTING PERFECT POSE ${newCount}/3!`);
+                
+                if (newCount === 1) {
+                  speak("Great! 1 out of 3 perfect poses!");
+                } else if (newCount === 2) {
+                  speak("Excellent! 2 out of 3 perfect poses!");
+                } else if (newCount >= 3) {
+                  // BRAVO! CELEBRATION TIME!
+                  console.log(`🎉 TRIGGERING BRAVO CELEBRATION!`);
+                  setPoseCompleted(true);
+                  setShowCelebration(true);
+                  const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
+                  speak(`BRAVO! 🎉 Your ${poseName} is perfect! You completed 3 perfect poses! Well done!`);
+                  
+                  // Record successful completion
+                  recordYogaSession(true);
+                  
+                  // Stop detection immediately when celebration starts
+                  setTimeout(() => {
+                    stopDetection();
+                    setDebugInfo('🎉 BRAVO! 3 perfect poses completed! Detection stopped.');
+                  }, 100);
+                  
+                  // Hide celebration after 5 seconds
+                  setTimeout(() => {
+                    setShowCelebration(false);
+                    setPerfectPoseCount(0);
+                    setConsecutiveFrames(0);
+                  }, 5000);
+                }
+                
+                return newCount;
+              });
+              setLastPoseState(true); // Mark that we've counted this perfect pose
+            }
+            
+            return newFrames;
+          });
         } else {
-          setPerfectPoseCount(0); // Reset if pose becomes imperfect
+          // Reset when pose becomes imperfect
+          if (result.accuracy_score < 95) {
+            console.log(`❌ Pose not perfect enough: ${result.accuracy_score}% (need >95%) - Resetting counters`);
+            setConsecutiveFrames(0);
+            setLastPoseState(false);
+          }
         }
 
-        // TTS Feedback - only if not completed and detecting
-        if (!poseCompleted && isDetecting) {
-          if (result.accuracy_score < 60 && result.feedback?.length > 0) {
+        // TTS Feedback - only if not completed and detecting and not celebrating
+        if (!poseCompleted && isDetecting && !showCelebration) {
+          if (result.accuracy_score >= 95) {
+            // Perfect pose achieved - this will be handled by the counting logic above
+          } else if (result.accuracy_score >= 85 && result.accuracy_score < 95) {
+            if (Math.random() < 0.2) {
+              speak('Almost perfect! Hold steady for perfect pose!');
+            }
+          } else if (result.accuracy_score >= 70 && result.accuracy_score < 85) {
+            if (Math.random() < 0.1) {
+              speak('Good form! Minor adjustments needed.');
+            }
+          } else if (result.accuracy_score < 60 && result.feedback?.length > 0) {
             const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
             const feedback = result.feedback[0];
             speak(`For ${poseName}: ${feedback}`);
-          } else if (result.accuracy_score >= 85 && result.accuracy_score < 90) {
-            if (Math.random() < 0.2) {
-              speak('Almost perfect! Hold steady!');
-            }
-          } else if (result.accuracy_score >= 70 && Math.random() < 0.1) {
-            speak('Good form! Minor adjustments needed.');
           }
         }
 
@@ -517,8 +568,8 @@ const PoseCamera = ({
   };
 
   const speak = (text) => {
-    // Only speak if detection is active and pose not completed
-    if ('speechSynthesis' in window && isDetecting && !poseCompleted) {
+    // Only speak if detection is active and not celebrating (unless it's the bravo message)
+    if ('speechSynthesis' in window && (isDetecting || text.includes('BRAVO'))) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 0.9;
@@ -604,14 +655,14 @@ const PoseCamera = ({
       {/* Instructions for PC camera setup */}
       <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg">
         <p className="text-green-300 text-sm">
-          📏 <strong>PC Camera Setup:</strong> Position yourself 1-2 meters back from your PC camera. Don't worry if you can't see your full body - the system will work with partial body detection too.
+          🧘‍♀️ <strong>Real Yoga Practice:</strong> Position yourself 1-2 meters back from camera. Hold poses with {'>'}95% accuracy to hear "Perfect pose!" and count towards your goal of 3 perfect poses for BRAVO celebration! 🎉
         </p>
       </div>
 
       {/* Debug Info */}
       <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg">
         <p className="text-blue-300 text-sm">
-          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 {poseCompleted ? '✅ COMPLETED!' : ''}
+          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 | Consecutive: {consecutiveFrames} | LastState: {lastPoseState ? 'TRUE' : 'FALSE'} | <strong>Need {'>'}95% for Perfect Pose</strong> {poseCompleted ? '✅ COMPLETED!' : ''} {showCelebration ? '🎉 CELEBRATING!' : ''}
         </p>
       </div>
 
@@ -670,6 +721,70 @@ const PoseCamera = ({
               }}
             />
 
+            {/* BRAVO CELEBRATION OVERLAY - HIGHEST Z-INDEX */}
+            {showCelebration && (
+              <div 
+                className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999]"
+                style={{ 
+                  position: 'fixed',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 9999
+                }}
+              >
+                <div className="text-center animate-bounce bg-gradient-to-r from-yellow-400 to-orange-500 p-8 rounded-3xl shadow-2xl">
+                  <div className="text-9xl mb-6">🎉</div>
+                  <h1 className="text-7xl font-bold text-white mb-6 animate-pulse shadow-lg drop-shadow-lg">
+                    BRAVO!
+                  </h1>
+                  <p className="text-3xl text-white mb-4 font-bold">
+                    3 Perfect Poses Completed!
+                  </p>
+                  <p className="text-2xl text-green-200 font-semibold">
+                    Excellent work! 🌟
+                  </p>
+                  <div className="flex justify-center space-x-6 mt-6 text-5xl">
+                    <span className="animate-bounce">🎊</span>
+                    <span className="animate-bounce" style={{animationDelay: '0.1s'}}>✨</span>
+                    <span className="animate-bounce" style={{animationDelay: '0.2s'}}>🎉</span>
+                    <span className="animate-bounce" style={{animationDelay: '0.3s'}}>⭐</span>
+                    <span className="animate-bounce" style={{animationDelay: '0.4s'}}>🎊</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Perfect Pose Progress Indicator */}
+            {!showCelebration && perfectPoseCount > 0 && (
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40">
+                <div className="bg-black/90 px-8 py-6 rounded-xl text-center border-2 border-yellow-400">
+                  <div className="text-3xl font-bold text-yellow-400 mb-4">
+                    Perfect Poses: {perfectPoseCount}/3
+                  </div>
+                  <div className="flex space-x-3 justify-center">
+                    {[1, 2, 3].map((num) => (
+                      <div
+                        key={num}
+                        className={`w-6 h-6 rounded-full border-2 ${
+                          num <= perfectPoseCount 
+                            ? 'bg-green-500 border-green-400' 
+                            : 'bg-gray-700 border-gray-500'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  {perfectPoseCount === 1 && (
+                    <p className="text-green-400 mt-2 text-lg">Great! Keep going!</p>
+                  )}
+                  {perfectPoseCount === 2 && (
+                    <p className="text-yellow-400 mt-2 text-lg">Almost there! One more!</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Status Indicators */}
             <div className="absolute top-4 left-4 space-y-2">
               <div className="bg-black/80 px-3 py-2 rounded-lg">
@@ -683,7 +798,7 @@ const PoseCamera = ({
                 <div className="bg-black/80 px-3 py-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span className="text-blue-400 text-sm font-bold">MediaPipe ACTIVE</span>
+                    <span className="text-blue-400 text-sm font-bold">AUTO-DETECTING</span>
                   </div>
                 </div>
               )}
@@ -691,21 +806,25 @@ const PoseCamera = ({
               <div className="bg-black/80 px-3 py-2 rounded-lg">
                 <span className="text-white text-sm">Landmarks: {landmarkCount}</span>
               </div>
+
+              {perfectPoseCount > 0 && !showCelebration && (
+                <div className="bg-black/80 px-3 py-2 rounded-lg">
+                  <span className="text-yellow-400 text-sm font-bold">Perfect: {perfectPoseCount}/3</span>
+                </div>
+              )}
             </div>
 
-            {/* Controls */}
-            <div className="absolute bottom-4 right-4 space-x-2">
-              <button
-                onClick={isDetecting ? stopDetection : startDetection}
-                className={`px-4 py-2 rounded-lg font-bold ${
-                  isDetecting
-                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                }`}
-              >
-                {isDetecting ? '⏹️ Stop' : '▶️ Start'} Detection
-              </button>
-            </div>
+            {/* Stop Detection Button (only when detecting and not celebrating) */}
+            {isDetecting && !showCelebration && (
+              <div className="absolute bottom-4 right-4">
+                <button
+                  onClick={stopDetection}
+                  className="px-4 py-2 rounded-lg font-bold bg-red-500 hover:bg-red-600 text-white"
+                >
+                  ⏹️ Stop Detection
+                </button>
+              </div>
+            )}
           </>
         ) : (
           <div className="flex items-center justify-center min-h-[480px] p-8">
@@ -715,12 +834,12 @@ const PoseCamera = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">PC Camera Pose Detection Ready</h3>
-              <p className="text-gray-500 mb-4">Click "Start Pose" to begin landmark detection</p>
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">Auto-Detection Ready</h3>
+              <p className="text-gray-500 mb-4">Detection starts automatically when camera loads</p>
               <div className="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-lg">
-                <strong>📏 PC Camera:</strong> Position yourself 1-2 meters back<br/>
-                Partial body detection works fine - don't worry about full body<br/>
-                When pose is perfect, detection will auto-stop with "Bravo!"
+                <strong>📏 Auto-Detection Ready:</strong> Position yourself 1-2 meters back<br/>
+                Detection starts automatically when camera loads<br/>
+                Get 3 perfect poses for "BRAVO!" celebration 🎉
               </div>
             </div>
           </div>
