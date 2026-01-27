@@ -666,6 +666,11 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
                 mirrored={true}
                 selectedPose={activePose}
                 onPoseDetection={handlePoseDetection}
+                onPoseChange={(newPoseId) => {
+                  console.log(`🔄 Parent received pose change: ${activePose} → ${newPoseId}`);
+                  setActivePose(newPoseId);
+                  onPoseSelect?.(newPoseId);
+                }}
               />
             </div>
 

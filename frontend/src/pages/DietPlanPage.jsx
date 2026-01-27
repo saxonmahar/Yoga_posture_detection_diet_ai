@@ -62,7 +62,28 @@ function DietPlanPage() {
   };
 
   useEffect(() => {
-    // Check if coming from yoga session
+    // Check for yoga session data from localStorage first
+    const sessionData = localStorage.getItem('yogaSessionData');
+    if (sessionData) {
+      try {
+        const parsedData = JSON.parse(sessionData);
+        setYogaSessionData(parsedData);
+        console.log('🧘‍♀️ Yoga session data found:', parsedData);
+        
+        // Adjust activity level based on yoga session
+        const adjustedStats = {
+          ...stats,
+          activityLevel: parsedData.totalCalories > 20 ? 'very_active' : 'moderately_active'
+        };
+        // Auto-fetch recommendations with adjusted stats
+        fetchRecommendationsWithData(adjustedStats);
+        return;
+      } catch (error) {
+        console.error('Error parsing yoga session data:', error);
+      }
+    }
+
+    // Check if coming from yoga session via navigation state
     if (location.state?.yogaSession) {
       setYogaSessionData(location.state.yogaSession);
       // Adjust activity level based on yoga session

@@ -41,7 +41,34 @@ const Layout = ({ children, footer = true }) => {
   );
 };
 
-// Protected route
+// Session-aware route (allows access with session data even without login)
+const SessionAwareRoute = ({ children, requiresSession = false }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If user is logged in, allow access
+  if (user) {
+    return children;
+  }
+
+  // If no user but session data exists, allow access
+  if (requiresSession) {
+    const sessionData = localStorage.getItem('yogaSessionData') || localStorage.getItem('yogaProgressData');
+    if (sessionData) {
+      return children;
+    }
+  }
+
+  // Otherwise redirect to login
+  return <Navigate to="/login" replace />;
+};
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
@@ -109,10 +136,13 @@ export default function Router() {
     ["/premium", <Premium />],
     ["/pose-detection", <PoseDetectionWrapper />], // Updated to use wrapper
     ["/yoga-session", <YogaSessionPage />],
-    ["/diet-plan", <DietPlanPage />],
-    ["/progress", <ProgressPage />],
     ["/profile", <ProfilePage />],
     ["/settings", <SettingsPage />],
+  ];
+
+  const sessionAwareRoutes = [
+    ["/diet-plan", <DietPlanPage />],
+    ["/progress", <ProgressPage />],
   ];
 
   return (
@@ -150,6 +180,19 @@ export default function Router() {
             <ProtectedRoute>
               {withLayout(page, false)}
             </ProtectedRoute>
+          }
+        />
+      ))}
+
+      {/* Session-aware pages (accessible with session data or login) */}
+      {sessionAwareRoutes.map(([path, page]) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            <SessionAwareRoute requiresSession={true}>
+              {withLayout(page, false)}
+            </SessionAwareRoute>
           }
         />
       ))}

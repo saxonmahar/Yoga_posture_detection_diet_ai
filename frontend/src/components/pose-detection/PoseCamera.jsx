@@ -4,14 +4,68 @@ import Webcam from 'react-webcam';
 
 const ML_API_URL = 'http://localhost:5000';
 
-// Professional yoga poses data for TTS feedback and live guidance
+// Professional yoga poses data with difficulty and categories
 const PROFESSIONAL_POSES = [
-  { id: 'yog1', name: 'Warrior II' },
-  { id: 'yog2', name: 'T Pose' },
-  { id: 'yog3', name: 'Tree Pose' },
-  { id: 'yog4', name: 'Goddess Pose' },
-  { id: 'yog5', name: 'Downward Facing Dog' },
-  { id: 'yog6', name: 'Plank Pose' }
+  { 
+    id: 'yog1', 
+    name: 'Warrior II',
+    difficulty: 'Medium',
+    category: 'Legs',
+    muscleGroups: ['legs', 'core'],
+    estimatedCalories: 8,
+    description: 'A powerful standing pose that builds strength and stability',
+    image: '/images/poses/warrior2.jpg'
+  },
+  { 
+    id: 'yog2', 
+    name: 'T Pose',
+    difficulty: 'Easy',
+    category: 'Upper Body',
+    muscleGroups: ['arms', 'shoulders'],
+    estimatedCalories: 4,
+    description: 'Simple arm extension pose for shoulder strength',
+    image: '/images/poses/tpose.jpg'
+  },
+  { 
+    id: 'yog3', 
+    name: 'Tree Pose',
+    difficulty: 'Medium',
+    category: 'Balance',
+    muscleGroups: ['legs', 'core'],
+    estimatedCalories: 6,
+    description: 'Classic balance pose that improves focus and stability',
+    image: '/images/poses/tree.jpg'
+  },
+  { 
+    id: 'yog4', 
+    name: 'Goddess Pose',
+    difficulty: 'Medium',
+    category: 'Lower Body',
+    muscleGroups: ['legs', 'glutes'],
+    estimatedCalories: 10,
+    description: 'Powerful squat pose that strengthens legs and glutes',
+    image: '/images/poses/goddess.jpg'
+  },
+  { 
+    id: 'yog5', 
+    name: 'Downward Facing Dog',
+    difficulty: 'Hard',
+    category: 'Full Body',
+    muscleGroups: ['arms', 'shoulders', 'legs', 'core'],
+    estimatedCalories: 12,
+    description: 'Full body pose that builds strength and flexibility',
+    image: '/images/poses/downward_dog.jpg'
+  },
+  { 
+    id: 'yog6', 
+    name: 'Plank Pose',
+    difficulty: 'Medium',
+    category: 'Core',
+    muscleGroups: ['core', 'arms'],
+    estimatedCalories: 8,
+    description: 'Core strengthening pose that builds stability',
+    image: '/images/poses/plank.jpg'
+  }
 ];
 
 // Live guided instructions for each pose
@@ -92,7 +146,8 @@ const PoseCamera = ({
   showLandmarks = true,
   mirrored = true,
   selectedPose = 'yog2',
-  onPoseDetection
+  onPoseDetection,
+  onPoseChange // Add this prop to handle pose changes
 }) => {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -107,6 +162,30 @@ const PoseCamera = ({
   const [showCelebration, setShowCelebration] = useState(false);
   const [consecutiveFrames, setConsecutiveFrames] = useState(0);
   const [lastPoseState, setLastPoseState] = useState(false);
+  
+  // Add current selected pose state
+  const [currentSelectedPose, setCurrentSelectedPose] = useState(selectedPose);
+
+  // Update currentSelectedPose when selectedPose prop changes
+  useEffect(() => {
+    if (selectedPose !== currentSelectedPose) {
+      console.log(`🔄 Updating currentSelectedPose: ${currentSelectedPose} → ${selectedPose}`);
+      setCurrentSelectedPose(selectedPose);
+    }
+  }, [selectedPose]);
+  
+  // Session Management State
+  const [sessionState, setSessionState] = useState({
+    completedPoses: [],
+    currentPoseIndex: 0,
+    sessionStartTime: null,
+    totalSessionTime: 0,
+    isSessionActive: false,
+    sessionPhase: 'single-pose' // 'single-pose', 'pose-selection', 'session-complete'
+  });
+  const [showPoseComplete, setShowPoseComplete] = useState(false);
+  const [showPoseSelection, setShowPoseSelection] = useState(false);
+  const [showSessionComplete, setShowSessionComplete] = useState(false);
   const [sessionData, setSessionData] = useState({
     startTime: null,
     attempts: 0,
@@ -200,6 +279,14 @@ const PoseCamera = ({
       correctionsNeeded: []
     });
 
+    // Initialize session state
+    setSessionState(prev => ({
+      ...prev,
+      sessionStartTime: new Date(),
+      isSessionActive: true,
+      sessionPhase: 'single-pose'
+    }));
+
     // Start detection loop - every 200ms
     detectionIntervalRef.current = setInterval(async () => {
       await detectPose();
@@ -280,13 +367,13 @@ const PoseCamera = ({
 
       setDebugInfo('Sending webcam frame to MediaPipe API...');
 
-      // Call MediaPipe API
+      // Call MediaPipe API with current selected pose
       const response = await fetch(`${ML_API_URL}/api/ml/detect-pose`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: imageData,
-          pose_type: selectedPose,
+          pose_type: currentSelectedPose, // Use current selected pose instead of selectedPose
           user_name: 'User'
         })
       });
@@ -344,21 +431,38 @@ const PoseCamera = ({
                   const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
                   speak(`BRAVO! 🎉 Your ${poseName} is perfect! You completed 3 perfect poses! Well done!`);
                   
+                  // Record pose completion in session
+                  const currentPose = PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose);
+                  const poseEndTime = new Date();
+                  const poseStartTime = sessionData.startTime;
+                  const poseDuration = Math.round((poseEndTime - poseStartTime) / 1000); // seconds
+                  
+                  const completedPose = {
+                    ...currentPose,
+                    completionTime: poseEndTime,
+                    duration: poseDuration,
+                    averageAccuracy: sessionData.accuracyScores.length > 0 ? 
+                      Math.round(sessionData.accuracyScores.reduce((a, b) => a + b, 0) / sessionData.accuracyScores.length) : 0,
+                    attempts: sessionData.attempts,
+                    perfectCount: 3
+                  };
+                  
+                  setSessionState(prev => ({
+                    ...prev,
+                    completedPoses: [...prev.completedPoses, completedPose],
+                    totalSessionTime: Math.round((poseEndTime - prev.sessionStartTime) / 1000)
+                  }));
+                  
                   // Record successful completion
                   recordYogaSession(true);
                   
-                  // Stop detection immediately when celebration starts
+                  // Stop detection and show pose complete overlay after celebration
                   setTimeout(() => {
                     stopDetection();
-                    setDebugInfo('🎉 BRAVO! 3 perfect poses completed! Detection stopped.');
-                  }, 100);
-                  
-                  // Hide celebration after 5 seconds
-                  setTimeout(() => {
                     setShowCelebration(false);
-                    setPerfectPoseCount(0);
-                    setConsecutiveFrames(0);
-                  }, 5000);
+                    setShowPoseComplete(true);
+                    setDebugInfo('🎉 Pose completed! Choose next pose or end session.');
+                  }, 3000); // Show celebration for 3 seconds
                 }
                 
                 return newCount;
@@ -664,6 +768,9 @@ const PoseCamera = ({
         <p className="text-blue-300 text-sm">
           Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 | Consecutive: {consecutiveFrames} | LastState: {lastPoseState ? 'TRUE' : 'FALSE'} | <strong>Need {'>'}95% for Perfect Pose</strong> {poseCompleted ? '✅ COMPLETED!' : ''} {showCelebration ? '🎉 CELEBRATING!' : ''}
         </p>
+        <p className="text-green-300 text-xs mt-1">
+          Current Pose: <strong>{PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose)?.name || 'Unknown'}</strong> | Session: {sessionState.isSessionActive ? 'ACTIVE' : 'INACTIVE'} | Completed Poses: {sessionState.completedPoses.length} | Phase: {sessionState.sessionPhase}
+        </p>
       </div>
 
       {/* Webcam Container - FULL BODY VIEW */}
@@ -721,7 +828,271 @@ const PoseCamera = ({
               }}
             />
 
-            {/* BRAVO CELEBRATION OVERLAY - HIGHEST Z-INDEX */}
+            {/* SESSION COMPLETE OVERLAY - Phase 3 */}
+            {showSessionComplete && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999] p-4">
+                <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-8 rounded-3xl shadow-2xl text-center max-w-lg mx-4">
+                  <div className="text-8xl mb-6">🎊</div>
+                  <h1 className="text-5xl font-bold text-white mb-4">Session Complete!</h1>
+                  <p className="text-xl text-white mb-6">Amazing work! You've completed your yoga session.</p>
+                  
+                  {/* Session Summary */}
+                  <div className="bg-white/20 rounded-xl p-4 mb-6 text-white">
+                    <h3 className="font-bold mb-3">Session Summary</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>Poses Completed:</div>
+                      <div className="font-bold">{sessionState.completedPoses.length}</div>
+                      <div>Total Time:</div>
+                      <div className="font-bold">{Math.round(sessionState.totalSessionTime / 60)}m {sessionState.totalSessionTime % 60}s</div>
+                      <div>Calories Burned:</div>
+                      <div className="font-bold">~{sessionState.completedPoses.reduce((total, pose) => total + pose.estimatedCalories, 0)}</div>
+                    </div>
+                    
+                    <div className="mt-4">
+                      <h4 className="font-bold mb-2">Completed Poses:</h4>
+                      {sessionState.completedPoses.map((pose, index) => (
+                        <div key={index} className="text-xs bg-white/20 rounded px-2 py-1 mb-1">
+                          {pose.name} - {pose.averageAccuracy}% accuracy
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        // Navigate to Diet Recommendations with session data
+                        setShowSessionComplete(false);
+                        speak("Redirecting to your personalized diet recommendations!");
+                        
+                        // Store session data in localStorage for diet page
+                        const sessionSummary = {
+                          completedPoses: sessionState.completedPoses,
+                          totalTime: sessionState.totalSessionTime,
+                          totalCalories: sessionState.completedPoses.reduce((total, pose) => total + pose.estimatedCalories, 0),
+                          sessionDate: new Date().toISOString()
+                        };
+                        localStorage.setItem('yogaSessionData', JSON.stringify(sessionSummary));
+                        
+                        // Navigate directly to diet page
+                        window.location.href = '/diet-plan';
+                      }}
+                      className="w-full px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
+                    >
+                      🍎 View Diet Recommendations
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        // Navigate to Progress Dashboard with session data
+                        setShowSessionComplete(false);
+                        speak("Checking your progress dashboard!");
+                        
+                        // Store session data in localStorage for progress page
+                        const progressData = {
+                          latestSession: {
+                            completedPoses: sessionState.completedPoses,
+                            totalTime: sessionState.totalSessionTime,
+                            totalCalories: sessionState.completedPoses.reduce((total, pose) => total + pose.estimatedCalories, 0),
+                            sessionDate: new Date().toISOString(),
+                            averageAccuracy: sessionState.completedPoses.length > 0 ? 
+                              Math.round(sessionState.completedPoses.reduce((total, pose) => total + pose.averageAccuracy, 0) / sessionState.completedPoses.length) : 0
+                          }
+                        };
+                        localStorage.setItem('yogaProgressData', JSON.stringify(progressData));
+                        
+                        // Navigate directly to progress page
+                        window.location.href = '/progress';
+                      }}
+                      className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors"
+                    >
+                      📈 View Progress Dashboard
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        // Close and reset
+                        setShowSessionComplete(false);
+                        setSessionState({
+                          completedPoses: [],
+                          currentPoseIndex: 0,
+                          sessionStartTime: null,
+                          totalSessionTime: 0,
+                          isSessionActive: false,
+                          sessionPhase: 'single-pose'
+                        });
+                      }}
+                      className="w-full px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showPoseSelection && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999] p-4">
+                <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                  <div className="p-6 text-center border-b">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Choose Your Next Pose</h2>
+                    <p className="text-gray-600">Select from the available yoga poses below</p>
+                    <div className="mt-2 text-sm text-blue-600">
+                      Session Progress: {sessionState.completedPoses.length} completed | {2 - sessionState.completedPoses.length} more for full benefits
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {PROFESSIONAL_POSES
+                      .filter(pose => !sessionState.completedPoses.some(completed => completed.id === pose.id))
+                      .map((pose) => (
+                        <div
+                          key={pose.id}
+                          onClick={() => {
+                            // Select new pose and restart detection
+                            console.log(`🔄 Switching from ${currentSelectedPose} to ${pose.id}`);
+                            setCurrentSelectedPose(pose.id); // Update current pose
+                            
+                            // Notify parent component about pose change if callback exists
+                            if (onPoseChange) {
+                              onPoseChange(pose.id);
+                            }
+                            
+                            setShowPoseSelection(false);
+                            speak(`Starting ${pose.name}. Get ready!`);
+                            
+                            // Reset pose-specific states
+                            setPerfectPoseCount(0);
+                            setConsecutiveFrames(0);
+                            setPoseCompleted(false);
+                            setLastPoseState(false);
+                            
+                            // Reset session data for new pose
+                            setSessionData({
+                              startTime: new Date(),
+                              attempts: 0,
+                              accuracyScores: [],
+                              feedbackGiven: [],
+                              correctionsNeeded: []
+                            });
+                            
+                            // Start new pose session
+                            setTimeout(() => {
+                              startLiveGuidedSession();
+                            }, 1000);
+                          }}
+                          className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-gray-200 hover:border-blue-400 cursor-pointer transition-all hover:shadow-lg group"
+                        >
+                          <div className="text-center">
+                            {/* Real Pose Image */}
+                            <div className="w-24 h-24 mx-auto mb-4 rounded-lg overflow-hidden bg-gray-100">
+                              <img 
+                                src={pose.image} 
+                                alt={pose.name}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                onError={(e) => {
+                                  // Fallback to emoji if image fails to load
+                                  e.target.style.display = 'none';
+                                  e.target.nextSibling.style.display = 'flex';
+                                }}
+                              />
+                              <div className="w-full h-full hidden items-center justify-center text-4xl bg-gradient-to-br from-blue-100 to-purple-100">
+                                🧘‍♀️
+                              </div>
+                            </div>
+                            
+                            <h3 className="font-bold text-lg text-gray-800 mb-2">{pose.name}</h3>
+                            <div className="flex justify-center gap-2 mb-3">
+                              <span className={`px-2 py-1 rounded-full text-xs ${
+                                pose.difficulty === 'Easy' ? 'bg-green-100 text-green-700' :
+                                pose.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                              }`}>
+                                {pose.difficulty}
+                              </span>
+                              <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-700">
+                                {pose.category}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-3 leading-relaxed">{pose.description}</p>
+                            <div className="text-xs text-purple-600 font-semibold">~{pose.estimatedCalories} calories</div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                  
+                  <div className="p-6 border-t bg-gray-50 text-center">
+                    <button
+                      onClick={() => {
+                        // End session if user doesn't want to continue
+                        if (sessionState.completedPoses.length >= 2) {
+                          setShowPoseSelection(false);
+                          setShowSessionComplete(true);
+                        } else {
+                          setShowPoseSelection(false);
+                          setSessionState(prev => ({ ...prev, isSessionActive: false }));
+                          speak("Session ended. Great work!");
+                        }
+                      }}
+                      className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
+                    >
+                      End Session
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {showPoseComplete && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999]">
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 p-8 rounded-3xl shadow-2xl text-center max-w-md mx-4">
+                  <div className="text-6xl mb-4">✅</div>
+                  <h2 className="text-4xl font-bold text-white mb-4">Pose Complete!</h2>
+                  
+                  {sessionState.completedPoses.length > 0 && (
+                    <div className="text-white mb-6">
+                      <p className="text-xl mb-2">{sessionState.completedPoses[sessionState.completedPoses.length - 1]?.name}</p>
+                      <p className="text-sm opacity-80">Duration: {sessionState.completedPoses[sessionState.completedPoses.length - 1]?.duration}s</p>
+                      <p className="text-sm opacity-80">Accuracy: {sessionState.completedPoses[sessionState.completedPoses.length - 1]?.averageAccuracy}%</p>
+                    </div>
+                  )}
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setShowPoseComplete(false);
+                        setShowPoseSelection(true);
+                        setPerfectPoseCount(0);
+                        setConsecutiveFrames(0);
+                        setPoseCompleted(false);
+                      }}
+                      className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg transition-colors"
+                    >
+                      🧘‍♀️ Choose Next Pose
+                    </button>
+                    
+                    <button
+                      onClick={() => {
+                        // End session logic
+                        if (sessionState.completedPoses.length >= 2) {
+                          setShowPoseComplete(false);
+                          setShowSessionComplete(true);
+                        } else {
+                          setShowPoseComplete(false);
+                          setSessionState(prev => ({ ...prev, isSessionActive: false }));
+                          speak("Session ended. Great work!");
+                        }
+                      }}
+                      className="w-full px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"
+                    >
+                      🏁 End Session
+                    </button>
+                  </div>
+                  
+                  <p className="text-xs text-white/70 mt-4">
+                    Completed: {sessionState.completedPoses.length} pose(s) | Need 2 for full benefits
+                  </p>
+                </div>
+              </div>
+            )}
             {showCelebration && (
               <div 
                 className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999]"

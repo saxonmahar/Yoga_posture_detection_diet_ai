@@ -5,6 +5,7 @@ import ProgressDashboard from '../components/analytics/ProgressDashboard';
 
 const ProgressPage = () => {
   const [user, setUser] = useState(null);
+  const [yogaProgressData, setYogaProgressData] = useState(null);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -12,9 +13,22 @@ const ProgressPage = () => {
     if (userData) {
       setUser(JSON.parse(userData));
     }
+
+    // Check for yoga progress data from session
+    const progressData = localStorage.getItem('yogaProgressData');
+    if (progressData) {
+      try {
+        const parsedData = JSON.parse(progressData);
+        setYogaProgressData(parsedData);
+        console.log('📈 Yoga progress data found:', parsedData);
+      } catch (error) {
+        console.error('Error parsing yoga progress data:', error);
+      }
+    }
   }, []);
 
-  if (!user) {
+  // Allow access if user exists OR if yoga progress data exists
+  if (!user && !yogaProgressData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
         <div className="text-center">
@@ -53,9 +67,41 @@ const ProgressPage = () => {
             <div className="flex items-center justify-center gap-3 mb-6">
               <User className="w-5 h-5 text-emerald-400" />
               <span className="text-lg text-emerald-400 font-medium">
-                Welcome back, {user.name || user.username}!
+                Welcome back, {user?.name || user?.username || 'Yoga Practitioner'}!
               </span>
             </div>
+
+            {/* Latest Session Banner */}
+            {yogaProgressData?.latestSession && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 rounded-2xl p-6 mb-6 max-w-4xl mx-auto"
+              >
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-emerald-400 mb-2">🎉 Latest Session Complete!</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <div className="text-slate-400">Poses</div>
+                      <div className="text-white font-bold">{yogaProgressData.latestSession.completedPoses?.length || 0}</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400">Duration</div>
+                      <div className="text-white font-bold">{Math.round(yogaProgressData.latestSession.totalTime / 60)}m</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400">Accuracy</div>
+                      <div className="text-white font-bold">{yogaProgressData.latestSession.averageAccuracy || 0}%</div>
+                    </div>
+                    <div>
+                      <div className="text-slate-400">Calories</div>
+                      <div className="text-white font-bold">{yogaProgressData.latestSession.totalCalories || 0}</div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* Quick Stats Preview */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
