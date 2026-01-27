@@ -84,9 +84,9 @@ const LIVE_INSTRUCTIONS = {
   }
 };
 
-const PoseCamera = ({ 
-  isActive = false, 
-  onWebcamStart, 
+const PoseCamera = ({
+  isActive = false,
+  onWebcamStart,
   onWebcamStop,
   onCapture,
   showLandmarks = true,
@@ -111,7 +111,7 @@ const PoseCamera = ({
     feedbackGiven: [],
     correctionsNeeded: []
   });
-  
+
   // Live Guided Instructions State
   const [guidancePhase, setGuidancePhase] = useState('preparation'); // 'preparation', 'guidance', 'analysis', 'completed'
   const [currentInstructionStep, setCurrentInstructionStep] = useState(0);
@@ -184,10 +184,10 @@ const PoseCamera = ({
 
   const startDetection = () => {
     if (isDetecting) return;
-    
+
     setIsDetecting(true);
     setDebugInfo('Starting MediaPipe detection...');
-    
+
     // Initialize session data
     setSessionData({
       startTime: new Date(),
@@ -196,7 +196,7 @@ const PoseCamera = ({
       feedbackGiven: [],
       correctionsNeeded: []
     });
-    
+
     // Start detection loop - every 200ms
     detectionIntervalRef.current = setInterval(async () => {
       await detectPose();
@@ -214,24 +214,24 @@ const PoseCamera = ({
       clearTimeout(instructionTimer);
       setInstructionTimer(null);
     }
-    
+
     // Record session data even if not completed perfectly
     if (sessionData.startTime && sessionData.attempts > 0) {
       recordYogaSession(poseCompleted);
     }
-    
+
     setIsDetecting(false);
     setPoseCompleted(false);
     setPerfectPoseCount(0);
     setGuidancePhase('preparation');
     setCurrentInstructionStep(0);
     setIsGivingInstructions(false);
-    
+
     // STOP ALL TTS IMMEDIATELY
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
-    
+
     // Clear canvas
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
@@ -244,7 +244,7 @@ const PoseCamera = ({
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
-    
+
     stopDetection();
     setIsStreaming(false);
     setLandmarkCount(0);
@@ -266,9 +266,9 @@ const PoseCamera = ({
       canvas.height = 720;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(video, 0, 0, 1280, 720);
-      
+
       const imageData = canvas.toDataURL('image/jpeg', 0.8);
-      
+
       setDebugInfo('Sending webcam frame to MediaPipe API...');
 
       // Call MediaPipe API
@@ -288,14 +288,14 @@ const PoseCamera = ({
       }
 
       const result = await response.json();
-      
+
       if (result.success && result.landmarks && result.landmarks.length > 0) {
         setLandmarkCount(result.landmarks.length);
         setDebugInfo(`Got ${result.landmarks.length} landmarks - Drawing...`);
-        
+
         // DRAW LANDMARKS IMMEDIATELY
         drawLandmarks(result.landmarks, result);
-        
+
         // Record session data
         setSessionData(prev => ({
           ...prev,
@@ -304,20 +304,20 @@ const PoseCamera = ({
           feedbackGiven: result.feedback ? [...prev.feedbackGiven, ...result.feedback] : prev.feedbackGiven,
           correctionsNeeded: result.corrections ? [...prev.correctionsNeeded, ...result.corrections] : prev.correctionsNeeded
         }));
-        
+
         // AUTO-STOP WHEN POSE IS PERFECT
         if (result.accuracy_score >= 90) {
           setPerfectPoseCount(prev => prev + 1);
-          
+
           // If perfect pose held for 3 consecutive detections (about 1 second)
           if (perfectPoseCount >= 2 && !poseCompleted) {
             setPoseCompleted(true);
             const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
             speak(`Bravo! Your ${poseName} is perfect! Well done!`);
-            
+
             // Record successful completion
             await recordYogaSession(true);
-            
+
             // Auto-stop detection after 3 seconds
             setTimeout(() => {
               if (isDetecting) {
@@ -329,7 +329,7 @@ const PoseCamera = ({
         } else {
           setPerfectPoseCount(0); // Reset if pose becomes imperfect
         }
-        
+
         // TTS Feedback - only if not completed and detecting
         if (!poseCompleted && isDetecting) {
           if (result.accuracy_score < 60 && result.feedback?.length > 0) {
@@ -344,7 +344,7 @@ const PoseCamera = ({
             speak('Good form! Minor adjustments needed.');
           }
         }
-        
+
       } else {
         setDebugInfo('No pose detected in webcam frame');
         setLandmarkCount(0);
@@ -362,12 +362,12 @@ const PoseCamera = ({
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const video = webcamRef.current.video;
-    
+
     // CRITICAL: Set canvas size to match video display size exactly
     const rect = video.getBoundingClientRect();
     canvas.width = rect.width;
     canvas.height = rect.height;
-    
+
     // Clear canvas with semi-transparent background for visibility
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -386,7 +386,7 @@ const PoseCamera = ({
     ctx.lineWidth = 4;
     ctx.shadowColor = '#00FF00';
     ctx.shadowBlur = 2;
-    
+
     connections.forEach(([start, end]) => {
       if (landmarks[start] && landmarks[end]) {
         // MediaPipe returns non-mirrored coordinates, but webcam is mirrored
@@ -395,7 +395,7 @@ const PoseCamera = ({
         const startY = landmarks[start].y * canvas.height;
         const endX = mirrored ? (1 - landmarks[end].x) * canvas.width : landmarks[end].x * canvas.width;
         const endY = landmarks[end].y * canvas.height;
-        
+
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
@@ -421,20 +421,20 @@ const PoseCamera = ({
         ctx.arc(x, y, 12, 0, 2 * Math.PI);
         ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
         ctx.fill();
-        
+
         // Main red circle for landmark
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, 2 * Math.PI);
         ctx.fillStyle = '#FF0000'; // Bright Red
         ctx.fill();
-        
+
         // White border for contrast
         ctx.beginPath();
         ctx.arc(x, y, 8, 0, 2 * Math.PI);
         ctx.strokeStyle = '#FFFFFF';
         ctx.lineWidth = 3;
         ctx.stroke();
-        
+
         // Landmark number with background
         if (index % 5 === 0) { // Show every 5th landmark number to avoid clutter
           ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
@@ -455,7 +455,7 @@ const PoseCamera = ({
           // So we need to flip X coordinates to match the mirrored video
           const x = mirrored ? (1 - landmark.x) * canvas.width : landmark.x * canvas.width;
           const y = landmark.y * canvas.height;
-          
+
           // Pulsing large red correction circle
           ctx.beginPath();
           ctx.arc(x, y, 35, 0, 2 * Math.PI);
@@ -464,7 +464,7 @@ const PoseCamera = ({
           ctx.setLineDash([10, 5]);
           ctx.stroke();
           ctx.setLineDash([]); // Reset dash
-          
+
           // Correction text
           ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
           ctx.fillRect(x - 40, y - 60, 80, 20);
@@ -485,12 +485,12 @@ const PoseCamera = ({
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.strokeRect(10, 10, 320, 80);
-      
+
       // Score text
       ctx.fillStyle = '#FFFFFF';
       ctx.font = 'bold 24px Arial';
       ctx.fillText(`Score: ${Math.round(result.accuracy_score)}%`, 20, 40);
-      
+
       // Status text with color
       ctx.font = 'bold 18px Arial';
       if (result.accuracy_score >= 85) {
@@ -506,7 +506,7 @@ const PoseCamera = ({
         ctx.fillStyle = '#FF0000';
         ctx.fillText('ADJUST POSE! ⚠️', 20, 65);
       }
-      
+
       // Pose name
       ctx.fillStyle = '#CCCCCC';
       ctx.font = '14px Arial';
@@ -517,13 +517,12 @@ const PoseCamera = ({
   };
 
   const speak = (text) => {
-    // Speak during guidance phase or analysis phase (but not when completed)
-    if ('speechSynthesis' in window && (isGivingInstructions || (isDetecting && !poseCompleted))) {
+    // Only speak if detection is active and pose not completed
+    if ('speechSynthesis' in window && isDetecting && !poseCompleted) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.8; // Slightly slower for better understanding
-      utterance.volume = 0.9;
-      utterance.pitch = 1.0;
+      utterance.rate = 0.9;
+      utterance.volume = 0.8;
       window.speechSynthesis.speak(utterance);
     }
   };
@@ -533,7 +532,7 @@ const PoseCamera = ({
     try {
       const userData = JSON.parse(localStorage.getItem('user') || '{}');
       const userId = userData._id || userData.id;
-      
+
       if (!userId || !sessionData.startTime) {
         console.log('No user ID or session data to record');
         return;
@@ -542,14 +541,14 @@ const PoseCamera = ({
       const endTime = new Date();
       const duration = Math.round((endTime - sessionData.startTime) / 1000 / 60); // minutes
       const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'Unknown Pose';
-      
+
       const sessionPayload = {
         user_id: userId,
         total_duration: Math.max(duration, 1), // At least 1 minute
         poses_practiced: [{
           pose_id: selectedPose,
           pose_name: poseName,
-          accuracy_score: sessionData.accuracyScores.length > 0 ? 
+          accuracy_score: sessionData.accuracyScores.length > 0 ?
             Math.max(...sessionData.accuracyScores) : 0,
           attempts_count: sessionData.attempts,
           hold_duration: duration * 60, // seconds
@@ -577,7 +576,7 @@ const PoseCamera = ({
       if (response.ok) {
         const result = await response.json();
         console.log('✅ Session recorded successfully:', result);
-        
+
         // Show achievement notifications if any
         if (result.new_achievements && result.new_achievements.length > 0) {
           result.new_achievements.forEach(achievement => {
@@ -594,30 +593,30 @@ const PoseCamera = ({
   };
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto">
+    <div className="relative w-full max-w-4xl mx-auto">
       {/* Error Display */}
       {error && (
-        <div className="mb-2 p-2 bg-red-500/20 border border-red-500 rounded-lg">
-          <p className="text-red-400 text-sm">{error}</p>
+        <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg">
+          <p className="text-red-400">{error}</p>
         </div>
       )}
 
-      {/* Instructions for PC camera setup - Compact */}
-      <div className="mb-2 p-2 bg-green-500/20 border border-green-500 rounded-lg">
-        <p className="text-green-300 text-xs">
-          📏 <strong>Live Guidance:</strong> I'll guide you step-by-step with voice instructions. Position yourself 1-2 meters back for best results.
+      {/* Instructions for PC camera setup */}
+      <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg">
+        <p className="text-green-300 text-sm">
+          📏 <strong>PC Camera Setup:</strong> Position yourself 1-2 meters back from your PC camera. Don't worry if you can't see your full body - the system will work with partial body detection too.
         </p>
       </div>
 
-      {/* Debug Info - Compact */}
-      <div className="mb-2 p-2 bg-blue-500/20 border border-blue-500 rounded-lg">
-        <p className="text-blue-300 text-xs">
-          Phase: {guidancePhase} | Step: {currentInstructionStep + 1} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 {poseCompleted ? '✅ COMPLETED!' : ''}
+      {/* Debug Info */}
+      <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg">
+        <p className="text-blue-300 text-sm">
+          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 {poseCompleted ? '✅ COMPLETED!' : ''}
         </p>
       </div>
 
-      {/* Webcam Container - Optimized Height */}
-      <div className="relative bg-black rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', height: '65vh' }}>
+      {/* Webcam Container - FULL BODY VIEW */}
+      <div className="relative bg-black rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '80vh' }}>
         {isActive ? (
           <>
             {/* Webcam Video - Full Body View */}
@@ -644,22 +643,22 @@ const PoseCamera = ({
               }}
               onUserMedia={() => {
                 setIsStreaming(true);
-                setDebugInfo('Webcam stream active - Live guidance will begin shortly');
-                console.log('📹 Webcam started - Live Guided Session will begin');
+                setDebugInfo('Webcam stream active - Full body view ready');
+                console.log('📹 Webcam started with full body view');
                 onWebcamStart?.();
-                
-                // Welcome message - guidance will start automatically
+
+                // TTS Welcome with user name
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 const userName = userData.name || userData.username || 'User';
                 const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'yoga pose';
-                speak(`Hello ${userName}! Get ready for live guided ${poseName} practice. I'll guide you step by step.`);
+                speak(`Welcome ${userName}! Let's practice ${poseName}. Position yourself as far back as possible so I can see your full body. Even 1-2 meters is fine.`);
               }}
               onUserMediaError={(err) => {
                 setError(`Webcam failed: ${err.message}`);
                 setDebugInfo(`Webcam error: ${err.message}`);
               }}
             />
-            
+
             {/* Canvas Overlay for Landmarks - CRITICAL POSITIONING */}
             <canvas
               ref={canvasRef}
@@ -671,49 +670,6 @@ const PoseCamera = ({
               }}
             />
 
-            {/* Live Guidance Overlay */}
-            {isGivingInstructions && guidancePhase === 'preparation' && (
-              <div className="absolute top-4 left-4 right-4 z-30">
-                <div className="bg-black/80 backdrop-blur-sm rounded-xl p-4 border border-emerald-500/50">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <span className="text-emerald-400 font-bold text-sm">LIVE GUIDANCE</span>
-                    <span className="text-slate-400 text-sm">
-                      Step {currentInstructionStep + 1} of {LIVE_INSTRUCTIONS[selectedPose]?.steps.length || 6}
-                    </span>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="w-full bg-slate-700 rounded-full h-2 mb-3">
-                    <div 
-                      className="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${((currentInstructionStep + 1) / (LIVE_INSTRUCTIONS[selectedPose]?.steps.length || 6)) * 100}%` 
-                      }}
-                    ></div>
-                  </div>
-                  
-                  {/* Current Instruction */}
-                  <div className="text-white text-sm leading-relaxed">
-                    {LIVE_INSTRUCTIONS[selectedPose]?.steps[currentInstructionStep]?.instruction || 'Follow the guidance...'}
-                  </div>
-                  
-                  {/* Skip Button */}
-                  <button
-                    onClick={() => {
-                      setIsGivingInstructions(false);
-                      setGuidancePhase('analysis');
-                      if (instructionTimer) clearTimeout(instructionTimer);
-                      startDetection();
-                    }}
-                    className="mt-3 px-3 py-1 bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 text-xs rounded-lg transition-colors"
-                  >
-                    Skip to Analysis
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Status Indicators */}
             <div className="absolute top-4 left-4 space-y-2">
               <div className="bg-black/80 px-3 py-2 rounded-lg">
@@ -722,21 +678,12 @@ const PoseCamera = ({
                   <span className="text-green-400 text-sm font-bold">WEBCAM LIVE</span>
                 </div>
               </div>
-              
-              {guidancePhase === 'analysis' && isDetecting && (
+
+              {isDetecting && (
                 <div className="bg-black/80 px-3 py-2 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-                    <span className="text-blue-400 text-sm font-bold">ANALYZING POSE</span>
-                  </div>
-                </div>
-              )}
-
-              {guidancePhase === 'preparation' && isGivingInstructions && (
-                <div className="bg-black/80 px-3 py-2 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse"></div>
-                    <span className="text-emerald-400 text-sm font-bold">LIVE GUIDANCE</span>
+                    <span className="text-blue-400 text-sm font-bold">MediaPipe ACTIVE</span>
                   </div>
                 </div>
               )}
@@ -748,32 +695,16 @@ const PoseCamera = ({
 
             {/* Controls */}
             <div className="absolute bottom-4 right-4 space-x-2">
-              {guidancePhase === 'analysis' && (
-                <button
-                  onClick={isDetecting ? stopDetection : startDetection}
-                  className={`px-4 py-2 rounded-lg font-bold ${
-                    isDetecting
-                      ? 'bg-red-500 hover:bg-red-600 text-white'
-                      : 'bg-green-500 hover:bg-green-600 text-white'
-                  }`}
-                >
-                  {isDetecting ? '⏹️ Stop' : '▶️ Start'} Analysis
-                </button>
-              )}
-              
-              {guidancePhase === 'preparation' && isGivingInstructions && (
-                <button
-                  onClick={() => {
-                    setIsGivingInstructions(false);
-                    setGuidancePhase('analysis');
-                    if (instructionTimer) clearTimeout(instructionTimer);
-                    startDetection();
-                  }}
-                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-bold"
-                >
-                  ⏭️ Skip to Analysis
-                </button>
-              )}
+              <button
+                onClick={isDetecting ? stopDetection : startDetection}
+                className={`px-4 py-2 rounded-lg font-bold ${
+                  isDetecting
+                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                    : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+              >
+                {isDetecting ? '⏹️ Stop' : '▶️ Start'} Detection
+              </button>
             </div>
           </>
         ) : (
@@ -784,12 +715,12 @@ const PoseCamera = ({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-300 mb-2">Live Guided Yoga Practice Ready</h3>
-              <p className="text-gray-500 mb-4">Click "Start Pose" to begin live step-by-step guidance</p>
-              <div className="text-sm text-emerald-400 bg-emerald-400/10 p-3 rounded-lg">
-                <strong>🎤 Live Guidance:</strong> I'll guide you through each step with voice instructions<br/>
-                <strong>📏 Camera Setup:</strong> Position yourself 1-2 meters back for best results<br/>
-                <strong>🎯 Auto-Analysis:</strong> After guidance, I'll analyze your pose automatically
+              <h3 className="text-xl font-semibold text-gray-300 mb-2">PC Camera Pose Detection Ready</h3>
+              <p className="text-gray-500 mb-4">Click "Start Pose" to begin landmark detection</p>
+              <div className="text-sm text-yellow-400 bg-yellow-400/10 p-3 rounded-lg">
+                <strong>📏 PC Camera:</strong> Position yourself 1-2 meters back<br/>
+                Partial body detection works fine - don't worry about full body<br/>
+                When pose is perfect, detection will auto-stop with "Bravo!"
               </div>
             </div>
           </div>
@@ -798,7 +729,7 @@ const PoseCamera = ({
 
       {/* Stop Camera Button */}
       {isActive && (
-        <div className="mt-2 text-center">
+        <div className="mt-4 text-center">
           <button
             onClick={stopWebcam}
             className="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg border border-red-500/30"
