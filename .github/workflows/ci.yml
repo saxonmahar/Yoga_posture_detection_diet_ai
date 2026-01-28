@@ -1,0 +1,80 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        
+    - name: Clear npm cache
+      run: npm cache clean --force
+        
+    - name: Install root dependencies
+      run: |
+        npm install --legacy-peer-deps --no-audit --no-fund
+        
+    - name: Install frontend dependencies
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps --no-audit --no-fund
+        
+    - name: Install backend dependencies
+      run: |
+        cd backend
+        npm install --legacy-peer-deps --no-audit --no-fund
+        
+    - name: Validate package.json files
+      run: |
+        echo "✅ Validating package.json files..."
+        node -e "console.log('Root:', JSON.parse(require('fs').readFileSync('package.json', 'utf8')).name)"
+        node -e "console.log('Frontend:', JSON.parse(require('fs').readFileSync('frontend/package.json', 'utf8')).name)"
+        node -e "console.log('Backend:', JSON.parse(require('fs').readFileSync('backend/package.json', 'utf8')).name)"
+        echo "✅ All package.json files are valid!"
+        
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+        
+    - name: Verify build artifacts
+      run: |
+        if [ -d "frontend/dist" ]; then
+          echo "✅ Build successful - dist folder created"
+          echo "Build artifacts:"
+          ls -la frontend/dist/
+          echo "✅ Frontend build completed successfully!"
+        else
+          echo "❌ Build failed - no dist folder found"
+          exit 1
+        fi
+        
+    - name: Test backend syntax
+      run: |
+        cd backend
+        if [ -f "index.js" ]; then
+          node -c index.js
+          echo "✅ Backend syntax check passed"
+        else
+          echo "⚠️ Backend index.js not found, skipping syntax check"
+        fi
+        
+    - name: Build summary
+      run: |
+        echo "🎉 Build Summary:"
+        echo "✅ Dependencies installed successfully"
+        echo "✅ Frontend build completed"
+        echo "✅ All checks passed"
+        echo "🚀 Ready for deployment!"
