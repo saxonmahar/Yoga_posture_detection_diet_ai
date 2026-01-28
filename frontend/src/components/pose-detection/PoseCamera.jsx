@@ -1030,23 +1030,28 @@ const PoseCamera = ({
                       onClick={() => {
                         // Navigate to Diet Recommendations with session data
                         setShowSessionComplete(false);
-                        speak("Redirecting to your personalized diet recommendations!");
+                        speak("Great job! Let's get your personalized diet plan based on your workout!");
                         
                         // Store session data in localStorage for diet page
                         const sessionSummary = {
                           completedPoses: sessionState.completedPoses,
                           totalTime: sessionState.totalSessionTime,
                           totalCalories: sessionState.completedPoses.reduce((total, pose) => total + pose.estimatedCalories, 0),
-                          sessionDate: new Date().toISOString()
+                          sessionDate: new Date().toISOString(),
+                          averageAccuracy: sessionState.completedPoses.length > 0 ? 
+                            Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90
                         };
                         localStorage.setItem('yogaSessionData', JSON.stringify(sessionSummary));
+                        
+                        // Mark session as completed for dashboard access
+                        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
                         
                         // Navigate directly to diet page
                         window.location.href = '/diet-plan';
                       }}
                       className="w-full px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
                     >
-                      🍎 View Diet Recommendations
+                      🍎 Get My Diet Plan (Recommended)
                     </button>
                     
                     <button
@@ -1073,14 +1078,16 @@ const PoseCamera = ({
                         };
                         localStorage.setItem('yogaProgressData', JSON.stringify(progressData));
                         console.log('📊 Progress data stored:', progressData);
-                        localStorage.setItem('yogaProgressData', JSON.stringify(progressData));
+                        
+                        // Mark session as completed for dashboard access
+                        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
                         
                         // Navigate directly to progress page
                         window.location.href = '/progress';
                       }}
                       className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors"
                     >
-                      📈 View Progress Dashboard
+                      📈 View My Progress
                     </button>
                     
                     <button
