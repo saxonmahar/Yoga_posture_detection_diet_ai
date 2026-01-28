@@ -1,5 +1,4 @@
 const YogaSession = require('../models/yogaSession');
-const UserProgress = require('../models/userProgress');
 const Food = require('../models/food');
 
 class AnalyticsService {
@@ -353,9 +352,9 @@ class AnalyticsService {
             const tomorrow = new Date(today);
             tomorrow.setDate(tomorrow.getDate() + 1);
 
-            let progress = await Progress.findOne({
-                userId,
-                date: { $gte: today, $lt: tomorrow }
+            let progress = await YogaSession.findOne({
+                user_id: userId,
+                session_date: { $gte: today, $lt: tomorrow }
             });
 
             if (progress) {
@@ -363,9 +362,9 @@ class AnalyticsService {
                 Object.assign(progress, progressData);
             } else {
                 // Create new
-                progress = new Progress({
-                    userId,
-                    date: new Date(),
+                progress = new YogaSession({
+                    user_id: userId,
+                    session_date: new Date(),
                     ...progressData
                 });
             }
@@ -380,8 +379,8 @@ class AnalyticsService {
     // Get progress history
     async getProgressHistory(userId, limit = 30) {
         try {
-            const progress = await Progress.find({ userId })
-                .sort({ date: -1 })
+            const progress = await YogaSession.find({ user_id: userId })
+                .sort({ session_date: -1 })
                 .limit(limit);
 
             return { success: true, progress };

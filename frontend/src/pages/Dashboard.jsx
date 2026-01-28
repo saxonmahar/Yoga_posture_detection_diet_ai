@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Calendar,
@@ -7,13 +7,11 @@ import {
   Trophy,
   Zap,
   Heart,
-  Brain,
   Users,
   ArrowRight,
   Camera,
   Utensils,
   BarChart3,
-  Plus,
   Star,
   Clock,
   Activity,
@@ -21,24 +19,105 @@ import {
   Award,
   Target as TargetIcon,
   Play,
-  BookOpen,
   Sparkles,
   TrendingDown,
   CheckCircle2,
   ChevronRight,
-  Dumbbell,
   Apple,
   Moon,
   Sun,
   Droplets,
-  Wind,
-  AlertCircle // Added AlertCircle icon
+  AlertCircle
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 function Dashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [userAnalytics, setUserAnalytics] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [hasCompletedSession, setHasCompletedSession] = useState(false)
+
+  // Fetch real user analytics on component mount
+  useEffect(() => {
+    if (user?._id || user?.id) {
+      fetchUserAnalytics()
+      checkSessionCompletion()
+    }
+  }, [user])
+
+  const fetchUserAnalytics = async () => {
+    try {
+      const userId = user._id || user.id
+      console.log('📊 Fetching dashboard analytics for user:', userId)
+      
+      const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setUserAnalytics(data.analytics)
+          console.log('✅ Dashboard analytics loaded:', data.analytics)
+        }
+      } else {
+        console.log('⚠️ No analytics data available yet')
+      }
+    } catch (error) {
+      console.error('❌ Error fetching dashboard analytics:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const checkSessionCompletion = () => {
+    // Check if user has completed a session recently (within last 24 hours)
+    const lastSessionTime = localStorage.getItem('lastYogaSessionTime')
+    const lastSessionData = localStorage.getItem('yogaSessionData')
+    const lastProgressData = localStorage.getItem('yogaProgressData')
+    
+    if (lastSessionTime) {
+      try {
+        const sessionTime = new Date(lastSessionTime)
+        const now = new Date()
+        const hoursDiff = (now - sessionTime) / (1000 * 60 * 60)
+        
+        // If session was completed within last 24 hours
+        if (hoursDiff <= 24) {
+          setHasCompletedSession(true)
+          console.log(`✅ User has completed session within last ${Math.round(hoursDiff)} hours`)
+          return
+        }
+      } catch (error) {
+        console.error('Error checking session timestamp:', error)
+      }
+    }
+    
+    // Fallback: check session data timestamps
+    if (lastSessionData || lastProgressData) {
+      try {
+        const sessionData = lastSessionData ? JSON.parse(lastSessionData) : null
+        const progressData = lastProgressData ? JSON.parse(lastProgressData) : null
+        
+        const sessionDate = sessionData?.sessionDate || progressData?.latestSession?.sessionDate
+        
+        if (sessionDate) {
+          const sessionTime = new Date(sessionDate)
+          const now = new Date()
+          const hoursDiff = (now - sessionTime) / (1000 * 60 * 60)
+          
+          // If session was completed within last 24 hours
+          if (hoursDiff <= 24) {
+            setHasCompletedSession(true)
+            console.log(`✅ User has completed session within last ${Math.round(hoursDiff)} hours (from data)`)
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session completion:', error)
+      }
+    }
+    
+    console.log(`📊 Session completion check: ${hasCompletedSession ? 'UNLOCKED' : 'LOCKED'}`)
+  }
 
   // Check Flask ML server status
   const checkMLServer = async () => {
@@ -56,22 +135,6 @@ function Dashboard() {
       return { success: false, error: 'Server not responding properly' };
     } catch (error) {
       return { success: false, error: 'Cannot connect to ML server' };
-    }
-  };
-
-  // Start ML server via backend API (optional - if you have backend endpoint)
-  const startMLServer = async () => {
-    try {
-      // If you have a backend endpoint to start Flask
-      const response = await fetch('http://localhost:5001/api/start-ml-server', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.ok;
-    } catch (error) {
-      return false;
     }
   };
 
@@ -106,10 +169,11 @@ function Dashboard() {
     });
   };
 
+  // Real user stats from analytics
   const stats = [
     { 
       label: 'Yoga Sessions', 
-      value: user?.stats?.totalWorkouts || '0', 
+      value: loading ? '...' : (userAnalytics?.overall_stats?.total_sessions || '0'), 
       icon: Calendar, 
       change: '+12%', 
       trending: 'up',
@@ -118,7 +182,7 @@ function Dashboard() {
     },
     { 
       label: 'Current Streak', 
-      value: `${user?.stats?.currentStreak || 0} days`, 
+      value: loading ? '...' : `${userAnalytics?.overall_stats?.current_streak || 0} days`, 
       icon: Trophy, 
       change: '+15%', 
       trending: 'up',
@@ -127,7 +191,8 @@ function Dashboard() {
     },
     { 
       label: 'Accuracy', 
-      value: `${user?.stats?.averageAccuracy || 0}%`, 
+      value: loading ? '...' : `${userAnalytics?.pose_progress?.length > 0 ? 
+        Math.round(userAnalytics.pose_progress.reduce((sum, pose) => sum + pose.average_score, 0) / userAnalytics.pose_progress.length) : 0}%`, 
       icon: TargetIcon, 
       change: '+5%', 
       trending: 'up',
@@ -136,42 +201,35 @@ function Dashboard() {
     },
   ]
 
-  const recentSessions = [
+  // Real recent sessions from analytics
+  const recentSessions = userAnalytics?.recent_sessions?.slice(0, 3).map(session => ({
+    pose: session.poses_practiced?.[0]?.pose_name || 'Yoga Session',
+    accuracy: session.overall_performance?.average_accuracy || 0,
+    duration: `${session.total_duration || 0}m`,
+    date: new Date(session.session_date).toLocaleDateString(),
+    calories: Math.round((session.total_duration || 0) * 3), // Estimate 3 cal/min
+    icon: '🧘‍♀️',
+    difficulty: session.overall_performance?.average_accuracy >= 85 ? 'Advanced' : 
+                session.overall_performance?.average_accuracy >= 70 ? 'Intermediate' : 'Beginner'
+  })) || [
+    // Fallback data if no sessions
     { 
-      pose: 'Downward Dog', 
-      accuracy: 92, 
-      duration: '5:24', 
-      date: 'Today', 
-      calories: 45,
-      icon: '🐕',
-      difficulty: 'Intermediate'
-    },
-    { 
-      pose: 'Warrior II', 
-      accuracy: 87, 
-      duration: '4:12', 
-      date: 'Yesterday', 
-      calories: 38,
-      icon: '⚔️',
-      difficulty: 'Advanced'
-    },
-    { 
-      pose: 'Tree Pose', 
-      accuracy: 95, 
-      duration: '3:48', 
-      date: '2 days ago', 
-      calories: 32,
-      icon: '🌳',
+      pose: 'Complete your first session!', 
+      accuracy: 0, 
+      duration: '0m', 
+      date: 'Start today', 
+      calories: 0,
+      icon: '🎯',
       difficulty: 'Beginner'
-    },
-  ]
+    }
+  ];
 
   const todayGoals = [
     { title: 'Morning Yoga', completed: true, time: '30 min', icon: Sun },
     { title: 'Drink 2L Water', completed: false, progress: 60, icon: Droplets },
     { title: 'Healthy Meal Plan', completed: true, time: '3 meals', icon: Apple },
     { title: 'Evening Meditation', completed: false, time: '15 min', icon: Moon },
-  ]
+  ];
 
   const quickActions = [
     {
@@ -181,25 +239,32 @@ function Dashboard() {
       icon: Camera,
       gradient: 'from-blue-500 to-cyan-400',
       badge: 'Popular',
-      onClick: handlePoseDetectionClick
+      onClick: handlePoseDetectionClick,
+      enabled: true
     },
     {
       id: 'diet-plan',
       title: 'Smart Diet Plan',
-      description: 'Personalized nutrition guide',
+      description: hasCompletedSession ? 'Personalized nutrition guide' : 'Complete a yoga session first',
       icon: Utensils,
       gradient: 'from-green-500 to-emerald-400',
-      badge: 'New',
-      onClick: () => navigate('/diet-plan')
+      badge: hasCompletedSession ? 'New' : 'Locked',
+      onClick: hasCompletedSession ? () => navigate('/diet-plan') : () => {
+        alert('🧘‍♀️ Complete a yoga session first to unlock your personalized diet plan!')
+      },
+      enabled: hasCompletedSession
     },
     {
       id: 'progress',
       title: 'Progress Analytics',
-      description: 'Track your improvements',
+      description: hasCompletedSession ? 'Track your improvements' : 'Complete a yoga session first',
       icon: BarChart3,
       gradient: 'from-purple-500 to-pink-400',
-      badge: null,
-      onClick: () => navigate('/progress')
+      badge: hasCompletedSession ? null : 'Locked',
+      onClick: hasCompletedSession ? () => navigate('/progress') : () => {
+        alert('📊 Complete a yoga session first to view your progress analytics!')
+      },
+      enabled: hasCompletedSession
     },
     {
       id: 'community',
@@ -208,7 +273,8 @@ function Dashboard() {
       icon: Users,
       gradient: 'from-orange-500 to-red-400',
       badge: 'Live',
-      onClick: () => navigate('/community')
+      onClick: () => navigate('/community'),
+      enabled: true
     }
   ]
 
@@ -278,6 +344,26 @@ function Dashboard() {
                 <div className="animate-bounce">👋</div>
               </div>
               <p className="text-slate-400 text-lg">Let's make today amazing for your wellness journey</p>
+              
+              {/* Session Completion Status */}
+              {hasCompletedSession ? (
+                <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-green-400" />
+                    <span className="text-green-400 font-semibold">Session Complete!</span>
+                    <span className="text-green-300">Diet Plan & Progress Analytics are now unlocked 🎉</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="mt-4 p-3 bg-amber-500/20 border border-amber-500/30 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5 text-amber-400" />
+                    <span className="text-amber-400 font-semibold">Complete a yoga session</span>
+                    <span className="text-amber-300">to unlock Diet Plan & Progress Analytics</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="mt-4 flex items-center gap-2 flex-wrap">
                 {user?.isPremium && (
                   <div className="px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-sm font-semibold flex items-center gap-2 shadow-lg shadow-yellow-500/20">
@@ -384,29 +470,48 @@ function Dashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {quickActions.map((action) => {
               const Icon = action.icon
+              const isLocked = !action.enabled
               return (
                 <button
                   key={action.id}
                   onClick={action.onClick}
-                  className="group relative bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-slate-600 transition-all duration-300 hover:scale-105 hover:shadow-2xl text-left overflow-hidden"
+                  className={`group relative bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 transition-all duration-300 text-left overflow-hidden ${
+                    isLocked 
+                      ? 'opacity-60 cursor-not-allowed' 
+                      : 'hover:border-slate-600 hover:scale-105 hover:shadow-2xl'
+                  }`}
                 >
                   {/* Animated gradient background */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-20 transition-opacity duration-300`}></div>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 ${!isLocked && 'group-hover:opacity-20'} transition-opacity duration-300`}></div>
                   
                   {action.badge && (
-                    <div className="absolute top-4 right-4 px-3 py-1 bg-white/10 backdrop-blur-sm rounded-full text-xs font-semibold text-white border border-white/20">
+                    <div className={`absolute top-4 right-4 px-3 py-1 backdrop-blur-sm rounded-full text-xs font-semibold border ${
+                      action.badge === 'Locked' 
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30' 
+                        : 'bg-white/10 text-white border-white/20'
+                    }`}>
                       {action.badge}
                     </div>
                   )}
                   
+                  {isLocked && (
+                    <div className="absolute top-4 left-4 w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center">
+                      <AlertCircle className="w-4 h-4 text-red-400" />
+                    </div>
+                  )}
+                  
                   <div className="relative">
-                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${action.gradient} flex items-center justify-center mb-4 shadow-lg ${!isLocked && 'group-hover:scale-110'} transition-transform duration-300 ${isLocked && 'grayscale'}`}>
                       <Icon className="w-7 h-7 text-white" strokeWidth={2.5} />
                     </div>
                     <h3 className="text-lg font-bold text-white mb-2">{action.title}</h3>
                     <p className="text-sm text-slate-400 mb-4">{action.description}</p>
-                    <div className="flex items-center text-emerald-400 text-sm font-semibold group-hover:translate-x-2 transition-transform duration-300">
-                      <span>Get Started</span>
+                    <div className={`flex items-center text-sm font-semibold transition-transform duration-300 ${
+                      isLocked 
+                        ? 'text-red-400' 
+                        : 'text-emerald-400 group-hover:translate-x-2'
+                    }`}>
+                      <span>{isLocked ? 'Complete Session First' : 'Get Started'}</span>
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </div>
                   </div>
