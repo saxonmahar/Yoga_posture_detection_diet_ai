@@ -6,13 +6,11 @@ const authMiddleware = require('../middleware/authMiddleware');
 // Import our new analytics functions
 const {
   recordYogaSession,
-  getUserAnalytics,
-  getDashboardSummary
+  getUserAnalytics
 } = require('../controllers/analyticsController');
 
 // Public endpoints (no auth required for testing)
 router.post('/session', recordYogaSession);
-router.get('/dashboard', getDashboardSummary);
 
 // User-specific endpoints (with auth)
 router.get('/user/:user_id', getUserAnalytics);

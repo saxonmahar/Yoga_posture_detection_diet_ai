@@ -14,33 +14,124 @@ import {
   Activity
 } from 'lucide-react';
 
-const ProgressDashboard = ({ userId }) => {
+const ProgressDashboard = ({ userId, yogaProgressData }) => {
   const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState('30'); // days
 
   useEffect(() => {
-    if (userId) {
-      fetchUserAnalytics();
+    // If we have yoga progress data from session, use it immediately
+    if (yogaProgressData?.latestSession) {
+      console.log('📊 Using session data for progress display');
+      setAnalytics(createAnalyticsFromSessionData(yogaProgressData.latestSession));
+      setLoading(false);
+      return;
     }
-  }, [userId, selectedTimeframe]);
+
+    // Otherwise try to fetch from backend if userId exists
+    if (userId && userId !== 'guest') {
+      fetchUserAnalytics();
+    } else {
+      // No user and no session data
+      setLoading(false);
+      setError('No progress data available');
+    }
+  }, [userId, selectedTimeframe, yogaProgressData]);
+
+  const createAnalyticsFromSessionData = (sessionData) => {
+    return {
+      overall_stats: {
+        total_sessions: 1,
+        current_streak: 1,
+        total_practice_time: Math.round(sessionData.totalTime / 60) || 1,
+        overall_mastery_level: 'Beginner',
+        favorite_pose: sessionData.completedPoses?.[0]?.name || 'T Pose'
+      },
+      pose_progress: sessionData.completedPoses?.map(pose => ({
+        pose_id: pose.id,
+        pose_name: pose.name,
+        mastery_level: pose.maxAccuracy >= 90 ? 'Advanced' : pose.maxAccuracy >= 75 ? 'Intermediate' : 'Beginner',
+        average_score: pose.maxAccuracy || pose.averageAccuracy || 90,
+        best_score: pose.maxAccuracy || pose.averageAccuracy || 90,
+        total_attempts: pose.attempts || 3,
+        successful_completions: 1,
+        improvement_trend: 'Improving'
+      })) || [],
+      achievements: [
+        {
+          name: 'First Session Complete',
+          description: 'Completed your first yoga session!',
+          unlocked: true,
+          unlocked_date: new Date().toISOString(),
+          icon: '🎉'
+        }
+      ],
+      recent_sessions: [
+        {
+          session_date: sessionData.sessionDate || new Date().toISOString(),
+          total_duration: Math.round(sessionData.totalTime / 60) || 1,
+          poses_practiced: sessionData.completedPoses?.map(pose => ({
+            pose_name: pose.name,
+            accuracy_score: pose.maxAccuracy || pose.averageAccuracy || 90,
+            completed_successfully: true
+          })) || [],
+          overall_performance: {
+            average_accuracy: sessionData.averageAccuracy || 90,
+            poses_completed: sessionData.completedPoses?.length || 1
+          }
+        }
+      ],
+      insights: [
+        {
+          message: 'Great job completing your yoga session!',
+          type: 'achievement',
+          icon: '🎯'
+        },
+        {
+          message: 'Keep practicing to improve your pose accuracy',
+          type: 'improvement',
+          icon: '📈'
+        },
+        {
+          message: 'Try different poses to build overall strength',
+          type: 'suggestion',
+          icon: '💪'
+        }
+      ]
+    };
+  };
 
   const fetchUserAnalytics = async () => {
     try {
       setLoading(true);
+      console.log(`📊 Fetching analytics for user: ${userId}`);
+      
       const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch analytics');
+        throw new Error(`Failed to fetch analytics: ${response.status}`);
       }
       
       const data = await response.json();
-      setAnalytics(data.analytics);
-      setError(null);
+      console.log('📈 Analytics response:', data);
+      
+      if (data.success) {
+        setAnalytics(data.analytics);
+        setError(null);
+      } else {
+        throw new Error(data.error || 'Failed to fetch analytics');
+      }
     } catch (err) {
+      console.error('❌ Error fetching analytics:', err);
       setError(err.message);
-      console.error('Error fetching analytics:', err);
+      
+      // If backend fails but we have session data, use it
+      if (yogaProgressData?.latestSession) {
+        console.log('📊 Using session data as fallback');
+        setAnalytics(createAnalyticsFromSessionData(yogaProgressData.latestSession));
+        setError(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -97,6 +188,12 @@ const ProgressDashboard = ({ userId }) => {
         <div className="text-center py-8">
           <div className="text-slate-400 mb-4">No progress data available yet</div>
           <p className="text-sm text-slate-500">Complete some yoga sessions to see your analytics!</p>
+          <button 
+            onClick={() => window.location.href = '/pose-detection'}
+            className="mt-4 px-6 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+          >
+            Start Practicing
+          </button>
         </div>
       </div>
     );
