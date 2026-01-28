@@ -95,6 +95,12 @@ function Dashboard() {
   const fetchUserAnalytics = async () => {
     try {
       const userId = user._id || user.id
+      if (!userId) {
+        console.log('⚠️ No user ID available for analytics')
+        setLoading(false)
+        return
+      }
+      
       console.log('📊 Fetching dashboard analytics for user:', userId)
       
       const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`)
@@ -104,12 +110,21 @@ function Dashboard() {
         if (data.success) {
           setUserAnalytics(data.analytics)
           console.log('✅ Dashboard analytics loaded:', data.analytics)
+        } else {
+          console.log('⚠️ Analytics request failed:', data.error)
         }
+      } else if (response.status === 404) {
+        console.log('ℹ️ No analytics data found for user - showing empty state')
       } else {
-        console.log('⚠️ No analytics data available yet')
+        console.log(`⚠️ Analytics request failed with status: ${response.status}`)
       }
     } catch (error) {
-      console.error('❌ Error fetching dashboard analytics:', error)
+      // Only log unexpected errors, not network issues
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.log('🌐 Backend server not available - using empty state')
+      } else {
+        console.error('❌ Error fetching dashboard analytics:', error.message)
+      }
     } finally {
       setLoading(false)
     }

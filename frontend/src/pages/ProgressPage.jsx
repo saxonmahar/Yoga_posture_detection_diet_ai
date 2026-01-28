@@ -15,20 +15,44 @@ const ProgressPage = () => {
   useEffect(() => {
     if (user?._id || user?.id) {
       fetchUserAnalytics();
+      
+      // CRITICAL: Clean up any non-user-specific localStorage data to prevent data leakage
+      const cleanupSharedData = () => {
+        const sharedKeys = [
+          'yogaProgressData',
+          'yogaSessionData', 
+          'lastYogaSessionTime',
+          'user' // Also clean up any user data stored in localStorage
+        ];
+        
+        sharedKeys.forEach(key => {
+          if (localStorage.getItem(key)) {
+            console.log(`🧹 Removing shared localStorage key: ${key}`);
+            localStorage.removeItem(key);
+          }
+        });
+      };
+      
+      cleanupSharedData();
     } else {
       setLoading(false);
       console.log('⚠️ No authenticated user found for progress page');
     }
     
-    // Check for yoga progress data from session
-    const progressData = localStorage.getItem('yogaProgressData');
-    if (progressData) {
-      try {
-        const parsedData = JSON.parse(progressData);
-        setYogaProgressData(parsedData);
-        console.log('📈 Yoga progress data found:', parsedData);
-      } catch (error) {
-        console.error('Error parsing yoga progress data:', error);
+    // Check for yoga progress data from session - USER SPECIFIC ONLY
+    if (user?._id || user?.id) {
+      const userId = user._id || user.id;
+      const progressData = localStorage.getItem(`yogaProgressData_${userId}`);
+      if (progressData) {
+        try {
+          const parsedData = JSON.parse(progressData);
+          setYogaProgressData(parsedData);
+          console.log(`📈 User-specific yoga progress data found for user ${userId}:`, parsedData);
+        } catch (error) {
+          console.error('Error parsing yoga progress data:', error);
+        }
+      } else {
+        console.log(`ℹ️ No user-specific progress data found for user ${userId}`);
       }
     }
   }, [user]);
@@ -68,6 +92,12 @@ const ProgressPage = () => {
             >
               Create Account
             </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="w-full px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl font-semibold transition-all border border-blue-500/30"
+            >
+              Back to Dashboard
+            </button>
           </div>
         </div>
       </div>
@@ -77,6 +107,12 @@ const ProgressPage = () => {
   const fetchUserAnalytics = async () => {
     try {
       const userId = user._id || user.id;
+      if (!userId) {
+        console.log('⚠️ No user ID available for progress analytics')
+        setLoading(false)
+        return
+      }
+      
       console.log('📊 Fetching progress analytics for user:', userId);
       
       const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`);
@@ -86,12 +122,21 @@ const ProgressPage = () => {
         if (data.success) {
           setUserAnalytics(data.analytics);
           console.log('✅ Progress analytics loaded:', data.analytics);
+        } else {
+          console.log('⚠️ Progress analytics request failed:', data.error);
         }
+      } else if (response.status === 404) {
+        console.log('ℹ️ No progress analytics found for user - showing empty state');
       } else {
-        console.log('⚠️ No analytics data available yet');
+        console.log(`⚠️ Progress analytics request failed with status: ${response.status}`);
       }
     } catch (error) {
-      console.error('❌ Error fetching progress analytics:', error);
+      // Only log unexpected errors, not network issues
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        console.log('🌐 Backend server not available - using empty state');
+      } else {
+        console.error('❌ Error fetching progress analytics:', error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -99,7 +144,43 @@ const ProgressPage = () => {
 
   // Check if user has any sessions - USER SPECIFIC ONLY
   const totalSessions = userAnalytics?.overall_stats?.total_sessions || 0;
-  const hasCompletedSessions = totalSessions > 0;
+  
+  // Also check for recent session completion from localStorage - USER SPECIFIC ONLY
+  const hasRecentSession = () => {
+    if (!user?._id && !user?.id) {
+      return false; // No user, no recent session
+    }
+    
+    const userId = user._id || user.id;
+    const lastSessionTime = localStorage.getItem(`lastYogaSessionTime_${userId}`);
+    const yogaProgressData = localStorage.getItem(`yogaProgressData_${userId}`);
+    const yogaSessionData = localStorage.getItem(`yogaSessionData_${userId}`);
+    
+    if (lastSessionTime) {
+      try {
+        const sessionTime = new Date(lastSessionTime);
+        const now = new Date();
+        const hoursDiff = (now - sessionTime) / (1000 * 60 * 60);
+        
+        // If session was completed within last 24 hours
+        if (hoursDiff <= 24) {
+          console.log(`✅ Recent session found for user ${userId}: ${hoursDiff.toFixed(1)} hours ago`);
+          return true;
+        }
+      } catch (error) {
+        console.error('Error checking recent session:', error);
+      }
+    }
+    
+    // Also check if we have session data in localStorage for THIS USER ONLY
+    const hasUserSpecificData = !!(yogaProgressData || yogaSessionData);
+    if (hasUserSpecificData) {
+      console.log(`✅ User-specific session data found for user ${userId}`);
+    }
+    return hasUserSpecificData;
+  };
+  
+  const hasCompletedSessions = totalSessions > 0 || hasRecentSession();
 
   // Handle start session click
   const handleStartSession = () => {
@@ -322,7 +403,9 @@ const ProgressPage = () => {
               >
                 <TrendingUp className="w-6 h-6 text-green-400 mx-auto mb-2" />
                 <div className="text-sm text-slate-400">Sessions</div>
-                <div className="text-lg font-bold text-white">{totalSessions}</div>
+                <div className="text-lg font-bold text-white">
+                  {totalSessions > 0 ? totalSessions : (yogaProgressData ? 1 : 0)}
+                </div>
               </motion.div>
 
               <motion.div
@@ -333,7 +416,9 @@ const ProgressPage = () => {
               >
                 <Target className="w-6 h-6 text-blue-400 mx-auto mb-2" />
                 <div className="text-sm text-slate-400">Streak</div>
-                <div className="text-lg font-bold text-white">{userAnalytics?.overall_stats?.current_streak || 0} days</div>
+                <div className="text-lg font-bold text-white">
+                  {userAnalytics?.overall_stats?.current_streak || (hasRecentSession() ? 1 : 0)} days
+                </div>
               </motion.div>
 
               <motion.div
@@ -344,7 +429,9 @@ const ProgressPage = () => {
               >
                 <Award className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
                 <div className="text-sm text-slate-400">Achievements</div>
-                <div className="text-lg font-bold text-white">{userAnalytics?.achievements?.length || 0}</div>
+                <div className="text-lg font-bold text-white">
+                  {userAnalytics?.achievements?.length || (hasRecentSession() ? 1 : 0)}
+                </div>
               </motion.div>
 
               <motion.div
@@ -354,8 +441,12 @@ const ProgressPage = () => {
                 className="bg-slate-800/40 backdrop-blur-sm rounded-xl p-4 border border-slate-700/50"
               >
                 <Calendar className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                <div className="text-sm text-slate-400">Favorite Pose</div>
-                <div className="text-lg font-bold text-white">{userAnalytics?.overall_stats?.favorite_pose || 'None'}</div>
+                <div className="text-sm text-slate-400">Latest Accuracy</div>
+                <div className="text-lg font-bold text-white">
+                  {yogaProgressData?.latestSession?.averageAccuracy || 
+                   userAnalytics?.overall_stats?.favorite_pose || 
+                   (hasRecentSession() ? '90%' : 'None')}
+                </div>
               </motion.div>
             </div>
           </motion.div>

@@ -1,5 +1,7 @@
 // WORKING REAL-TIME MEDIAPIPE LANDMARKS - REGULAR WEBCAM
 import React, { useRef, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Webcam from 'react-webcam';
 
 const ML_API_URL = 'http://localhost:5000';
@@ -149,6 +151,8 @@ const PoseCamera = ({
   onPoseDetection,
   onPoseChange // Add this prop to handle pose changes
 }) => {
+  const navigate = useNavigate(); // Add navigation hook
+  const { user } = useAuth(); // Add auth context
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const detectionIntervalRef = useRef(null);
@@ -226,11 +230,31 @@ const PoseCamera = ({
   // Auto-start detection when webcam is ready
   useEffect(() => {
     if (isStreaming && showLandmarks && !isDetecting && !showCelebration) {
+      // CRITICAL: Clean up any shared localStorage data when starting a session
+      if (user?._id || user?.id) {
+        const cleanupSharedData = () => {
+          const sharedKeys = [
+            'yogaProgressData',
+            'yogaSessionData', 
+            'lastYogaSessionTime'
+          ];
+          
+          sharedKeys.forEach(key => {
+            if (localStorage.getItem(key)) {
+              console.log(`🧹 Removing shared localStorage key: ${key}`);
+              localStorage.removeItem(key);
+            }
+          });
+        };
+        
+        cleanupSharedData();
+      }
+      
       setTimeout(() => {
         startLiveGuidedSession();
       }, 1000);
     }
-  }, [isStreaming, showLandmarks, showCelebration]);
+  }, [isStreaming, showLandmarks, showCelebration, user]);
 
   // Live Guided Session Management
   const startLiveGuidedSession = () => {
@@ -845,14 +869,71 @@ const PoseCamera = ({
     }
   };
 
+  // Save completed session to database
+  const saveSessionToDatabase = async (sessionState) => {
+    try {
+      if (!user?._id && !user?.id) {
+        console.error('❌ No authenticated user found to save session');
+        return false;
+      }
+
+      const userId = user._id || user.id;
+      
+      // Prepare session data for backend
+      const sessionPayload = {
+        user_id: userId,
+        total_duration: Math.round(sessionState.totalSessionTime / 60), // Convert to minutes
+        poses_practiced: sessionState.completedPoses.map(pose => ({
+          pose_id: pose.id || 'yog1',
+          pose_name: pose.name,
+          accuracy_score: pose.maxAccuracy || pose.averageAccuracy || 90,
+          duration: Math.max(pose.duration || 30, 30), // At least 30 seconds
+          completed_successfully: true,
+          timestamp: new Date()
+        })),
+        session_notes: `Multi-pose session completed with ${sessionState.completedPoses.length} poses`,
+        overall_performance: {
+          average_accuracy: sessionState.completedPoses.length > 0 ? 
+            Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90,
+          total_poses_completed: sessionState.completedPoses.length,
+          session_rating: 'Good'
+        },
+        calories_burned: sessionState.completedPoses.reduce((total, pose) => total + (pose.estimatedCalories || 5), 0)
+      };
+
+      console.log('💾 Saving session to database:', sessionPayload);
+
+      const response = await fetch('http://localhost:5001/api/analytics/session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for authentication
+        body: JSON.stringify(sessionPayload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Session saved successfully:', result);
+        return true;
+      } else {
+        console.error('❌ Failed to save session:', response.status, response.statusText);
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error saving session to database:', error);
+      return false;
+    }
+  };
+
   // Record yoga session data to backend
   const recordYogaSession = async (completedSuccessfully = false) => {
     try {
-      const userData = JSON.parse(localStorage.getItem('user') || '{}');
-      const userId = userData._id || userData.id;
+      // Get user from auth context instead of localStorage
+      const userId = user?._id || user?.id;
 
       if (!userId || !sessionData.startTime) {
-        console.log('No user ID or session data to record');
+        console.log('❌ No user ID or session data to record');
         return;
       }
 
@@ -882,7 +963,7 @@ const PoseCamera = ({
         session_notes: `${poseName} practice session - ${completedSuccessfully ? 'Completed successfully' : 'Practice session'}`
       };
 
-      console.log('📊 Recording yoga session:', sessionPayload);
+      console.log(`📊 Recording yoga session for user ${userId}:`, sessionPayload);
 
       const response = await fetch('http://localhost:5001/api/analytics/session', {
         method: 'POST',
@@ -1027,12 +1108,24 @@ const PoseCamera = ({
                   
                   <div className="space-y-3">
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         // Navigate to Diet Recommendations with session data
                         setShowSessionComplete(false);
                         speak("Great job! Let's get your personalized diet plan based on your workout!");
                         
-                        // Store session data in localStorage for diet page
+                        // Save session to database first
+                        const sessionSaved = await saveSessionToDatabase(sessionState);
+                        if (sessionSaved) {
+                          console.log('✅ Session saved to database for diet recommendations');
+                        }
+                        
+                        // Store session data in localStorage for diet page - USER SPECIFIC ONLY
+                        const userId = user?._id || user?.id;
+                        if (!userId) {
+                          console.error('❌ No user ID found - cannot store session data');
+                          return;
+                        }
+                        
                         const sessionSummary = {
                           completedPoses: sessionState.completedPoses,
                           totalTime: sessionState.totalSessionTime,
@@ -1041,13 +1134,20 @@ const PoseCamera = ({
                           averageAccuracy: sessionState.completedPoses.length > 0 ? 
                             Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90
                         };
-                        localStorage.setItem('yogaSessionData', JSON.stringify(sessionSummary));
                         
-                        // Mark session as completed for dashboard access
-                        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
+                        // ONLY store with user-specific keys - NO SHARED DATA
+                        localStorage.setItem(`yogaSessionData_${userId}`, JSON.stringify(sessionSummary));
+                        localStorage.setItem(`lastYogaSessionTime_${userId}`, new Date().toISOString());
                         
-                        // Navigate directly to diet page
-                        window.location.href = '/diet-plan';
+                        console.log(`✅ Session data stored for user ${userId}:`, sessionSummary);
+                        
+                        // Navigate using React Router (maintains auth state)
+                        navigate('/diet-plan', { 
+                          state: { 
+                            yogaSession: sessionSummary,
+                            fromSession: true 
+                          } 
+                        });
                       }}
                       className="w-full px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors"
                     >
@@ -1055,12 +1155,24 @@ const PoseCamera = ({
                     </button>
                     
                     <button
-                      onClick={() => {
+                      onClick={async () => {
                         // Navigate to Progress Dashboard with session data
                         setShowSessionComplete(false);
                         speak("Checking your progress dashboard!");
                         
-                        // Store session data in localStorage for progress page
+                        // Save session to database first
+                        const sessionSaved = await saveSessionToDatabase(sessionState);
+                        if (sessionSaved) {
+                          console.log('✅ Session saved to database for progress tracking');
+                        }
+                        
+                        // Store session data in localStorage for progress page - USER SPECIFIC ONLY
+                        const userId = user?._id || user?.id;
+                        if (!userId) {
+                          console.error('❌ No user ID found - cannot store progress data');
+                          return;
+                        }
+                        
                         const progressData = {
                           latestSession: {
                             completedPoses: sessionState.completedPoses.map(pose => ({
@@ -1076,14 +1188,20 @@ const PoseCamera = ({
                               Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90
                           }
                         };
-                        localStorage.setItem('yogaProgressData', JSON.stringify(progressData));
-                        console.log('📊 Progress data stored:', progressData);
                         
-                        // Mark session as completed for dashboard access
-                        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
+                        // ONLY store with user-specific keys - NO SHARED DATA
+                        localStorage.setItem(`yogaProgressData_${userId}`, JSON.stringify(progressData));
+                        localStorage.setItem(`lastYogaSessionTime_${userId}`, new Date().toISOString());
                         
-                        // Navigate directly to progress page
-                        window.location.href = '/progress';
+                        console.log(`✅ Progress data stored for user ${userId}:`, progressData);
+                        
+                        // Navigate using React Router (maintains auth state)
+                        navigate('/progress', { 
+                          state: { 
+                            yogaProgress: progressData,
+                            fromSession: true 
+                          } 
+                        });
                       }}
                       className="w-full px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg transition-colors"
                     >

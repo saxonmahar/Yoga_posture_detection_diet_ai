@@ -7,7 +7,7 @@ import { dietService } from '../services/diet/diet.service';
 function DietPlanPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recommendations, setRecommendations] = useState(null);
@@ -24,6 +24,47 @@ function DietPlanPage() {
   };
 
   const stats = user?.stats || defaultStats;
+
+  // If still loading auth, show loading spinner
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If no user is authenticated, show login prompt
+  if (!user && !authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
+            <Utensils className="w-10 h-10 text-emerald-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Smart Diet Plan</h2>
+          <p className="text-slate-400 mb-6">Please log in to access your personalized AI-powered diet recommendations.</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20"
+            >
+              Log In
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl font-semibold transition-all border border-slate-600/50 hover:border-slate-600"
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Fetch diet recommendations with custom data
   const fetchRecommendationsWithData = async (customStats) => {
@@ -60,6 +101,35 @@ function DietPlanPage() {
   const fetchRecommendations = async () => {
     await fetchRecommendationsWithData(stats);
   };
+
+  // If no user is authenticated, show login prompt
+  if (!user && !authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
+            <Utensils className="w-10 h-10 text-emerald-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Smart Diet Plan</h2>
+          <p className="text-slate-400 mb-6">Please log in to access your personalized AI-powered diet recommendations.</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20"
+            >
+              Log In
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl font-semibold transition-all border border-slate-600/50 hover:border-slate-600"
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Check for yoga session data from localStorage first
