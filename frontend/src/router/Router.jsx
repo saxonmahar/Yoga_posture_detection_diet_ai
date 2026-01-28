@@ -136,13 +136,14 @@ export default function Router() {
     ["/premium", <Premium />],
     ["/pose-detection", <PoseDetectionWrapper />], // Updated to use wrapper
     ["/yoga-session", <YogaSessionPage />],
+    ["/diet-plan", <DietPlanPage />],
+    ["/progress", <ProgressPage />],
     ["/profile", <ProfilePage />],
     ["/settings", <SettingsPage />],
   ];
 
   const sessionAwareRoutes = [
-    ["/diet-plan", <DietPlanPage />],
-    ["/progress", <ProgressPage />],
+    // Remove diet-plan and progress from here - they should be protected
   ];
 
   return (
@@ -185,7 +186,7 @@ export default function Router() {
       ))}
 
       {/* Session-aware pages (accessible with session data or login) */}
-      {sessionAwareRoutes.map(([path, page]) => (
+      {sessionAwareRoutes.length > 0 && sessionAwareRoutes.map(([path, page]) => (
         <Route
           key={path}
           path={path}

@@ -7,6 +7,15 @@ class AnalyticsService {
         try {
             console.log(`📊 Fetching analytics for user: ${userId}`);
             
+            // Validate userId
+            if (!userId) {
+                console.log('⚠️ No userId provided to getUserAnalytics');
+                return {
+                    success: false,
+                    error: 'User ID is required'
+                };
+            }
+            
             // Get ALL yoga sessions for this user (not just last 30 days for now)
             const sessions = await YogaSession.find({
                 user_id: userId

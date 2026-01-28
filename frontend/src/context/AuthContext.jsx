@@ -97,17 +97,26 @@ export const AuthProvider = ({ children }) => {
       const response = await getMeRequest();
       if (response?.data?.user) {
         setUser(response.data.user);
+        console.log('✅ User loaded successfully:', response.data.user.name || response.data.user.email);
       } else {
         setUser(null);
+        console.log('⚠️ No user data in response');
       }
     } catch (error) {
-      console.error('Error loading user:', error);
-      // Only set user to null if it's a 401 (unauthorized)
-      // For other errors, keep existing user state if available
+      // Suppress 401 error logs - these are expected for non-authenticated users
       if (error.response?.status === 401 || error.response?.status === 403) {
         setUser(null);
+        console.log('ℹ️ User not authenticated - showing guest experience');
+      } else {
+        // Only log unexpected errors
+        console.error('❌ Unexpected error loading user:', error.message);
+        // For network errors, don't clear user - might be temporary
+        if (!error.response) {
+          console.log('🌐 Network error - keeping existing user state');
+        } else {
+          setUser(null);
+        }
       }
-      // For network errors, don't clear user - might be temporary
     } finally {
       setLoading(false); // 👈 CRITICAL
     }
