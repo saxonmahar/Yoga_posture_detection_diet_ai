@@ -11,7 +11,13 @@ const ProgressPage = () => {
     // Get user data from localStorage
     const userData = localStorage.getItem('user');
     if (userData) {
-      setUser(JSON.parse(userData));
+      try {
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        console.log('👤 User data loaded:', parsedUser);
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
     }
 
     // Check for yoga progress data from session
@@ -25,6 +31,11 @@ const ProgressPage = () => {
         console.error('Error parsing yoga progress data:', error);
       }
     }
+
+    // Debug all localStorage data
+    console.log('🔍 All localStorage keys:', Object.keys(localStorage));
+    console.log('🔍 yogaProgressData raw:', localStorage.getItem('yogaProgressData'));
+    console.log('🔍 user raw:', localStorage.getItem('user'));
   }, []);
 
   // Allow access if user exists OR if yoga progress data exists
@@ -43,6 +54,12 @@ const ProgressPage = () => {
       </div>
     );
   }
+
+  // Debug logging
+  console.log('🔍 ProgressPage Debug:', { user, yogaProgressData });
+
+  // Get user ID safely
+  const userId = user?._id || user?.id || 'guest';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -160,7 +177,7 @@ const ProgressPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <ProgressDashboard userId={user._id || user.id} />
+          <ProgressDashboard userId={userId} yogaProgressData={yogaProgressData} />
         </motion.div>
       </div>
 
