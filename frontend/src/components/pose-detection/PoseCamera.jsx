@@ -84,23 +84,23 @@ const LIVE_INSTRUCTIONS = {
   'yog2': {
     name: 'T Pose',
     steps: [
-      { instruction: "Welcome! Let's practice T Pose together. Stand straight in the center of the camera.", duration: 4000 },
-      { instruction: "Great! Keep your feet hip-width apart and engage your core.", duration: 4000 },
-      { instruction: "Perfect! Now slowly lift both arms out to your sides.", duration: 5000 },
-      { instruction: "Excellent! Bring your arms to shoulder height, parallel to the floor.", duration: 4000 },
-      { instruction: "Amazing! Extend your arms fully, reaching through your fingertips.", duration: 4000 },
-      { instruction: "Beautiful T Pose! Hold this position steady. I'm now analyzing your form.", duration: 2000 }
+      { instruction: "Welcome! Let's practice T Pose together. First, step back 2-3 meters from your camera so I can see your full body clearly.", duration: 5000 },
+      { instruction: "Great! Make sure you have good lighting - face a window or bright light if possible.", duration: 4000 },
+      { instruction: "Perfect! Now stand straight in the center of the camera view with your feet hip-width apart.", duration: 4000 },
+      { instruction: "Excellent! Slowly lift both arms out to your sides to shoulder height.", duration: 5000 },
+      { instruction: "Amazing! Extend your arms fully, reaching through your fingertips, creating a perfect T shape.", duration: 4000 },
+      { instruction: "Beautiful T Pose! Hold this position steady. I'm now analyzing your form with real MediaPipe technology.", duration: 2000 }
     ]
   },
   'yog3': {
     name: 'Tree Pose',
     steps: [
-      { instruction: "Welcome! Let's practice Tree Pose together. Stand tall in the center of the camera.", duration: 4000 },
-      { instruction: "Great! Find a focal point ahead to help with balance.", duration: 3000 },
-      { instruction: "Perfect! Shift your weight onto your left foot and ground it firmly.", duration: 4000 },
-      { instruction: "Excellent! Lift your right foot and place it on your inner left thigh.", duration: 6000 },
-      { instruction: "Amazing! Bring your palms together in prayer position at your heart.", duration: 4000 },
-      { instruction: "Beautiful Tree Pose! Find your balance and breathe. I'm analyzing your form.", duration: 2000 }
+      { instruction: "Welcome! Let's practice Tree Pose together. First, step back 2-3 meters so I can see your full body clearly.", duration: 5000 },
+      { instruction: "Great! Make sure you have good lighting and stand tall in the center of the camera view.", duration: 4000 },
+      { instruction: "Perfect! Find a focal point ahead to help with balance, and shift your weight onto your left foot.", duration: 5000 },
+      { instruction: "Excellent! Lift your right foot and place it on your inner left thigh - avoid the knee.", duration: 6000 },
+      { instruction: "Amazing! Bring your palms together in prayer position at your heart center.", duration: 4000 },
+      { instruction: "Beautiful Tree Pose! Find your balance and breathe deeply. I'm analyzing your form with real MediaPipe.", duration: 2000 }
     ]
   },
   'yog4': {
@@ -171,8 +171,31 @@ const PoseCamera = ({
     if (selectedPose !== currentSelectedPose) {
       console.log(`🔄 Updating currentSelectedPose: ${currentSelectedPose} → ${selectedPose}`);
       setCurrentSelectedPose(selectedPose);
+      
+      // Reset pose-specific states when switching poses
+      setPerfectPoseCount(0);
+      setConsecutiveFrames(0);
+      setPoseCompleted(false);
+      setLastPoseState(false);
+      setShowCelebration(false);
+      
+      // Reset session data for new pose
+      setSessionData({
+        startTime: new Date(),
+        attempts: 0,
+        accuracyScores: [],
+        feedbackGiven: [],
+        correctionsNeeded: []
+      });
+      
+      // Stop any ongoing speech
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      
+      console.log(`✅ Pose switched to: ${selectedPose} - States reset`);
     }
-  }, [selectedPose]);
+  }, [selectedPose, currentSelectedPose]);
   
   // Session Management State
   const [sessionState, setSessionState] = useState({
@@ -384,6 +407,9 @@ const PoseCamera = ({
       }
 
       const result = await response.json();
+      
+      // Debug log to verify pose type being sent and received
+      console.log(`🎯 Detection Request: pose_type=${currentSelectedPose}, Response: pose_name=${result.pose_name}, accuracy=${result.accuracy_score}%`);
 
       if (result.success && result.landmarks && result.landmarks.length > 0) {
         setLandmarkCount(result.landmarks.length);
@@ -501,8 +527,16 @@ const PoseCamera = ({
         }
 
       } else {
-        setDebugInfo('No pose detected in webcam frame');
+        setDebugInfo('No pose detected in webcam frame - Check lighting and distance');
         setLandmarkCount(0);
+        
+        // Provide helpful guidance when no pose is detected
+        if (isDetecting && !showCelebration) {
+          // Only speak guidance occasionally to avoid spam
+          if (Math.random() < 0.05) { // 5% chance per frame
+            speak('Make sure your full body is visible and lighting is good');
+          }
+        }
       }
 
     } catch (error) {
@@ -603,7 +637,7 @@ const PoseCamera = ({
 
     // Draw correction circles for bad joints (LARGE RED CIRCLES)
     if (result.corrections && result.corrections.length > 0) {
-      result.corrections.forEach(correction => {
+      result.corrections.forEach((correction, index) => {
         if (correction.joint_index !== undefined && landmarks[correction.joint_index]) {
           const landmark = landmarks[correction.joint_index];
           // MediaPipe returns non-mirrored coordinates, but webcam is mirrored
@@ -611,61 +645,117 @@ const PoseCamera = ({
           const x = mirrored ? (1 - landmark.x) * canvas.width : landmark.x * canvas.width;
           const y = landmark.y * canvas.height;
 
-          // Pulsing large red correction circle
+          // Pulsing large red correction circle with animation
+          const pulseSize = 35 + Math.sin(Date.now() / 200) * 10; // Animated pulsing
           ctx.beginPath();
-          ctx.arc(x, y, 35, 0, 2 * Math.PI);
+          ctx.arc(x, y, pulseSize, 0, 2 * Math.PI);
           ctx.strokeStyle = '#FF0000';
-          ctx.lineWidth = 6;
-          ctx.setLineDash([10, 5]);
+          ctx.lineWidth = 8;
+          ctx.setLineDash([15, 8]);
           ctx.stroke();
           ctx.setLineDash([]); // Reset dash
 
-          // Correction text
-          ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
-          ctx.fillRect(x - 40, y - 60, 80, 20);
+          // Inner solid red circle
+          ctx.beginPath();
+          ctx.arc(x, y, 25, 0, 2 * Math.PI);
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+          ctx.fill();
+          ctx.strokeStyle = '#FF0000';
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          // Correction text with better visibility
+          const message = correction.message || 'ADJUST';
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.95)';
+          ctx.fillRect(x - 60, y - 80, 120, 25);
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x - 60, y - 80, 120, 25);
+          
           ctx.fillStyle = '#FFFFFF';
+          ctx.font = 'bold 14px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText(message.toUpperCase(), x, y - 60);
+          ctx.textAlign = 'left';
+          
+          // Add joint number for debugging
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+          ctx.fillRect(x + 30, y - 15, 25, 20);
+          ctx.fillStyle = '#FFFF00';
           ctx.font = 'bold 12px Arial';
           ctx.textAlign = 'center';
-          ctx.fillText('ADJUST', x, y - 45);
+          ctx.fillText(`${correction.joint_index}`, x + 42, y - 2);
           ctx.textAlign = 'left';
         }
       });
     }
 
-    // Score overlay with better visibility
+    // Score overlay with better visibility and responsive colors
     if (result.accuracy_score !== undefined) {
-      // Background with border
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-      ctx.fillRect(10, 10, 320, 80);
-      ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(10, 10, 320, 80);
-
-      // Score text
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 24px Arial';
-      ctx.fillText(`Score: ${Math.round(result.accuracy_score)}%`, 20, 40);
-
-      // Status text with color
-      ctx.font = 'bold 18px Arial';
-      if (result.accuracy_score >= 85) {
-        ctx.fillStyle = '#00FF00';
-        ctx.fillText('PERFECT! 🎯', 20, 65);
-      } else if (result.accuracy_score >= 70) {
-        ctx.fillStyle = '#FFAA00';
-        ctx.fillText('GOOD! 👍', 20, 65);
+      // Background with border - color changes based on score
+      let bgColor, borderColor, textColor;
+      if (result.accuracy_score >= 90) {
+        bgColor = 'rgba(0, 255, 0, 0.9)';
+        borderColor = '#00FF00';
+        textColor = '#000000';
+      } else if (result.accuracy_score >= 75) {
+        bgColor = 'rgba(255, 255, 0, 0.9)';
+        borderColor = '#FFFF00';
+        textColor = '#000000';
       } else if (result.accuracy_score >= 50) {
-        ctx.fillStyle = '#FF8800';
-        ctx.fillText('GETTING THERE! 💪', 20, 65);
+        bgColor = 'rgba(255, 165, 0, 0.9)';
+        borderColor = '#FFA500';
+        textColor = '#000000';
       } else {
-        ctx.fillStyle = '#FF0000';
-        ctx.fillText('ADJUST POSE! ⚠️', 20, 65);
+        bgColor = 'rgba(255, 0, 0, 0.9)';
+        borderColor = '#FF0000';
+        textColor = '#FFFFFF';
+      }
+      
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(10, 10, 350, 100);
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, 350, 100);
+
+      // Score text with dynamic color
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 28px Arial';
+      ctx.fillText(`Score: ${Math.round(result.accuracy_score)}%`, 20, 45);
+
+      // Status text with color and better feedback
+      ctx.font = 'bold 20px Arial';
+      if (result.accuracy_score >= 95) {
+        ctx.fillStyle = '#000000';
+        ctx.fillText('PERFECT! 🎯', 20, 70);
+      } else if (result.accuracy_score >= 85) {
+        ctx.fillStyle = '#000000';
+        ctx.fillText('EXCELLENT! 🌟', 20, 70);
+      } else if (result.accuracy_score >= 75) {
+        ctx.fillStyle = '#000000';
+        ctx.fillText('VERY GOOD! 👍', 20, 70);
+      } else if (result.accuracy_score >= 60) {
+        ctx.fillStyle = '#000000';
+        ctx.fillText('GOOD! 💪', 20, 70);
+      } else if (result.accuracy_score >= 40) {
+        ctx.fillStyle = textColor;
+        ctx.fillText('GETTING THERE! 📈', 20, 70);
+      } else {
+        ctx.fillStyle = textColor;
+        ctx.fillText('ADJUST POSE! ⚠️', 20, 70);
       }
 
-      // Pose name
-      ctx.fillStyle = '#CCCCCC';
-      ctx.font = '14px Arial';
-      ctx.fillText(`Pose: ${result.pose_name || 'Unknown'}`, 20, 85);
+      // Pose name with better visibility
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText(`Pose: ${result.pose_name || 'Unknown'}`, 20, 95);
+      
+      // Feedback preview (first feedback item)
+      if (result.feedback && result.feedback.length > 0) {
+        ctx.font = '14px Arial';
+        const feedback = result.feedback[0].substring(0, 40) + (result.feedback[0].length > 40 ? '...' : '');
+        ctx.fillText(`💡 ${feedback}`, 20, 110);
+      }
     }
 
     console.log('✅ LANDMARKS DRAWN WITH ENHANCED VISIBILITY!');
@@ -673,12 +763,35 @@ const PoseCamera = ({
 
   const speak = (text) => {
     // Only speak if detection is active and not celebrating (unless it's the bravo message)
-    if ('speechSynthesis' in window && (isDetecting || text.includes('BRAVO'))) {
+    if ('speechSynthesis' in window && (isDetecting || text.includes('BRAVO') || text.includes('Welcome') || text.includes('Starting'))) {
+      // Cancel any ongoing speech first
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.volume = 0.8;
-      window.speechSynthesis.speak(utterance);
+      
+      // Small delay to ensure cancellation is processed
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.volume = 0.8;
+        utterance.pitch = 1.0;
+        utterance.lang = 'en-US';
+        
+        // Add event listeners for debugging
+        utterance.onstart = () => {
+          console.log(`🔊 TTS Started: "${text.substring(0, 50)}..."`);
+        };
+        
+        utterance.onend = () => {
+          console.log(`✅ TTS Completed: "${text.substring(0, 30)}..."`);
+        };
+        
+        utterance.onerror = (event) => {
+          console.error(`❌ TTS Error:`, event.error);
+        };
+        
+        window.speechSynthesis.speak(utterance);
+      }, 100);
+    } else {
+      console.log(`🔇 TTS Skipped: isDetecting=${isDetecting}, text="${text.substring(0, 30)}..."`);
     }
   };
 
@@ -748,7 +861,7 @@ const PoseCamera = ({
   };
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto">
+    <div className="relative w-full max-w-full mx-auto px-2">  {/* Full width, minimal padding */}
       {/* Error Display */}
       {error && (
         <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg">
@@ -756,25 +869,25 @@ const PoseCamera = ({
         </div>
       )}
 
-      {/* Instructions for PC camera setup */}
-      <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg">
+      {/* Simple instruction - no big boxes */}
+      <div className="mb-2 text-center">
         <p className="text-green-300 text-sm">
-          🧘‍♀️ <strong>Real Yoga Practice:</strong> Position yourself 1-2 meters back from camera. Hold poses with {'>'}95% accuracy to hear "Perfect pose!" and count towards your goal of 3 perfect poses for BRAVO celebration! 🎉
+          🧘‍♀️ <strong>Stand 3-4 meters back for full body view</strong> • Hold poses with {'>'}95% accuracy for "Perfect pose!" 🎉
         </p>
       </div>
 
-      {/* Debug Info */}
-      <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg">
-        <p className="text-blue-300 text-sm">
-          Debug: {debugInfo} | Landmarks: {landmarkCount} | Detection: {isDetecting ? 'ON' : 'OFF'} | Perfect Count: {perfectPoseCount}/3 | Consecutive: {consecutiveFrames} | LastState: {lastPoseState ? 'TRUE' : 'FALSE'} | <strong>Need {'>'}95% for Perfect Pose</strong> {poseCompleted ? '✅ COMPLETED!' : ''} {showCelebration ? '🎉 CELEBRATING!' : ''}
-        </p>
-        <p className="text-green-300 text-xs mt-1">
-          Current Pose: <strong>{PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose)?.name || 'Unknown'}</strong> | Session: {sessionState.isSessionActive ? 'ACTIVE' : 'INACTIVE'} | Completed Poses: {sessionState.completedPoses.length} | Phase: {sessionState.sessionPhase}
+      {/* Compact Debug Info */}
+      <div className="mb-2 p-2 bg-blue-500/20 border border-blue-500 rounded-lg">
+        <p className="text-blue-300 text-xs">
+          <strong>Status:</strong> {debugInfo} | <strong>Landmarks:</strong> {landmarkCount} | <strong>Perfect:</strong> {perfectPoseCount}/3 | <strong>Expected:</strong> {PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose)?.name || 'Unknown'}
+          {landmarkCount === 0 && isDetecting && (
+            <span className="text-red-300 ml-2 animate-pulse">⚠️ Move back more • Improve lighting</span>
+          )}
         </p>
       </div>
 
-      {/* Webcam Container - FULL BODY VIEW */}
-      <div className="relative bg-black rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', maxHeight: '80vh' }}>
+      {/* Webcam Container - MAXIMUM SIZE FOR FULL BODY */}
+      <div className="relative bg-black rounded-xl overflow-hidden" style={{ aspectRatio: '4/3', minHeight: '85vh', width: '100%' }}>
         {isActive ? (
           <>
             {/* Webcam Video - Full Body View */}
@@ -790,8 +903,11 @@ const PoseCamera = ({
                 facingMode: "user",
                 aspectRatio: 16/9,
                 frameRate: { ideal: 30, min: 15 },
-                // WIDER FIELD OF VIEW for better full body capture
-                zoom: 0.5 // Try to zoom out if supported
+                // MAXIMUM FIELD OF VIEW for full body capture
+                zoom: 0.3, // Try to zoom out more if supported
+                focusMode: "continuous",
+                // Request widest possible field of view
+                fieldOfView: { ideal: 120, min: 90 }
               }}
               style={{
                 width: '100%',
@@ -805,11 +921,11 @@ const PoseCamera = ({
                 console.log('📹 Webcam started with full body view');
                 onWebcamStart?.();
 
-                // TTS Welcome with user name
+                // Enhanced TTS Welcome with better guidance
                 const userData = JSON.parse(localStorage.getItem('user') || '{}');
                 const userName = userData.name || userData.username || 'User';
                 const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'yoga pose';
-                speak(`Welcome ${userName}! Let's practice ${poseName}. Position yourself as far back as possible so I can see your full body. Even 1-2 meters is fine.`);
+                speak(`Welcome ${userName}! Let's practice ${poseName}. Please step back 3-4 meters from your camera for the best full body view. The camera is now set to maximum wide angle to capture your entire body. Make sure you have good lighting and center yourself in the view.`);
               }}
               onUserMediaError={(err) => {
                 setError(`Webcam failed: ${err.message}`);

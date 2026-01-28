@@ -131,18 +131,33 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.rate = 0.9;
-      utterance.pitch = 1.0;
-      utterance.volume = 0.8;
-      utterance.lang = 'en-US';
-      
-      utterance.onend = () => {
-        setLastSpokenMessage('');
-      };
-      
-      window.speechSynthesis.speak(utterance);
-      setLastSpokenMessage(message);
+      // Small delay to ensure cancellation is processed
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(message);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.0;
+        utterance.volume = 0.8;
+        utterance.lang = 'en-US';
+        
+        utterance.onstart = () => {
+          console.log(`🔊 TTS Started: "${message.substring(0, 50)}..."`);
+        };
+        
+        utterance.onend = () => {
+          console.log(`✅ TTS Completed: "${message.substring(0, 30)}..."`);
+          setLastSpokenMessage('');
+        };
+        
+        utterance.onerror = (event) => {
+          console.error(`❌ TTS Error:`, event.error);
+          setLastSpokenMessage('');
+        };
+        
+        window.speechSynthesis.speak(utterance);
+        setLastSpokenMessage(message);
+      }, 100);
+    } else {
+      console.warn('⚠️ Speech synthesis not supported in this browser');
     }
   };
 
