@@ -27,13 +27,14 @@ import {
   Moon,
   Sun,
   Droplets,
-  AlertCircle
+  AlertCircle,
+  User
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 function Dashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [userAnalytics, setUserAnalytics] = useState(null)
   const [loading, setLoading] = useState(true)
   const [hasCompletedSession, setHasCompletedSession] = useState(false)
@@ -43,8 +44,53 @@ function Dashboard() {
     if (user?._id || user?.id) {
       fetchUserAnalytics()
       checkSessionCompletion()
+    } else {
+      // No authenticated user - set loading to false and show guest experience
+      setLoading(false)
+      console.log('⚠️ No authenticated user found')
     }
   }, [user])
+
+  // If still loading auth, show loading spinner
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // If no user is authenticated, redirect to login
+  if (!user && !authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
+            <User className="w-10 h-10 text-emerald-400" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-4">Welcome to Yoga AI</h2>
+          <p className="text-slate-400 mb-6">Please log in to access your personalized dashboard and track your yoga progress.</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => navigate('/login')}
+              className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20"
+            >
+              Log In
+            </button>
+            <button
+              onClick={() => navigate('/register')}
+              className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl font-semibold transition-all border border-slate-600/50 hover:border-slate-600"
+            >
+              Create Account
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const fetchUserAnalytics = async () => {
     try {
@@ -169,39 +215,46 @@ function Dashboard() {
     });
   };
 
-  // Real user stats from analytics
+  // Real user stats from analytics - ALWAYS show user's own data (even if 0)
+  const totalSessions = userAnalytics?.overall_stats?.total_sessions || 0;
+  const currentStreak = userAnalytics?.overall_stats?.current_streak || 0;
+  const avgAccuracy = userAnalytics?.pose_progress?.length > 0 ? 
+    Math.round(userAnalytics.pose_progress.reduce((sum, pose) => sum + pose.average_score, 0) / userAnalytics.pose_progress.length) : 0;
+
   const stats = [
     { 
       label: 'Yoga Sessions', 
-      value: loading ? '...' : (userAnalytics?.overall_stats?.total_sessions || '0'), 
+      value: loading ? '...' : totalSessions.toString(), 
       icon: Calendar, 
-      change: '+12%', 
-      trending: 'up',
+      change: totalSessions === 0 ? 'Start today!' : '+12%', 
+      trending: totalSessions === 0 ? 'neutral' : 'up',
       color: 'from-blue-500 to-cyan-400',
-      bgColor: 'bg-blue-500/10'
+      bgColor: 'bg-blue-500/10',
+      emptyMessage: 'Your first session awaits!'
     },
     { 
       label: 'Current Streak', 
-      value: loading ? '...' : `${userAnalytics?.overall_stats?.current_streak || 0} days`, 
+      value: loading ? '...' : `${currentStreak} ${currentStreak === 1 ? 'day' : 'days'}`, 
       icon: Trophy, 
-      change: '+15%', 
-      trending: 'up',
+      change: currentStreak === 0 ? 'Begin streak!' : '+15%', 
+      trending: currentStreak === 0 ? 'neutral' : 'up',
       color: 'from-yellow-500 to-amber-400',
-      bgColor: 'bg-yellow-500/10'
+      bgColor: 'bg-yellow-500/10',
+      emptyMessage: 'Build your practice streak!'
     },
     { 
       label: 'Accuracy', 
-      value: loading ? '...' : `${userAnalytics?.pose_progress?.length > 0 ? 
-        Math.round(userAnalytics.pose_progress.reduce((sum, pose) => sum + pose.average_score, 0) / userAnalytics.pose_progress.length) : 0}%`, 
+      value: loading ? '...' : totalSessions === 0 ? 'Ready to start!' : `${avgAccuracy}%`, 
       icon: TargetIcon, 
-      change: '+5%', 
-      trending: 'up',
+      change: totalSessions === 0 ? 'Track progress!' : '+5%', 
+      trending: totalSessions === 0 ? 'neutral' : 'up',
       color: 'from-purple-500 to-pink-400',
-      bgColor: 'bg-purple-500/10'
+      bgColor: 'bg-purple-500/10',
+      emptyMessage: 'Perfect your poses!'
     },
   ]
 
-  // Real recent sessions from analytics
+  // Real recent sessions from analytics - USER SPECIFIC ONLY
   const recentSessions = userAnalytics?.recent_sessions?.slice(0, 3).map(session => ({
     pose: session.poses_practiced?.[0]?.pose_name || 'Yoga Session',
     accuracy: session.overall_performance?.average_accuracy || 0,
@@ -211,18 +264,43 @@ function Dashboard() {
     icon: '🧘‍♀️',
     difficulty: session.overall_performance?.average_accuracy >= 85 ? 'Advanced' : 
                 session.overall_performance?.average_accuracy >= 70 ? 'Intermediate' : 'Beginner'
-  })) || [
-    // Fallback data if no sessions
+  })) || [];
+
+  // Empty state for new users - NEVER show other users' data
+  const emptyStateSessions = [
     { 
-      pose: 'Complete your first session!', 
+      pose: 'Your yoga journey starts here!', 
       accuracy: 0, 
       duration: '0m', 
-      date: 'Start today', 
+      date: 'Ready when you are', 
       calories: 0,
       icon: '🎯',
-      difficulty: 'Beginner'
+      difficulty: 'Beginner',
+      isEmpty: true
+    },
+    { 
+      pose: 'Complete your first session', 
+      accuracy: 0, 
+      duration: '0m', 
+      date: 'Today could be the day', 
+      calories: 0,
+      icon: '🌟',
+      difficulty: 'Beginner',
+      isEmpty: true
+    },
+    { 
+      pose: 'Build your practice streak', 
+      accuracy: 0, 
+      duration: '0m', 
+      date: 'Every expert was once a beginner', 
+      calories: 0,
+      icon: '💪',
+      difficulty: 'Beginner',
+      isEmpty: true
     }
   ];
+
+  const displaySessions = recentSessions.length > 0 ? recentSessions : emptyStateSessions;
 
   const todayGoals = [
     { title: 'Morning Yoga', completed: true, time: '30 min', icon: Sun },
@@ -407,16 +485,20 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Grid with Enhanced Design */}
+        {/* Stats Grid with Enhanced Design - USER SPECIFIC DATA ONLY */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => {
             const Icon = stat.icon
-            const trendIcon = stat.trending === 'up' ? TrendingUp : TrendingDown
+            const trendIcon = stat.trending === 'up' ? TrendingUp : stat.trending === 'down' ? TrendingDown : Target
             const TrendIcon = trendIcon
+            const isEmptyState = totalSessions === 0
+            
             return (
               <div 
                 key={index} 
-                className="group relative bg-gradient-to-br from-slate-800/50 to-slate-800/30 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-slate-600 transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden"
+                className={`group relative bg-gradient-to-br from-slate-800/50 to-slate-800/30 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 hover:border-slate-600 transition-all duration-300 hover:scale-105 hover:shadow-2xl overflow-hidden ${
+                  isEmptyState ? 'border-dashed border-slate-600/50' : ''
+                }`}
               >
                 {/* Glow effect */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
@@ -425,18 +507,31 @@ function Dashboard() {
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <p className="text-slate-400 text-sm mb-2">{stat.label}</p>
-                      <p className="text-4xl font-bold text-white">{stat.value}</p>
+                      <p className={`text-4xl font-bold ${isEmptyState ? 'text-slate-300' : 'text-white'}`}>
+                        {stat.value}
+                      </p>
+                      {isEmptyState && (
+                        <p className="text-xs text-slate-500 mt-1">{stat.emptyMessage}</p>
+                      )}
                     </div>
                     <div className={`p-3 rounded-xl ${stat.bgColor} backdrop-blur-sm`}>
                       <Icon className={`w-7 h-7 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} strokeWidth={2.5} />
                     </div>
                   </div>
                   <div className="flex items-center">
-                    <TrendIcon className={`w-4 h-4 mr-2 ${stat.trending === 'up' ? 'text-emerald-400' : 'text-red-400'}`} />
-                    <span className={`text-sm font-semibold ${stat.trending === 'up' ? 'text-emerald-400' : 'text-red-400'}`}>
+                    <TrendIcon className={`w-4 h-4 mr-2 ${
+                      stat.trending === 'up' ? 'text-emerald-400' : 
+                      stat.trending === 'down' ? 'text-red-400' : 'text-slate-400'
+                    }`} />
+                    <span className={`text-sm font-semibold ${
+                      stat.trending === 'up' ? 'text-emerald-400' : 
+                      stat.trending === 'down' ? 'text-red-400' : 'text-slate-400'
+                    }`}>
                       {stat.change}
                     </span>
-                    <span className="text-slate-500 text-sm ml-2">vs last week</span>
+                    <span className="text-slate-500 text-sm ml-2">
+                      {isEmptyState ? 'Your journey begins' : 'vs last week'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -584,56 +679,91 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Recent Sessions */}
+            {/* Recent Sessions - USER SPECIFIC ONLY */}
             <div className="bg-gradient-to-br from-slate-800/80 to-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-white flex items-center">
                   <Activity className="w-5 h-5 mr-3 text-blue-400" />
-                  Recent Yoga Sessions
+                  {totalSessions === 0 ? 'Your Yoga Journey' : 'Recent Yoga Sessions'}
                 </h2>
                 <button
                   onClick={() => navigate('/progress')}
                   className="text-blue-400 hover:text-blue-300 text-sm font-semibold flex items-center"
                 >
-                  View All
+                  {totalSessions === 0 ? 'Get Started' : 'View All'}
                   <ArrowRight className="w-4 h-4 ml-1" />
                 </button>
               </div>
               <div className="space-y-4">
-                {recentSessions.map((session, index) => (
+                {displaySessions.map((session, index) => (
                   <button
                     key={index}
-                    onClick={() => navigate('/progress')}
-                    className="w-full flex items-center justify-between p-5 bg-slate-700/30 hover:bg-slate-700/50 rounded-xl transition-all border border-slate-600/30 hover:border-slate-600 group"
+                    onClick={() => session.isEmpty ? handlePoseDetectionClick() : navigate('/progress')}
+                    className={`w-full flex items-center justify-between p-5 rounded-xl transition-all border group ${
+                      session.isEmpty 
+                        ? 'bg-slate-700/20 hover:bg-slate-700/40 border-slate-600/30 hover:border-slate-600 border-dashed' 
+                        : 'bg-slate-700/30 hover:bg-slate-700/50 border-slate-600/30 hover:border-slate-600'
+                    }`}
                   >
                     <div className="flex items-center gap-4">
                       <div className="text-3xl">{session.icon}</div>
                       <div className="text-left">
-                        <p className="font-bold text-white text-lg mb-1">{session.pose}</p>
+                        <p className={`font-bold text-lg mb-1 ${session.isEmpty ? 'text-slate-300' : 'text-white'}`}>
+                          {session.pose}
+                        </p>
                         <div className="flex items-center gap-4 text-sm text-slate-400">
                           <span className="flex items-center gap-1">
                             <Clock className="w-4 h-4" />
                             {session.duration}
                           </span>
-                          <span className="flex items-center gap-1">
-                            <Flame className="w-4 h-4" />
-                            {session.calories} cal
-                          </span>
-                          <span className="px-2 py-0.5 bg-slate-600/50 rounded text-xs">
-                            {session.difficulty}
-                          </span>
+                          {!session.isEmpty && (
+                            <>
+                              <span className="flex items-center gap-1">
+                                <Flame className="w-4 h-4" />
+                                {session.calories} cal
+                              </span>
+                              <span className="px-2 py-0.5 bg-slate-600/50 rounded text-xs">
+                                {session.difficulty}
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                        {session.accuracy}%
-                      </p>
-                      <p className="text-sm text-slate-400">Accuracy</p>
+                      {session.isEmpty ? (
+                        <div className="text-slate-400">
+                          <p className="text-sm">Click to start</p>
+                          <p className="text-xs text-slate-500">{session.date}</p>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="font-bold text-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                            {session.accuracy}%
+                          </p>
+                          <p className="text-sm text-slate-400">Accuracy</p>
+                        </>
+                      )}
                     </div>
                   </button>
                 ))}
               </div>
+              
+              {/* Empty state call to action */}
+              {totalSessions === 0 && (
+                <div className="mt-6 p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
+                  <div className="text-center">
+                    <p className="text-white font-semibold mb-2">Ready to begin your wellness journey?</p>
+                    <p className="text-slate-400 text-sm mb-4">Complete your first yoga session to start tracking your amazing progress!</p>
+                    <button
+                      onClick={handlePoseDetectionClick}
+                      className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-lg font-semibold transition-all"
+                    >
+                      Start First Session 🧘‍♀️
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Nutrition Overview */}
