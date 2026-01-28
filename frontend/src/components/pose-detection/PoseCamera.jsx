@@ -73,12 +73,12 @@ const LIVE_INSTRUCTIONS = {
   'yog1': {
     name: 'Warrior II',
     steps: [
-      { instruction: "Welcome! Let's practice Warrior II together. Stand in the center of the camera.", duration: 4000 },
-      { instruction: "Great! Now step your feet wide apart, about 4 feet distance.", duration: 5000 },
-      { instruction: "Perfect! Turn your right foot out 90 degrees to the right.", duration: 4000 },
-      { instruction: "Excellent! Now bend your right knee directly over your ankle.", duration: 5000 },
-      { instruction: "Amazing! Raise both arms parallel to the floor, reaching in opposite directions.", duration: 5000 },
-      { instruction: "Beautiful! Hold this strong Warrior II position. I'm now analyzing your form.", duration: 2000 }
+      { instruction: "Welcome! Let's master Warrior II together. Step back 3-4 meters so I can see your full warrior stance.", duration: 5000 },
+      { instruction: "Perfect! Stand with your feet wide apart, about 4 feet distance - feel your power!", duration: 4000 },
+      { instruction: "Excellent! Turn your right foot out 90 degrees and ground it firmly like a warrior.", duration: 4000 },
+      { instruction: "Amazing! Bend your right knee directly over your ankle - sink into your warrior strength!", duration: 5000 },
+      { instruction: "Magnificent! Raise both arms parallel to the floor, reaching in opposite directions with warrior energy!", duration: 5000 },
+      { instruction: "Beautiful Warrior II! Hold this powerful stance. I'm analyzing your warrior form with real MediaPipe.", duration: 2000 }
     ]
   },
   'yog2': {
@@ -106,34 +106,34 @@ const LIVE_INSTRUCTIONS = {
   'yog4': {
     name: 'Goddess Pose',
     steps: [
-      { instruction: "Welcome! Let's practice Goddess Pose together. Stand with feet wide apart.", duration: 4000 },
-      { instruction: "Great! Turn both feet out at 45-degree angles.", duration: 4000 },
-      { instruction: "Perfect! Lower into a wide squat, keeping your back straight.", duration: 5000 },
-      { instruction: "Excellent! Lift your arms up and bend your elbows at 90 degrees.", duration: 5000 },
-      { instruction: "Amazing! Make strong goal post arms and sink deeper into the squat.", duration: 4000 },
-      { instruction: "Powerful Goddess Pose! Hold this strength. I'm analyzing your form.", duration: 2000 }
+      { instruction: "Welcome! Let's embody the Goddess Pose together. Step back so I can see your full powerful stance.", duration: 5000 },
+      { instruction: "Perfect! Stand with your feet very wide apart and turn both feet out - feel your goddess power!", duration: 5000 },
+      { instruction: "Excellent! Lower into a deep wide squat, keeping your back straight and proud like a goddess!", duration: 5000 },
+      { instruction: "Amazing! Lift your arms up and bend your elbows at 90 degrees - make strong victory arms!", duration: 5000 },
+      { instruction: "Magnificent! Sink deeper into your squat and feel your inner goddess strength!", duration: 4000 },
+      { instruction: "Powerful Goddess Pose! Hold this divine strength. I'm analyzing your goddess form with real MediaPipe.", duration: 2000 }
     ]
   },
   'yog5': {
     name: 'Downward Facing Dog',
     steps: [
-      { instruction: "Welcome! Let's practice Downward Dog. Start on your hands and knees.", duration: 5000 },
-      { instruction: "Great! Place your hands under your shoulders, knees under hips.", duration: 4000 },
-      { instruction: "Perfect! Curl your toes under and prepare to lift your hips.", duration: 4000 },
-      { instruction: "Excellent! Straighten your legs and lift your hips up and back.", duration: 5000 },
-      { instruction: "Amazing! Create an inverted V-shape, pressing through your hands.", duration: 5000 },
-      { instruction: "Beautiful Downward Dog! Hold steady. I'm analyzing your form.", duration: 2000 }
+      { instruction: "Welcome! Let's flow into Downward Dog together. Start on your hands and knees in the camera view.", duration: 5000 },
+      { instruction: "Great! Place your hands firmly under your shoulders, spread your fingers wide for strength.", duration: 4000 },
+      { instruction: "Perfect! Curl your toes under and prepare to lift your hips up to the sky.", duration: 4000 },
+      { instruction: "Excellent! Straighten your legs and lift your hips up and back - create that beautiful inverted V!", duration: 5000 },
+      { instruction: "Amazing! Press through your hands, lengthen your spine, and breathe deeply in this energizing pose.", duration: 5000 },
+      { instruction: "Beautiful Downward Dog! Hold this rejuvenating pose. I'm analyzing your form with real MediaPipe.", duration: 2000 }
     ]
   },
   'yog6': {
     name: 'Plank Pose',
     steps: [
-      { instruction: "Welcome! Let's practice Plank Pose. Start in a push-up position.", duration: 4000 },
-      { instruction: "Great! Place your hands directly under your shoulders.", duration: 4000 },
-      { instruction: "Perfect! Create a straight line from your head to your heels.", duration: 4000 },
-      { instruction: "Excellent! Engage your core muscles strongly.", duration: 4000 },
-      { instruction: "Amazing! Keep your body straight and strong like a plank.", duration: 4000 },
-      { instruction: "Perfect Plank! Hold this strength. I'm analyzing your form.", duration: 2000 }
+      { instruction: "Welcome! Let's build strength with Plank Pose. Start in a push-up position in the camera view.", duration: 5000 },
+      { instruction: "Great! Place your hands directly under your shoulders, fingers spread for stability.", duration: 4000 },
+      { instruction: "Perfect! Create a straight line from your head to your heels - be strong like a plank of wood!", duration: 5000 },
+      { instruction: "Excellent! Engage your core muscles strongly, breathe steadily, and hold your power!", duration: 4000 },
+      { instruction: "Amazing! Keep your body straight and strong, feel your core working and your strength building!", duration: 4000 },
+      { instruction: "Perfect Plank! Hold this incredible strength. I'm analyzing your powerful form with real MediaPipe.", duration: 2000 }
     ]
   }
 };
@@ -430,8 +430,8 @@ const PoseCamera = ({
           correctionsNeeded: result.corrections ? [...prev.correctionsNeeded, ...result.corrections] : prev.correctionsNeeded
         }));
 
-        // AUTO-STOP WHEN POSE IS PERFECT - Count perfect poses (95% threshold for real yoga)
-        if (result.accuracy_score >= 95) {
+        // AUTO-STOP WHEN POSE IS PERFECT - Count perfect poses (90% threshold for easier achievement)
+        if (result.accuracy_score >= 90) {
           setConsecutiveFrames(prev => {
             const newFrames = prev + 1;
             console.log(`🔥 PERFECT POSE DETECTED! Accuracy: ${result.accuracy_score}% | Consecutive frames: ${newFrames} | Last state: ${lastPoseState}`);
@@ -454,8 +454,19 @@ const PoseCamera = ({
                   console.log(`🎉 TRIGGERING BRAVO CELEBRATION!`);
                   setPoseCompleted(true);
                   setShowCelebration(true);
-                  const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
-                  speak(`BRAVO! 🎉 Your ${poseName} is perfect! You completed 3 perfect poses! Well done!`);
+                  
+                  // Pose-specific BRAVO messages
+                  const poseMessages = {
+                    'yog1': 'BRAVO! 🎉 Your Warrior II is magnificent! You are a true warrior with perfect strength and balance! Well done!',
+                    'yog2': 'BRAVO! 🎉 Your T Pose is perfect! Excellent arm extension and balance! You completed 3 perfect poses! Well done!',
+                    'yog3': 'BRAVO! 🎉 Your Tree Pose is beautiful! Perfect balance and grace like a strong tree! You completed 3 perfect poses! Well done!',
+                    'yog4': 'BRAVO! 🎉 Your Goddess Pose is powerful! You embody strength and confidence like a true goddess! Well done!',
+                    'yog5': 'BRAVO! 🎉 Your Downward Dog is excellent! Perfect inverted V-shape and strength! You completed 3 perfect poses! Well done!',
+                    'yog6': 'BRAVO! 🎉 Your Plank Pose is rock solid! Amazing core strength and alignment! You completed 3 perfect poses! Well done!'
+                  };
+                  
+                  const bravoMessage = poseMessages[currentSelectedPose] || 'BRAVO! 🎉 Perfect pose mastery! You completed 3 perfect poses! Well done!';
+                  speak(bravoMessage);
                   
                   // Record pose completion in session
                   const currentPose = PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose);
@@ -479,16 +490,16 @@ const PoseCamera = ({
                     totalSessionTime: Math.round((poseEndTime - prev.sessionStartTime) / 1000)
                   }));
                   
-                  // Record successful completion
+                  // Record successful completion and STOP DETECTION IMMEDIATELY
                   recordYogaSession(true);
                   
-                  // Stop detection and show pose complete overlay after celebration
+                  // STOP DETECTION AUTOMATICALLY after 3 perfect poses
                   setTimeout(() => {
-                    stopDetection();
+                    stopDetection(); // Stop detection immediately
                     setShowCelebration(false);
                     setShowPoseComplete(true);
-                    setDebugInfo('🎉 Pose completed! Choose next pose or end session.');
-                  }, 3000); // Show celebration for 3 seconds
+                    setDebugInfo('🎉 Pose completed! 3 perfect poses achieved - Detection stopped.');
+                  }, 3000); // Show celebration for 3 seconds then stop
                 }
                 
                 return newCount;
@@ -500,8 +511,8 @@ const PoseCamera = ({
           });
         } else {
           // Reset when pose becomes imperfect
-          if (result.accuracy_score < 95) {
-            console.log(`❌ Pose not perfect enough: ${result.accuracy_score}% (need >95%) - Resetting counters`);
+          if (result.accuracy_score < 90) {
+            console.log(`❌ Pose not perfect enough: ${result.accuracy_score}% (need ≥90%) - Resetting counters`);
             setConsecutiveFrames(0);
             setLastPoseState(false);
           }
@@ -509,20 +520,48 @@ const PoseCamera = ({
 
         // TTS Feedback - only if not completed and detecting and not celebrating
         if (!poseCompleted && isDetecting && !showCelebration) {
-          if (result.accuracy_score >= 95) {
+          if (result.accuracy_score >= 90) {
             // Perfect pose achieved - this will be handled by the counting logic above
-          } else if (result.accuracy_score >= 85 && result.accuracy_score < 95) {
+          } else if (result.accuracy_score >= 80 && result.accuracy_score < 90) {
             if (Math.random() < 0.2) {
-              speak('Almost perfect! Hold steady for perfect pose!');
+              // Pose-specific encouragement messages
+              const encouragementMessages = {
+                'yog1': 'Strong Warrior II! Almost perfect - hold that powerful stance!',
+                'yog2': 'Excellent T Pose! Almost perfect - keep those arms straight and strong!',
+                'yog3': 'Beautiful Tree Pose! Almost perfect - find your balance and hold steady!',
+                'yog4': 'Powerful Goddess! Almost perfect - sink deeper and feel your strength!',
+                'yog5': 'Great Downward Dog! Almost perfect - lift those hips higher!',
+                'yog6': 'Solid Plank! Almost perfect - keep that body straight and strong!'
+              };
+              const message = encouragementMessages[currentSelectedPose] || 'Almost perfect! Hold steady for perfect pose!';
+              speak(message);
             }
           } else if (result.accuracy_score >= 70 && result.accuracy_score < 85) {
             if (Math.random() < 0.1) {
-              speak('Good form! Minor adjustments needed.');
+              // Pose-specific improvement messages
+              const improvementMessages = {
+                'yog1': 'Good Warrior II! Widen your stance and straighten those arms!',
+                'yog2': 'Good T Pose! Extend your arms fully and stand tall!',
+                'yog3': 'Good Tree Pose! Bring hands to prayer and lift that foot higher!',
+                'yog4': 'Good Goddess! Squat deeper and raise those victory arms!',
+                'yog5': 'Good Downward Dog! Press into your hands and lift your hips!',
+                'yog6': 'Good Plank! Keep your body straight like a strong plank!'
+              };
+              const message = improvementMessages[currentSelectedPose] || 'Good form! Minor adjustments needed.';
+              speak(message);
             }
           } else if (result.accuracy_score < 60 && result.feedback?.length > 0) {
-            const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'pose';
-            const feedback = result.feedback[0];
-            speak(`For ${poseName}: ${feedback}`);
+            // Pose-specific guidance messages
+            const guidanceMessages = {
+              'yog1': 'For Warrior II: Stand wide, bend front knee, arms parallel to floor',
+              'yog2': 'For T Pose: Stand straight, extend arms out to sides at shoulder height',
+              'yog3': 'For Tree Pose: Balance on one leg, hands in prayer, other foot on thigh',
+              'yog4': 'For Goddess Pose: Wide squat, knees bent, arms raised up high',
+              'yog5': 'For Downward Dog: Hands and feet down, hips up, make inverted V',
+              'yog6': 'For Plank Pose: Body straight, arms under shoulders, core engaged'
+            };
+            const message = guidanceMessages[currentSelectedPose] || result.feedback[0];
+            speak(message);
           }
         }
 
@@ -534,7 +573,17 @@ const PoseCamera = ({
         if (isDetecting && !showCelebration) {
           // Only speak guidance occasionally to avoid spam
           if (Math.random() < 0.05) { // 5% chance per frame
-            speak('Make sure your full body is visible and lighting is good');
+            // Pose-specific setup guidance
+            const setupMessages = {
+              'yog1': 'For Warrior II: Make sure your full body is visible, stand wide with arms extended',
+              'yog2': 'For T Pose: Make sure your full body is visible, stand straight with arms out',
+              'yog3': 'For Tree Pose: Make sure your full body is visible, try balancing on one leg',
+              'yog4': 'For Goddess Pose: Make sure your full body is visible, try a wide squat position',
+              'yog5': 'For Downward Dog: Make sure your full body is visible, get on hands and feet',
+              'yog6': 'For Plank Pose: Make sure your full body is visible, try a push-up position'
+            };
+            const message = setupMessages[currentSelectedPose] || 'Make sure your full body is visible and lighting is good';
+            speak(message);
           }
         }
       }
