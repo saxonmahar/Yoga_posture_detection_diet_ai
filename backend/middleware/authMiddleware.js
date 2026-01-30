@@ -36,7 +36,7 @@ const verifyToken = (req, res, next) => {
         console.log('✅ Token verified for user:', decoded.email);
         next();
     } catch (error) {
-        console.error('Token verification error:', error.message);
+        console.error('❌ Token verification error:', error.message);
         return res.status(401).json({
             success: false,
             error: 'Invalid or expired token.'

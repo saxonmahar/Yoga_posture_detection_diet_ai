@@ -27,12 +27,18 @@ exports.logMeal = async (req, res) => {
 
 exports.getDietRecommendation = async (req, res) => {
     try {
-        const userId = req.user.id;
+        console.log('🍎 Diet recommendation request received');
+        console.log('👤 User from token:', req.user);
+        console.log('📦 Request body:', req.body);
+        
+        // For public access, user might not be authenticated
+        const userId = req.user?.id || 'guest';
         const userData = {
             userId,
             ...req.body
         };
 
+        console.log('📤 Sending to diet service:', userData);
         const result = await dietService.getDietRecommendation(userData);
 
         res.json({
@@ -41,10 +47,11 @@ exports.getDietRecommendation = async (req, res) => {
             ...result
         });
     } catch (error) {
-        console.error('Diet recommendation error:', error);
+        console.error('❌ Diet recommendation error:', error);
         res.status(500).json({
             success: false,
-            error: 'Failed to generate diet recommendation'
+            error: 'Failed to generate diet recommendation',
+            details: error.message
         });
     }
 };

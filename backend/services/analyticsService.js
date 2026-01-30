@@ -1,7 +1,7 @@
 const YogaSession = require('../models/yogaSession');
 const Food = require('../models/food');
 
-class AnalyticsService {
+class AnalyticsServiceClass {
     // Get overall user analytics with REAL data
     async getUserAnalytics(userId) {
         try {
@@ -399,4 +399,4 @@ class AnalyticsService {
     }
 }
 
-module.exports = new AnalyticsService();
+module.exports = new AnalyticsServiceClass();
