@@ -43,8 +43,26 @@ const recordYogaSession = async (req, res) => {
     await userProgress.save();
     console.log('✅ User progress updated');
 
-    // Check for new achievements
-    const newAchievements = await checkAchievements(userProgress);
+    // Check for new achievements (simple implementation)
+    const newAchievements = [];
+    
+    // First session achievement
+    if (userProgress.overall_stats.total_sessions === 1) {
+      newAchievements.push({
+        name: 'First Session Complete',
+        description: 'Completed your first yoga session!',
+        icon: '🎉'
+      });
+    }
+    
+    // Streak achievements
+    if (userProgress.overall_stats.current_streak === 3) {
+      newAchievements.push({
+        name: '3-Day Streak',
+        description: 'Completed yoga for 3 consecutive days!',
+        icon: '🔥'
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -70,7 +88,7 @@ const getUserAnalytics = async (req, res) => {
     const { user_id } = req.params;
     console.log(`📈 Fetching analytics for user: ${user_id}`);
 
-    // Use the new analytics service for REAL data
+    // Use the analytics service for REAL data
     const analyticsResult = await AnalyticsService.getUserAnalytics(user_id);
 
     if (!analyticsResult.success) {

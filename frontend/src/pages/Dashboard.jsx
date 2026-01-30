@@ -51,6 +51,14 @@ function Dashboard() {
     }
   }, [user])
 
+  // Also check session completion when userAnalytics updates
+  useEffect(() => {
+    if (userAnalytics?.overall_stats?.total_sessions > 0) {
+      setHasCompletedSession(true)
+      console.log(`✅ Analytics loaded: ${userAnalytics.overall_stats.total_sessions} sessions - UNLOCKED`)
+    }
+  }, [userAnalytics])
+
   // If still loading auth, show loading spinner
   if (authLoading) {
     return (
@@ -130,54 +138,50 @@ function Dashboard() {
     }
   }
 
-  const checkSessionCompletion = () => {
-    // Check if user has completed a session recently (within last 24 hours)
+  const checkSessionCompletion = async () => {
+    // First check if user has any completed sessions in the database
+    if (user?._id || user?.id) {
+      try {
+        const userId = user._id || user.id
+        const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`)
+        
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.analytics?.overall_stats?.total_sessions > 0) {
+            setHasCompletedSession(true)
+            console.log(`✅ User has ${data.analytics.overall_stats.total_sessions} completed sessions - UNLOCKED`)
+            return
+          }
+        }
+      } catch (error) {
+        console.log('🌐 Backend not available, checking localStorage...')
+      }
+    }
+    
+    // Check localStorage for session completion flag
+    const hasCompletedFlag = localStorage.getItem('hasCompletedYogaSession')
+    if (hasCompletedFlag === 'true') {
+      setHasCompletedSession(true)
+      console.log('✅ Found session completion flag - UNLOCKED')
+      return
+    }
+    
+    // Fallback: check localStorage for recent session completion
     const lastSessionTime = localStorage.getItem('lastYogaSessionTime')
     const lastSessionData = localStorage.getItem('yogaSessionData')
     const lastProgressData = localStorage.getItem('yogaProgressData')
     
-    if (lastSessionTime) {
-      try {
-        const sessionTime = new Date(lastSessionTime)
-        const now = new Date()
-        const hoursDiff = (now - sessionTime) / (1000 * 60 * 60)
-        
-        // If session was completed within last 24 hours
-        if (hoursDiff <= 24) {
-          setHasCompletedSession(true)
-          console.log(`✅ User has completed session within last ${Math.round(hoursDiff)} hours`)
-          return
-        }
-      } catch (error) {
-        console.error('Error checking session timestamp:', error)
-      }
+    // Check if user has ever completed a session (no time limit)
+    if (lastSessionTime || lastSessionData || lastProgressData) {
+      setHasCompletedSession(true)
+      // Set the flag for future checks
+      localStorage.setItem('hasCompletedYogaSession', 'true')
+      console.log('✅ Found session data in localStorage - UNLOCKED')
+      return
     }
     
-    // Fallback: check session data timestamps
-    if (lastSessionData || lastProgressData) {
-      try {
-        const sessionData = lastSessionData ? JSON.parse(lastSessionData) : null
-        const progressData = lastProgressData ? JSON.parse(lastProgressData) : null
-        
-        const sessionDate = sessionData?.sessionDate || progressData?.latestSession?.sessionDate
-        
-        if (sessionDate) {
-          const sessionTime = new Date(sessionDate)
-          const now = new Date()
-          const hoursDiff = (now - sessionTime) / (1000 * 60 * 60)
-          
-          // If session was completed within last 24 hours
-          if (hoursDiff <= 24) {
-            setHasCompletedSession(true)
-            console.log(`✅ User has completed session within last ${Math.round(hoursDiff)} hours (from data)`)
-          }
-        }
-      } catch (error) {
-        console.error('Error checking session completion:', error)
-      }
-    }
-    
-    console.log(`📊 Session completion check: ${hasCompletedSession ? 'UNLOCKED' : 'LOCKED'}`)
+    console.log('📊 No session completion found - LOCKED')
+    setHasCompletedSession(false)
   }
 
   // Check Flask ML server status
@@ -443,8 +447,16 @@ function Dashboard() {
                 <div className="mt-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-green-400" />
-                    <span className="text-green-400 font-semibold">Session Complete!</span>
-                    <span className="text-green-300">Diet Plan & Progress Analytics are now unlocked 🎉</span>
+                    <span className="text-green-400 font-semibold">
+                      {userAnalytics?.overall_stats?.total_sessions > 1 
+                        ? `${userAnalytics.overall_stats.total_sessions} Sessions Complete!` 
+                        : 'Session Complete!'}
+                    </span>
+                    <span className="text-green-300">
+                      {userAnalytics?.overall_stats?.current_streak > 0 
+                        ? `${userAnalytics.overall_stats.current_streak} day streak! 🔥` 
+                        : 'Diet Plan & Progress Analytics are now unlocked 🎉'}
+                    </span>
                   </div>
                 </div>
               ) : (

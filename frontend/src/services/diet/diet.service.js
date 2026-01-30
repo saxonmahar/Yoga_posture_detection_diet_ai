@@ -1,33 +1,33 @@
-import apiClient from '../api/client.js';
+import api from '../api.js';
 
 export const dietService = {
   // Get diet recommendation
   getRecommendation: (userData) => {
-    return apiClient.post('/diet/recommendations', userData);
+    return api.post('/diet/recommendations', userData);
   },
 
   // Get personalized diet plan
   getDietPlan: (userId) => {
-    return apiClient.get(`/diet/plan/${userId}`);
+    return api.get(`/diet/plan/${userId}`);
   },
 
   // Update diet preferences
   updatePreferences: (preferences) => {
-    return apiClient.put('/diet/preferences', preferences);
+    return api.put('/diet/preferences', preferences);
   },
 
   // Track meal
   trackMeal: (mealData) => {
-    return apiClient.post('/diet/track', mealData);
+    return api.post('/diet/track', mealData);
   },
 
   // Get nutrition summary
   getNutritionSummary: (date) => {
-    return apiClient.get('/diet/summary', { params: { date } });
+    return api.get('/diet/summary', { params: { date } });
   },
 
   // Get food suggestions
   getFoodSuggestions: (criteria) => {
-    return apiClient.post('/diet/suggestions', criteria);
+    return api.post('/diet/suggestions', criteria);
   }
 };

@@ -977,18 +977,39 @@ const PoseCamera = ({
         const result = await response.json();
         console.log('✅ Session recorded successfully:', result);
 
+        // IMPORTANT: Save session completion to localStorage for dashboard unlock
+        const sessionCompletionData = {
+          sessionDate: new Date().toISOString(),
+          userId: userId,
+          poseName: poseName,
+          accuracy: sessionPayload.poses_practiced[0].accuracy_score,
+          duration: duration,
+          completedSuccessfully: completedSuccessfully
+        };
+
+        // Save multiple keys for different components to check
+        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
+        localStorage.setItem('yogaSessionData', JSON.stringify(sessionCompletionData));
+        localStorage.setItem('hasCompletedYogaSession', 'true');
+        
+        console.log('✅ Session completion saved to localStorage - Dashboard features will be unlocked');
+
         // Show achievement notifications if any
         if (result.new_achievements && result.new_achievements.length > 0) {
           result.new_achievements.forEach(achievement => {
             speak(`Achievement unlocked: ${achievement.name}!`);
           });
         }
+
+        return true; // Indicate successful recording
       } else {
         console.error('❌ Failed to record session:', response.statusText);
+        return false;
       }
 
     } catch (error) {
       console.error('❌ Error recording yoga session:', error);
+      return false;
     }
   };
 
@@ -1135,11 +1156,22 @@ const PoseCamera = ({
                             Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90
                         };
                         
-                        // ONLY store with user-specific keys - NO SHARED DATA
-                        localStorage.setItem(`yogaSessionData_${userId}`, JSON.stringify(sessionSummary));
-                        localStorage.setItem(`lastYogaSessionTime_${userId}`, new Date().toISOString());
+                        // IMPORTANT: Save session completion to localStorage for dashboard unlock
+                        const sessionCompletionData = {
+                          sessionDate: new Date().toISOString(),
+                          userId: userId,
+                          completedPoses: sessionState.completedPoses,
+                          totalTime: sessionState.totalSessionTime,
+                          averageAccuracy: sessionState.completedPoses.length > 0 ? 
+                            Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90
+                        };
+
+                        // Save with standard keys for dashboard detection
+                        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
+                        localStorage.setItem('yogaSessionData', JSON.stringify(sessionCompletionData));
+                        localStorage.setItem('hasCompletedYogaSession', 'true');
                         
-                        console.log(`✅ Session data stored for user ${userId}:`, sessionSummary);
+                        console.log('✅ Multi-pose session completion saved to localStorage - Dashboard features will be unlocked');
                         
                         // Navigate using React Router (maintains auth state)
                         navigate('/diet-plan', { 
@@ -1189,11 +1221,22 @@ const PoseCamera = ({
                           }
                         };
                         
-                        // ONLY store with user-specific keys - NO SHARED DATA
-                        localStorage.setItem(`yogaProgressData_${userId}`, JSON.stringify(progressData));
-                        localStorage.setItem(`lastYogaSessionTime_${userId}`, new Date().toISOString());
+                        // IMPORTANT: Save session completion to localStorage for dashboard unlock
+                        const progressCompletionData = {
+                          sessionDate: new Date().toISOString(),
+                          userId: userId,
+                          completedPoses: sessionState.completedPoses,
+                          totalTime: sessionState.totalSessionTime,
+                          averageAccuracy: sessionState.completedPoses.length > 0 ? 
+                            Math.round(sessionState.completedPoses.reduce((total, pose) => total + (pose.maxAccuracy || pose.averageAccuracy || 90), 0) / sessionState.completedPoses.length) : 90
+                        };
+
+                        // Save with standard keys for dashboard detection
+                        localStorage.setItem('lastYogaSessionTime', new Date().toISOString());
+                        localStorage.setItem('yogaProgressData', JSON.stringify({ latestSession: progressCompletionData }));
+                        localStorage.setItem('hasCompletedYogaSession', 'true');
                         
-                        console.log(`✅ Progress data stored for user ${userId}:`, progressData);
+                        console.log('✅ Multi-pose progress completion saved to localStorage - Dashboard features will be unlocked');
                         
                         // Navigate using React Router (maintains auth state)
                         navigate('/progress', { 

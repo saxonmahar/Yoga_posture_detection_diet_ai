@@ -79,14 +79,13 @@ const yogaSessionSchema = new mongoose.Schema({
 });
 
 // Calculate session statistics before saving
-yogaSessionSchema.pre('save', function(next) {
-  if (this.poses_practiced.length > 0) {
-    const totalAccuracy = this.poses_practiced.reduce((sum, pose) => sum + pose.accuracy_score, 0);
-    this.overall_performance.average_accuracy = totalAccuracy / this.poses_practiced.length;
+yogaSessionSchema.pre('save', function() {
+  if (this.poses_practiced && this.poses_practiced.length > 0) {
+    const totalAccuracy = this.poses_practiced.reduce((sum, pose) => sum + (pose.accuracy_score || 0), 0);
+    this.overall_performance.average_accuracy = Math.round(totalAccuracy / this.poses_practiced.length);
     this.overall_performance.total_poses_attempted = this.poses_practiced.length;
     this.overall_performance.poses_completed = this.poses_practiced.filter(pose => pose.completed_successfully).length;
   }
-  next();
 });
 
 module.exports = mongoose.model('YogaSession', yogaSessionSchema);
