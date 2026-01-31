@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Sparkles, 
   ArrowRight,
@@ -7,8 +8,11 @@ import {
   Utensils,
   BarChart3
 } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
-export default function HomePage({ onNavigate }) {
+export default function HomePage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [currentPoseIndex, setCurrentPoseIndex] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
   
@@ -32,29 +36,71 @@ export default function HomePage({ onNavigate }) {
     return () => clearInterval(interval);
   }, [poseImages.length, isPaused]);
 
+  // Handle authentication check before navigation
+  const handleFeatureClick = (targetPage) => {
+    if (!user) {
+      // Redirect directly to login page since buttons say "Sign In"
+      navigate('/login');
+      return;
+    }
+    
+    // User is authenticated, navigate to target page
+    navigate(targetPage);
+  };
+
   const features = [
     {
       icon: Camera,
       title: "AI Pose Detection",
       description: "Real-time feedback with 98% accuracy to perfect your form",
       color: "from-blue-500 to-cyan-400",
+      targetPage: "/pose-detection",
+      badge: "Popular"
     },
     {
       icon: Utensils,
       title: "Personalized Diet",
       description: "Custom nutrition plans tailored to your wellness goals",
       color: "from-purple-500 to-pink-500",
+      targetPage: "/diet-plan",
+      badge: "New"
     },
     {
       icon: BarChart3,
       title: "Progress Tracking",
       description: "Detailed analytics and insights to track your journey",
       color: "from-green-500 to-emerald-400",
+      targetPage: "/progress",
+      badge: "Insights"
     },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 relative">
+      {/* Welcome back banner for authenticated users only */}
+      {user && (
+        <div className="relative z-10 bg-gradient-to-r from-green-500/20 to-cyan-500/20 border-b border-green-500/30 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <span className="text-green-400 text-sm">✨</span>
+                </div>
+                <p className="text-green-200 text-sm font-medium">
+                  Welcome back, {user.name || user.fullName || 'Yogi'}! All features are unlocked for you.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-4 py-1.5 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-lg text-sm font-semibold transition-all"
+              >
+                Go to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Animated Background Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-green-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -263,11 +309,11 @@ export default function HomePage({ onNavigate }) {
 
                     {/* Action Button */}
                     <button 
-                      onClick={() => onNavigate('/pose-detection')}
+                      onClick={() => handleFeatureClick('/pose-detection')}
                       className="mt-4 px-6 py-2 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 flex items-center justify-center mx-auto group"
                     >
                       <Camera className="w-4 h-4 mr-2 group-hover:animate-pulse" />
-                      Try Now
+                      {user ? 'Try Now' : 'Sign In to Try'}
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </button>
                   </div>
@@ -299,26 +345,46 @@ export default function HomePage({ onNavigate }) {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group relative bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-8 hover:border-green-500/30 transition-all duration-300 hover:transform hover:scale-105"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                
-                <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
-                  <feature.icon className="w-8 h-8 text-white" />
-                </div>
-                
-                <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
-                <p className="text-slate-400 leading-relaxed">{feature.description}</p>
-                
-                <div className="mt-6 flex items-center text-green-400 group-hover:text-green-300 transition-colors">
-                  <span className="text-sm font-semibold">Learn more</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </div>
-            ))}
+            {features.map((feature, index) => {
+              const Icon = feature.icon
+              return (
+                <button
+                  key={index}
+                  onClick={() => handleFeatureClick(feature.targetPage)}
+                  className="group relative bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-8 hover:border-green-500/30 transition-all duration-300 hover:transform hover:scale-105 text-left cursor-pointer"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  {/* Badge */}
+                  {feature.badge && (
+                    <div className="absolute top-4 right-4 px-3 py-1 bg-white/10 text-white border border-white/20 backdrop-blur-sm rounded-full text-xs font-semibold">
+                      {feature.badge}
+                    </div>
+                  )}
+                  
+                  {/* Lock indicator for non-authenticated users */}
+                  {!user && (
+                    <div className="absolute top-4 left-4 w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
+                      <span className="text-amber-400 text-xs">🔒</span>
+                    </div>
+                  )}
+                  
+                  <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                    <Icon className="w-8 h-8 text-white" />
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-4">{feature.title}</h3>
+                  <p className="text-slate-400 leading-relaxed mb-6">{feature.description}</p>
+                  
+                  <div className="flex items-center text-green-400 group-hover:text-green-300 transition-colors">
+                    <span className="text-sm font-semibold">
+                      {user ? 'Get Started' : 'Sign In Required'}
+                    </span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>
@@ -344,11 +410,19 @@ export default function HomePage({ onNavigate }) {
               { name: "Downward Dog", image: "/images/poses/downward_dog.jpg", color: "from-yellow-500 to-orange-500", difficulty: "Intermediate" },
               { name: "Plank", image: "/images/poses/plank.jpg", color: "from-indigo-500 to-purple-500", difficulty: "Beginner" }
             ].map((pose, index) => (
-              <div
+              <button
                 key={index}
-                className="group relative bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-green-500/30 transition-all duration-300 hover:transform hover:scale-105 cursor-pointer"
+                onClick={() => handleFeatureClick('/pose-detection')}
+                className="group relative bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-green-500/30 transition-all duration-300 hover:transform hover:scale-105 cursor-pointer text-left"
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-cyan-500/5 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                
+                {/* Lock indicator for non-authenticated users */}
+                {!user && (
+                  <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30">
+                    <span className="text-amber-400 text-xs">🔒</span>
+                  </div>
+                )}
                 
                 <div className={`w-16 h-16 bg-gradient-to-br ${pose.color} rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform overflow-hidden shadow-lg`}>
                   <img 
@@ -377,19 +451,28 @@ export default function HomePage({ onNavigate }) {
                   <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
                     <div className={`h-full bg-gradient-to-r ${pose.color} rounded-full animate-pulse`} style={{width: '85%'}}></div>
                   </div>
-                  <p className="text-xs text-slate-400 text-center mt-1">85% Accuracy</p>
+                  <p className="text-xs text-slate-400 text-center mt-1">
+                    {user ? '85% Accuracy' : 'Sign In Required'}
+                  </p>
                 </div>
-              </div>
+                
+                {/* Click indicator */}
+                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="text-xs text-green-400 font-semibold">
+                    {user ? 'Click to Try' : 'Click to Sign In'}
+                  </span>
+                </div>
+              </button>
             ))}
           </div>
 
           <div className="text-center mt-12">
             <button
-              onClick={() => onNavigate('/pose-detection')}
+              onClick={() => handleFeatureClick('/pose-detection')}
               className="px-8 py-4 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-xl text-lg font-semibold transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 flex items-center justify-center mx-auto group"
             >
               <Camera className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-              Start Pose Detection
+              {user ? 'Start Pose Detection' : 'Sign In to Start'}
               <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
@@ -399,10 +482,17 @@ export default function HomePage({ onNavigate }) {
       {/* Floating Action Button */}
       <div className="fixed bottom-8 right-8 z-50">
         <button
-          onClick={() => onNavigate('/pose-detection')}
+          onClick={() => handleFeatureClick('/pose-detection')}
           className="group relative w-16 h-16 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 rounded-full shadow-2xl shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-110 flex items-center justify-center"
         >
           <Camera className="w-8 h-8 text-white group-hover:animate-pulse" />
+          
+          {/* Lock indicator for non-authenticated users */}
+          {!user && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              🔒
+            </div>
+          )}
           
           {/* Pulse rings */}
           <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-75"></div>
@@ -410,7 +500,7 @@ export default function HomePage({ onNavigate }) {
           
           {/* Tooltip */}
           <div className="absolute right-full mr-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-700 shadow-xl">
-            Start AI Pose Detection
+            {user ? 'Start AI Pose Detection' : 'Sign In to Start Detection'}
             <div className="absolute top-1/2 -right-1 w-2 h-2 bg-slate-800 border-r border-b border-slate-700 transform rotate-45 -translate-y-1/2"></div>
           </div>
         </button>
