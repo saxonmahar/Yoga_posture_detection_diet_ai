@@ -50,7 +50,7 @@ function Navbar() {
           
           {/* Logo */}
           <button
-            onClick={() => handleNavigation('login')}
+            onClick={() => handleNavigation('home')}
             className="flex items-center space-x-2 cursor-pointer group"
           >
             <div className="w-10 h-10 bg-gradient-to-br from-accent to-pink-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -221,7 +221,7 @@ function Navbar() {
                   <>
                     <button
                       onClick={() => {
-                        handleNavigation('home')
+                        handleNavigation('login')
                         setIsMenuOpen(false)
                       }}
                       className="w-full py-3 bg-surface hover:bg-secondary rounded-lg font-medium transition"
