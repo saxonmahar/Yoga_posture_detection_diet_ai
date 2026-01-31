@@ -1,143 +1,162 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Heart, Facebook, Twitter, Instagram, Youtube, Mail } from 'lucide-react'
+import { Heart, Mail, Phone, MapPin, Github, Linkedin, Twitter } from 'lucide-react'
 
 function Footer() {
   const navigate = useNavigate()
 
-  const socialLinks = [
-    { icon: Facebook, label: 'facebook' },
-    { icon: Twitter, label: 'twitter' },
-    { icon: Instagram, label: 'instagram' },
-    { icon: Youtube, label: 'youtube' },
+  const quickLinks = [
+    { id: '', label: 'Home' },
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About Us' },
+    { id: 'pricing', label: 'Pricing' },
+    { id: 'contact', label: 'Contact' },
   ]
 
   const productLinks = [
     { id: 'pose-detection', label: 'AI Pose Detection' },
-    { id: 'diet-plan', label: 'AI Diet Plans' },
+    { id: 'diet-plan', label: 'Diet Plans' },
     { id: 'progress', label: 'Progress Tracking' },
-    { id: 'features', label: 'AI Yoga Coach' },
-    { id: 'premium', label: 'Live Classes' },
-  ]
-
-  const companyLinks = [
-    { id: 'about', label: 'About Us' },
-    { id: 'careers', label: 'Careers' },
-    { id: 'blog', label: 'Blog' },
-    { id: 'press', label: 'Press' },
-    { id: 'contact', label: 'Contact' },
-  ]
-
-  const resourcesLinks = [
-    { id: 'how-it-works', label: 'How It Works' },
-    { id: 'testimonials', label: 'Testimonials' },
-    { id: 'pricing', label: 'Pricing' },
     { id: 'dashboard', label: 'Dashboard' },
-    { id: 'premium', label: 'Premium Features' },
   ]
 
-  const legalLinks = [
-    { id: 'privacy', label: 'Privacy Policy' },
-    { id: 'terms', label: 'Terms of Service' },
-    { id: 'cookies', label: 'Cookie Policy' },
-    { id: 'security', label: 'Security' },
-    { id: 'gdpr', label: 'GDPR' },
+  const socialLinks = [
+    { icon: Github, label: 'GitHub', url: 'https://github.com/saxonmahar/Yoga_posture_detection_diet_ai' },
+    { icon: Linkedin, label: 'LinkedIn', url: 'https://linkedin.com' },
+    { icon: Twitter, label: 'Twitter', url: 'https://twitter.com' },
   ]
 
   const handleNavigate = (page) => navigate(`/${page}`)
 
-  const handleSocialClick = (platform) => {
-    const urls = {
-      facebook: 'https://facebook.com',
-      twitter: 'https://twitter.com',
-      instagram: 'https://instagram.com',
-      youtube: 'https://youtube.com',
-    }
-    window.open(urls[platform], '_blank')
-  }
-
-  const handleSubscribe = (e) => {
-    e.preventDefault()
-    const email = e.target.email.value
-    if (email) {
-      alert(`Thank you for subscribing with ${email}!`)
-      e.target.reset()
-    }
+  const handleSocialClick = (url) => {
+    window.open(url, '_blank')
   }
 
   return (
-    <footer className="bg-[#0b1020] border-t border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
-        <div className="grid lg:grid-cols-5 gap-10 mb-12">
-          {/* Brand */}
+    <footer className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-t border-slate-700/50 relative">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-10 right-10 w-40 h-40 bg-purple-500/5 rounded-full blur-2xl"></div>
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
+        
+        {/* Main Footer Content */}
+        <div className="grid lg:grid-cols-4 gap-10 mb-12">
+          
+          {/* Brand Section */}
           <div className="lg:col-span-2">
             <div className="flex items-center space-x-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-accent to-pink-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
                 🧘
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-white">YogaAI</h2>
-                <p className="text-sm text-slate-400">Intelligent Wellness</p>
+                <p className="text-sm text-slate-400">Intelligent Wellness Platform</p>
               </div>
             </div>
 
-            <p className="text-slate-400 mb-6 max-w-md">
-              Empowering your wellness journey with AI-powered yoga guidance and nutrition.
+            <p className="text-slate-400 mb-6 max-w-md leading-relaxed">
+              Transform your yoga practice with AI-powered pose detection, personalized diet plans, 
+              and comprehensive progress tracking. Your journey to wellness starts here.
             </p>
 
+            {/* Contact Info */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center text-slate-400">
+                <Mail className="w-4 h-4 mr-3 text-emerald-400" />
+                <span className="text-sm">sanjaymahar2058@gmail.com</span>
+              </div>
+              <div className="flex items-center text-slate-400">
+                <Phone className="w-4 h-4 mr-3 text-emerald-400" />
+                <span className="text-sm">+977 9865918308</span>
+              </div>
+              <div className="flex items-center text-slate-400">
+                <MapPin className="w-4 h-4 mr-3 text-emerald-400" />
+                <span className="text-sm">Cosmos College, Lalitpur, Nepal</span>
+              </div>
+            </div>
+
+            {/* Social Links */}
             <div className="flex space-x-4">
-              {socialLinks.map(({ icon: Icon, label }) => (
+              {socialLinks.map(({ icon: Icon, label, url }) => (
                 <button
                   key={label}
-                  onClick={() => handleSocialClick(label)}
-                  className="w-10 h-10 bg-white/5 hover:bg-pink-500/20 border border-white/10 rounded-full flex items-center justify-center"
+                  onClick={() => handleSocialClick(url)}
+                  className="w-10 h-10 bg-slate-800/50 hover:bg-emerald-500/20 border border-slate-700/50 hover:border-emerald-500/30 rounded-xl flex items-center justify-center transition-all duration-300 group"
+                  title={label}
                 >
-                  <Icon className="w-5 h-5 text-slate-300 hover:text-pink-400" />
+                  <Icon className="w-5 h-5 text-slate-400 group-hover:text-emerald-400 transition-colors" />
                 </button>
               ))}
             </div>
           </div>
 
-          {[['Product', productLinks], ['Company', companyLinks], ['Resources', resourcesLinks], ['Legal', legalLinks]].map(
-            ([title, links]) => (
-              <div key={title}>
-                <h4 className="font-bold text-lg mb-6 text-white">{title}</h4>
-                <ul className="space-y-3">
-                  {links.map((link) => (
-                    <li key={link.id}>
-                      <button
-                        onClick={() => handleNavigate(link.id)}
-                        className="text-slate-400 hover:text-pink-400 text-sm"
-                      >
-                        {link.label}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
-          )}
+          {/* Quick Links */}
+          <div>
+            <h4 className="font-bold text-lg mb-6 text-white">Quick Links</h4>
+            <ul className="space-y-3">
+              {quickLinks.map((link) => (
+                <li key={link.id}>
+                  <button
+                    onClick={() => handleNavigate(link.id)}
+                    className="text-slate-400 hover:text-emerald-400 text-sm transition-colors duration-300 hover:translate-x-1 transform"
+                  >
+                    {link.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Product Links */}
+          <div>
+            <h4 className="font-bold text-lg mb-6 text-white">Features</h4>
+            <ul className="space-y-3">
+              {productLinks.map((link) => (
+                <li key={link.id}>
+                  <button
+                    onClick={() => handleNavigate(link.id)}
+                    className="text-slate-400 hover:text-emerald-400 text-sm transition-colors duration-300 hover:translate-x-1 transform"
+                  >
+                    {link.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <div className="pt-8 border-t border-white/10">
+        {/* Bottom Section */}
+        <div className="pt-8 border-t border-slate-700/50">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <form onSubmit={handleSubscribe} className="flex">
-              <input
-                type="email"
-                name="email"
-                placeholder="Your email"
-                className="px-4 py-2 bg-white/5 border border-white/10 rounded-l-lg text-white"
-                required
-              />
-              <button className="px-6 py-2 bg-gradient-to-r from-accent to-pink-500 rounded-r-lg font-semibold">
-                Subscribe
-              </button>
-            </form>
+            
+            {/* Copyright */}
+            <div className="flex items-center text-slate-400 text-sm">
+              <span>© {new Date().getFullYear()} YogaAI. Made with</span>
+              <Heart className="w-4 h-4 mx-2 text-red-500 animate-pulse" fill="currentColor" />
+              <span>by Team YogaAI</span>
+            </div>
 
-            <p className="text-slate-400 text-sm flex items-center">
-              © {new Date().getFullYear()} YogaAI · Made with
-              <Heart className="w-4 h-4 mx-1 text-red-500" />
-            </p>
+            {/* Project Info */}
+            <div className="flex items-center gap-6 text-slate-400 text-sm">
+              <span>Final Year Project</span>
+              <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
+              <span>Cosmos College</span>
+              <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
+              <span>2024-2025</span>
+            </div>
+          </div>
+
+          {/* Additional Info */}
+          <div className="mt-6 pt-6 border-t border-slate-700/30">
+            <div className="text-center">
+              <p className="text-slate-500 text-xs leading-relaxed">
+                This project demonstrates AI-powered yoga pose detection and personalized wellness recommendations. 
+                Built with React, Node.js, Python, and advanced computer vision technology.
+              </p>
+            </div>
           </div>
         </div>
       </div>
