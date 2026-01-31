@@ -48,6 +48,48 @@
     @apply bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent;
   }
   
+  /* Team member image styles */
+  .team-image {
+    @apply relative w-32 h-32 sm:w-36 sm:h-36 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-3xl object-cover mx-auto border-4 border-slate-600 transition-all duration-300 shadow-2xl;
+    object-position: center center;
+    object-fit: cover;
+  }
+  
+  .team-image:hover {
+    @apply border-slate-500 scale-105;
+  }
+  
+  /* Better image loading */
+  .team-image-container {
+    @apply relative mb-8;
+  }
+  
+  .team-image-container::before {
+    content: '';
+    @apply absolute inset-0 bg-slate-700 rounded-3xl animate-pulse;
+    width: 8rem;
+    height: 8rem;
+    margin: 0 auto;
+  }
+  
+  @screen sm {
+    .team-image-container::before {
+      width: 9rem;
+      height: 9rem;
+    }
+  }
+  
+  @screen xl {
+    .team-image-container::before {
+      width: 9rem;
+      height: 9rem;
+    }
+  }
+  
+  .team-image-container img {
+    @apply relative z-10;
+  }
+  
   .backdrop-blur-xl {
     backdrop-filter: blur(24px);
   }
