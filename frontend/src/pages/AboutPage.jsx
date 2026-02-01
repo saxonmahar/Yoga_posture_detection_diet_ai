@@ -382,17 +382,17 @@ function AboutPage() {
                             e.target.nextSibling.style.display = 'flex';
                           }}
                         />
-                        {/* Fallback placeholder */}
-                        <div className="hidden w-32 h-32 sm:w-36 sm:h-36 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-3xl bg-gradient-to-br from-slate-600 to-slate-700 mx-auto items-center justify-center border-4 border-slate-600 shadow-2xl">
-                          <span className="text-3xl sm:text-4xl lg:text-3xl xl:text-4xl font-bold text-slate-400">
+                        {/* Fallback placeholder - Updated for larger sizes */}
+                        <div className="hidden w-40 h-40 sm:w-44 sm:h-44 lg:w-40 lg:h-40 xl:w-48 xl:h-48 rounded-3xl bg-gradient-to-br from-slate-600 to-slate-700 mx-auto items-center justify-center border-4 border-slate-600 shadow-2xl">
+                          <span className="text-4xl sm:text-5xl lg:text-4xl xl:text-6xl font-bold text-slate-400">
                             {member.name.split(' ').map(n => n[0]).join('')}
                           </span>
                         </div>
                         {/* Glow effect */}
                         <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-300`}></div>
                       </div>
-                      <div className="absolute -bottom-3 -right-3 sm:-bottom-4 sm:-right-4 lg:-bottom-3 lg:-right-3 xl:-bottom-4 xl:-right-4 w-10 h-10 sm:w-12 sm:h-12 lg:w-10 lg:h-10 xl:w-12 xl:h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center border-4 border-slate-800 shadow-lg">
-                        <Star className="w-5 h-5 sm:w-6 sm:h-6 lg:w-5 lg:h-5 xl:w-6 xl:h-6 text-white" fill="currentColor" />
+                      <div className="absolute -bottom-4 -right-4 sm:-bottom-5 sm:-right-5 lg:-bottom-4 lg:-right-4 xl:-bottom-6 xl:-right-6 w-12 h-12 sm:w-14 sm:h-14 lg:w-12 lg:h-12 xl:w-16 xl:h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center border-4 border-slate-800 shadow-lg">
+                        <Star className="w-6 h-6 sm:w-7 sm:h-7 lg:w-6 lg:h-6 xl:w-8 xl:h-8 text-white" fill="currentColor" />
                       </div>
                     </div>
 

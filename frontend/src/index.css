@@ -48,18 +48,19 @@
     @apply bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent;
   }
   
-  /* Team member image styles */
+  /* Team member image styles - Enhanced and larger */
   .team-image {
-    @apply relative w-32 h-32 sm:w-36 sm:h-36 lg:w-32 lg:h-32 xl:w-36 xl:h-36 rounded-3xl object-cover mx-auto border-4 border-slate-600 transition-all duration-300 shadow-2xl;
+    @apply relative w-40 h-40 sm:w-44 sm:h-44 lg:w-40 lg:h-40 xl:w-48 xl:h-48 rounded-3xl object-cover mx-auto border-4 border-slate-600 transition-all duration-300 shadow-2xl;
     object-position: center center;
     object-fit: cover;
   }
   
   .team-image:hover {
     @apply border-slate-500 scale-105;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
   }
   
-  /* Better image loading */
+  /* Better image loading with larger placeholders */
   .team-image-container {
     @apply relative mb-8;
   }
@@ -67,22 +68,29 @@
   .team-image-container::before {
     content: '';
     @apply absolute inset-0 bg-slate-700 rounded-3xl animate-pulse;
-    width: 8rem;
-    height: 8rem;
+    width: 10rem;
+    height: 10rem;
     margin: 0 auto;
   }
   
   @screen sm {
     .team-image-container::before {
-      width: 9rem;
-      height: 9rem;
+      width: 11rem;
+      height: 11rem;
+    }
+  }
+  
+  @screen lg {
+    .team-image-container::before {
+      width: 10rem;
+      height: 10rem;
     }
   }
   
   @screen xl {
     .team-image-container::before {
-      width: 9rem;
-      height: 9rem;
+      width: 12rem;
+      height: 12rem;
     }
   }
   

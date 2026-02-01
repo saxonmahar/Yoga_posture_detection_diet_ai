@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { Users, MessageCircle, Target, Trophy } from "lucide-react";
 
 // Layout
 import Navbar from "../components/layout/Navbar";
@@ -29,6 +30,7 @@ import CareersPage from "../pages/CareersPage";
 import BlogPage from "../pages/BlogPage";
 import PressPage from "../pages/PressPage";
 import ContactPage from "../pages/ContactPage";
+// import CommunityPage from "../pages/CommunityPage";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -140,6 +142,44 @@ export default function Router() {
     ["/progress", <ProgressPage />],
     ["/profile", <ProfilePage />],
     ["/settings", <SettingsPage />],
+    ["/community", (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="bg-slate-800/40 backdrop-blur-xl rounded-3xl p-12 border border-slate-700/50 shadow-2xl">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-purple-500 rounded-3xl flex items-center justify-center mx-auto mb-8">
+              <Users className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-4xl font-bold text-white mb-6">
+              Community Features{" "}
+              <span className="bg-gradient-to-r from-emerald-400 to-purple-400 bg-clip-text text-transparent">
+                Coming Soon
+              </span>
+            </h1>
+            <p className="text-xl text-slate-400 mb-8">
+              We're building an amazing community platform where you can share your progress, 
+              participate in challenges, and connect with fellow wellness enthusiasts.
+            </p>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="bg-slate-700/30 rounded-2xl p-6">
+                <MessageCircle className="w-8 h-8 text-emerald-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-white mb-2">Community Feed</h4>
+                <p className="text-slate-400 text-sm">Share progress and connect</p>
+              </div>
+              <div className="bg-slate-700/30 rounded-2xl p-6">
+                <Target className="w-8 h-8 text-purple-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-white mb-2">Challenges</h4>
+                <p className="text-slate-400 text-sm">Join group challenges</p>
+              </div>
+              <div className="bg-slate-700/30 rounded-2xl p-6">
+                <Trophy className="w-8 h-8 text-yellow-400 mx-auto mb-4" />
+                <h4 className="text-lg font-semibold text-white mb-2">Leaderboards</h4>
+                <p className="text-slate-400 text-sm">Track your rankings</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )],
   ];
 
   const sessionAwareRoutes = [

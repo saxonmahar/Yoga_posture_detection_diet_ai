@@ -227,7 +227,13 @@ const PoseDetectionPage = () => {
               </div>
               <div className="flex gap-3">
                 <button
-                  onClick={() => navigate('/community')}
+                  onClick={() => {
+                    if (user) {
+                      navigate('/community');
+                    } else {
+                      navigate('/login');
+                    }
+                  }}
                   className="px-8 py-4 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl font-bold text-white transition-all border border-white/20 flex items-center gap-2"
                 >
                   <Users className="w-5 h-5" />
