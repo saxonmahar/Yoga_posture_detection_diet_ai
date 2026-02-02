@@ -51,16 +51,20 @@ const Dashboard = () => {
   // Check if user has completed a yoga session
   const checkSessionCompletion = async () => {
     try {
-      // First check database
-      const response = await fetch('http://localhost:5001/api/analytics/user-stats', {
-        credentials: 'include'
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.totalSessions > 0) {
-          setHasCompletedSession(true);
-          return;
+      // First check database if user is authenticated
+      if (user?._id || user?.id) {
+        const userId = user._id || user.id;
+        const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.analytics?.overall_stats?.total_sessions > 0) {
+            setHasCompletedSession(true);
+            console.log('✅ Dashboard session check: User has completed sessions via database');
+            return;
+          }
         }
       }
       
