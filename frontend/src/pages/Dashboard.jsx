@@ -32,7 +32,8 @@ import {
   Apple,
   ChevronRight,
   AlertCircle,
-  TrendingDown
+  TrendingDown,
+  RefreshCw
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -84,21 +85,98 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUserStats = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api/analytics/user-stats', {
-          credentials: 'include'
-        });
+        // Get user ID for API call
+        const userId = user?._id || user?.id;
         
-        if (response.ok) {
-          const data = await response.json();
-          setStats({
-            totalSessions: data.totalSessions || 0,
-            currentStreak: data.currentStreak || 0,
-            averageAccuracy: data.averageAccuracy || 0,
-            totalMinutes: data.totalMinutes || 0
+        if (userId) {
+          // Try to fetch from backend first
+          const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`, {
+            credentials: 'include'
           });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.analytics) {
+              const analytics = data.analytics;
+              setStats({
+                totalSessions: analytics.overall_stats?.total_sessions || 0,
+                currentStreak: analytics.overall_stats?.current_streak || 0,
+                averageAccuracy: Math.round(analytics.overall_stats?.average_accuracy || 0),
+                totalMinutes: Math.round((analytics.overall_stats?.total_practice_time || 0) / 60)
+              });
+              console.log('✅ Dashboard stats loaded from backend:', analytics.overall_stats);
+              setIsLoading(false);
+              return;
+            }
+          }
         }
+        
+        // Fallback to localStorage data if backend fails or no user ID
+        console.log('📱 Falling back to localStorage data for dashboard stats');
+        const fallbackStats = {
+          totalSessions: 0,
+          currentStreak: 0,
+          averageAccuracy: 0,
+          totalMinutes: 0
+        };
+        
+        // Check for session completion in localStorage
+        const hasCompletedSession = localStorage.getItem('hasCompletedYogaSession') === 'true';
+        const sessionData = localStorage.getItem('yogaSessionData');
+        const progressData = localStorage.getItem('yogaProgressData');
+        
+        if (hasCompletedSession || sessionData || progressData) {
+          // If we have session data, show at least 1 session
+          fallbackStats.totalSessions = 1;
+          fallbackStats.currentStreak = 1;
+          
+          // Try to get accuracy from session data
+          if (sessionData) {
+            try {
+              const parsed = JSON.parse(sessionData);
+              if (parsed.averageAccuracy) {
+                fallbackStats.averageAccuracy = Math.round(parsed.averageAccuracy);
+              }
+              if (parsed.totalTime) {
+                fallbackStats.totalMinutes = Math.round(parsed.totalTime / 60);
+              }
+            } catch (e) {
+              console.log('Error parsing session data:', e);
+            }
+          }
+          
+          // Try to get data from progress data
+          if (progressData) {
+            try {
+              const parsed = JSON.parse(progressData);
+              if (parsed.latestSession) {
+                const session = parsed.latestSession;
+                if (session.averageAccuracy) {
+                  fallbackStats.averageAccuracy = Math.round(session.averageAccuracy);
+                }
+                if (session.totalTime) {
+                  fallbackStats.totalMinutes = Math.round(session.totalTime / 60);
+                }
+              }
+            } catch (e) {
+              console.log('Error parsing progress data:', e);
+            }
+          }
+          
+          console.log('✅ Dashboard stats loaded from localStorage:', fallbackStats);
+        }
+        
+        setStats(fallbackStats);
+        
       } catch (error) {
         console.error('Error fetching user stats:', error);
+        // Set default stats on error
+        setStats({
+          totalSessions: 0,
+          currentStreak: 0,
+          averageAccuracy: 0,
+          totalMinutes: 0
+        });
       } finally {
         setIsLoading(false);
       }
@@ -106,7 +184,89 @@ const Dashboard = () => {
 
     checkSessionCompletion();
     fetchUserStats();
-  }, []);
+    
+    // Add event listener for storage changes to update stats when new sessions are completed
+    const handleStorageChange = (e) => {
+      if (e.key === 'hasCompletedYogaSession' || e.key === 'yogaSessionData' || e.key === 'yogaProgressData') {
+        console.log('🔄 Session data updated, refreshing dashboard stats');
+        fetchUserStats();
+        checkSessionCompletion();
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for focus events to refresh when user returns to tab
+    const handleFocus = () => {
+      console.log('🔄 Dashboard focused, refreshing stats');
+      fetchUserStats();
+      checkSessionCompletion();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user]);
+
+  // Add a manual refresh function that can be called
+  const refreshStats = async () => {
+    setIsLoading(true);
+    const userId = user?._id || user?.id;
+    
+    try {
+      if (userId) {
+        const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`, {
+          credentials: 'include'
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.analytics) {
+            const analytics = data.analytics;
+            setStats({
+              totalSessions: analytics.overall_stats?.total_sessions || 0,
+              currentStreak: analytics.overall_stats?.current_streak || 0,
+              averageAccuracy: Math.round(analytics.overall_stats?.average_accuracy || 0),
+              totalMinutes: Math.round((analytics.overall_stats?.total_practice_time || 0) / 60)
+            });
+            console.log('✅ Dashboard stats refreshed from backend');
+            checkSessionCompletion();
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+      
+      // Fallback refresh from localStorage
+      const hasCompletedSession = localStorage.getItem('hasCompletedYogaSession') === 'true';
+      const sessionData = localStorage.getItem('yogaSessionData');
+      const progressData = localStorage.getItem('yogaProgressData');
+      
+      if (hasCompletedSession || sessionData || progressData) {
+        const fallbackStats = { totalSessions: 1, currentStreak: 1, averageAccuracy: 90, totalMinutes: 15 };
+        
+        if (sessionData) {
+          try {
+            const parsed = JSON.parse(sessionData);
+            if (parsed.averageAccuracy) fallbackStats.averageAccuracy = Math.round(parsed.averageAccuracy);
+            if (parsed.totalTime) fallbackStats.totalMinutes = Math.round(parsed.totalTime / 60);
+          } catch (e) {}
+        }
+        
+        setStats(fallbackStats);
+        setHasCompletedSession(true);
+        console.log('✅ Dashboard stats refreshed from localStorage');
+      }
+      
+    } catch (error) {
+      console.error('Error refreshing stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const quickActions = [
     {
@@ -217,6 +377,14 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
+                      <button
+                        onClick={refreshStats}
+                        disabled={isLoading}
+                        className="flex items-center px-3 py-2 bg-slate-700/50 hover:bg-slate-700 rounded-xl border border-slate-600/50 hover:border-slate-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Refresh stats"
+                      >
+                        <RefreshCw className={`w-4 h-4 text-slate-400 ${isLoading ? 'animate-spin' : ''}`} />
+                      </button>
                       <div className="flex items-center px-4 py-2 bg-emerald-500/20 rounded-full border border-emerald-500/30">
                         <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse mr-2"></div>
                         <span className="text-emerald-400 text-sm font-medium">AI Active</span>
