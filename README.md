@@ -115,10 +115,7 @@ This project is licensed under the MIT License.
 
 - **Sanjay Mahar** - Full Stack Development
 - **Shashank Yadav** - ML & AI Integration
-- **Anup Kumar** - Backend Development
-- **Ashish Pandey** - Frontend Development
-- **Bistey Singh** - UI/UX Design
-
----
-
-Made with ❤️ for the yoga community
+- **Anup Bhatt** - Backend Development
+- **Ashish kumar karn** - Frontend Development
+- **Bishist Pandey** - UI/UX Design
+ 
