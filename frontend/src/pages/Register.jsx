@@ -15,6 +15,10 @@ export default function Register() {
     height: "",
     bodyType: "mesomorphic",
     goal: "maintain",
+    // Keep some enhanced preferences but make them optional
+    yogaStyle: "hatha",
+    sessionDuration: "30",
+    preferredTime: "morning"
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -74,6 +78,10 @@ export default function Register() {
         bodyType: form.bodyType,
         goal: form.goal,
         bmi: bmi ? parseFloat(bmi) : null,
+        // Include some enhanced preferences
+        yogaStyle: form.yogaStyle,
+        sessionDuration: parseInt(form.sessionDuration),
+        preferredTime: form.preferredTime
       });
 
       console.log("Registration successful:", result);
@@ -338,6 +346,47 @@ export default function Register() {
                     {level.charAt(0).toUpperCase() + level.slice(1)}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Optional: Quick Yoga Preferences (Compact) */}
+            <div className="border-t border-slate-700 pt-4">
+              <p className="text-sm text-slate-400 mb-3">Quick Preferences (Optional)</p>
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  value={form.yogaStyle}
+                  onChange={(e) => handleInputChange("yogaStyle", e.target.value)}
+                  className="px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-400"
+                  disabled={loading}
+                >
+                  <option value="hatha">Hatha</option>
+                  <option value="vinyasa">Vinyasa</option>
+                  <option value="yin">Yin</option>
+                  <option value="power">Power</option>
+                </select>
+                
+                <select
+                  value={form.sessionDuration}
+                  onChange={(e) => handleInputChange("sessionDuration", e.target.value)}
+                  className="px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-400"
+                  disabled={loading}
+                >
+                  <option value="15">15 min</option>
+                  <option value="30">30 min</option>
+                  <option value="45">45 min</option>
+                  <option value="60">60 min</option>
+                </select>
+                
+                <select
+                  value={form.preferredTime}
+                  onChange={(e) => handleInputChange("preferredTime", e.target.value)}
+                  className="px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-green-400"
+                  disabled={loading}
+                >
+                  <option value="morning">Morning</option>
+                  <option value="afternoon">Afternoon</option>
+                  <option value="evening">Evening</option>
+                </select>
               </div>
             </div>
 
