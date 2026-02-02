@@ -195,7 +195,7 @@ class AnalyticsServiceClass {
                     },
                     pose_progress: poseProgress,
                     achievements: achievements,
-                    recent_sessions: sessions.slice(0, 5), // Last 5 sessions
+                    recent_sessions: sessions.slice(0, 10), // Last 10 sessions (to cover 7 days)
                     insights: insights
                 }
             };
