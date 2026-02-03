@@ -10,6 +10,7 @@ const poseRoutes = require("./routes/poseRoutes");
 const dietRoutes = require("./routes/dietRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const contactRoutes = require("./routes/contactRoutes");
+const scheduleRoutes = require("./routes/scheduleRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -41,6 +42,7 @@ app.use("/api/pose", poseRoutes);
 app.use("/api/diet", dietRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/schedule", scheduleRoutes);
 
 // ----------------------------
 // ML Proxy Endpoints
