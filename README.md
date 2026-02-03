@@ -1,4 +1,4 @@
-# 🧘‍♀️ YogaAI - Intelligent Yoga Practice Platform
+﻿# 🧘‍♀️ YogaAI - Intelligent Yoga Practice Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -354,7 +354,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
 
 
-
-[🌟 Star this repo](https://github.com/saxonmahar/Yoga_posture_detection_diet_ai) | [🐛 Report Bug](https://github.com/saxonmahar/Yoga_posture_detection_diet_ai/issues) | [💡 Request Feature](https://github.com/saxonmahar/Yoga_posture_detection_diet_ai/issues)
+[⭐ Star this repo](https://github.com/saxonmahar/Yoga_posture_detection_diet_ai) | [🐛 Report Bug](https://github.com/saxonmahar/Yoga_posture_detection_diet_ai/issues) | [💡 Request Feature](https://github.com/saxonmahar/Yoga_posture_detection_diet_ai/issues)
 
 </div>
