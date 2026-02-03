@@ -24,12 +24,20 @@ function Navbar() {
         { id: 'pose-detection', label: 'AI Pose Detection', page: 'pose-detection' },
         { id: 'diet-plans', label: 'Diet Plans', page: 'diet-plan' },
         { id: 'progress', label: 'Progress Tracking', page: 'progress' },
+        { id: 'schedule', label: 'Schedule', page: 'schedule' },
       ]
     },
     { id: 'pricing', label: 'Pricing', page: 'pricing' },
     { id: 'about', label: 'About', page: 'about' },
     { id: 'contact', label: 'Contact', page: 'contact' },
   ]
+
+  // Add authenticated user navigation items
+  const authNavItems = user ? [
+    { id: 'dashboard', label: 'Dashboard', page: 'dashboard' },
+    { id: 'schedule', label: 'Schedule', page: 'schedule' },
+    { id: 'community', label: 'Community', page: 'community' },
+  ] : []
 
   const handleNavigation = (page) => {
     navigate(`/${page}`)
@@ -66,7 +74,7 @@ function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-1">
-            {navItems.map((item) => (
+            {[...navItems, ...authNavItems].map((item) => (
               <div key={item.id} className="relative">
                 {item.dropdown ? (
                   <div
@@ -168,7 +176,7 @@ function Navbar() {
         {isMenuOpen && (
           <div className="lg:hidden bg-card/95 backdrop-blur-lg rounded-xl mt-2 p-6 border border-white/10 animate-fadeIn">
             <div className="space-y-1">
-              {navItems.map((item) => (
+              {[...navItems, ...authNavItems].map((item) => (
                 <div key={item.id}>
                   <button
                     onClick={() => handleNavigation(item.page)}
