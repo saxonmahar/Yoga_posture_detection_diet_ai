@@ -283,6 +283,15 @@ const Dashboard = () => {
       badge: 'Start Now'
     },
     {
+      title: 'Schedule Sessions',
+      description: 'Plan and organize your yoga practice',
+      icon: Calendar,
+      color: 'from-indigo-500 to-purple-500',
+      onClick: () => navigate('/schedule'),
+      available: true,
+      badge: 'Plan Now'
+    },
+    {
       title: 'Personalized Diet',
       description: 'Access your AI-curated nutrition plan',
       icon: Utensils,
@@ -486,7 +495,7 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-6">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {quickActions.map((action, index) => {
                       const Icon = action.icon
                       return (
