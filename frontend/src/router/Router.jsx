@@ -31,6 +31,7 @@ import BlogPage from "../pages/BlogPage";
 import PressPage from "../pages/PressPage";
 import ContactPage from "../pages/ContactPage";
 import CommunityPage from "../pages/CommunityPage";
+import SchedulePage from "../pages/SchedulePage";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -143,6 +144,7 @@ export default function Router() {
     ["/profile", <ProfilePage />],
     ["/settings", <SettingsPage />],
     ["/community", <CommunityPage />],
+    ["/schedule", <SchedulePage />],
   ];
 
   const sessionAwareRoutes = [
