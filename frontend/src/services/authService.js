@@ -1,8 +1,8 @@
-import api from "./api";
+import api from "./api/client";
 
 // Register
 export const registerRequest = async (payload) => {
-  const { data } = await api.post("/auth/register", payload, {
+  const { data } = await api.post("/api/auth/register", payload, {
     withCredentials: true, // ensures cookies are handled
   });
   return data;
@@ -11,7 +11,7 @@ export const registerRequest = async (payload) => {
 // Login
 export const loginRequest = async ({ email, password }) => {
   const { data } = await api.post(
-    "/auth/login",
+    "/api/auth/login",
     { email, password },
     { withCredentials: true } // important to receive httpOnly cookie
   );
@@ -20,7 +20,7 @@ export const loginRequest = async ({ email, password }) => {
 
 // Get current logged-in user from cookie
 export const getMeRequest = async () => {
-  const { data } = await api.get("/auth/me", {
+  const { data } = await api.get("/api/auth/me", {
     withCredentials: true, // sends cookie automatically
   });
   return data;
@@ -29,7 +29,7 @@ export const getMeRequest = async () => {
 // Logout
 export const logoutRequest = async () => {
   const { data } = await api.post(
-    "/auth/logout",
+    "/api/auth/logout",
     {},
     { withCredentials: true } // clear cookie
   );

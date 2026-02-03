@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // In Vite, use import.meta.env instead of process.env
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 // Create axios instance with default config
 const apiClient = axios.create({

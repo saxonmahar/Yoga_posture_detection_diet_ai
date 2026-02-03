@@ -25,6 +25,33 @@ const userSchema = new mongoose.Schema(
       select: false
     },
 
+    // Email verification fields
+    isEmailVerified: {
+      type: Boolean,
+      default: false
+    },
+
+    emailVerificationToken: {
+      type: String,
+      select: false
+    },
+
+    emailVerificationExpires: {
+      type: Date,
+      select: false
+    },
+
+    // Password reset fields
+    passwordResetToken: {
+      type: String,
+      select: false
+    },
+
+    passwordResetExpires: {
+      type: Date,
+      select: false
+    },
+
     fitnessLevel: {
       type: String,
       enum: ["beginner", "intermediate", "advanced"],

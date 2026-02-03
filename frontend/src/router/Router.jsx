@@ -32,6 +32,9 @@ import PressPage from "../pages/PressPage";
 import ContactPage from "../pages/ContactPage";
 import CommunityPage from "../pages/CommunityPage";
 import SchedulePage from "../pages/SchedulePage";
+import EmailVerification from "../pages/EmailVerification";
+import SecurityConfirmation from "../pages/SecurityConfirmation";
+import ForgotPassword from "../pages/ForgotPassword";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -175,6 +178,33 @@ export default function Router() {
             {withLayout(<Register />, false)}
           </PublicRoute>
         }
+      />
+
+      {/* Forgot Password - Public route */}
+      <Route
+        path="/forgot-password"
+        element={
+          <PublicRoute>
+            {withLayout(<ForgotPassword />, false)}
+          </PublicRoute>
+        }
+      />
+
+      {/* Email Verification - Public route */}
+      <Route
+        path="/email-verification"
+        element={withLayout(<EmailVerification />, false)}
+      />
+
+      {/* Security Confirmation - Public routes */}
+      <Route
+        path="/security/confirm"
+        element={withLayout(<SecurityConfirmation />, false)}
+      />
+      
+      <Route
+        path="/security/deny"
+        element={withLayout(<SecurityConfirmation />, false)}
       />
 
       {/* Protected pages */}

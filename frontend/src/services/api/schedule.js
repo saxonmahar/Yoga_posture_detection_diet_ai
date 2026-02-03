@@ -4,7 +4,7 @@ export const scheduleAPI = {
   // Get user's schedule for a date range
   getSchedule: async (params = {}) => {
     try {
-      const response = await api.get('/schedule', { params });
+      const response = await api.get('/api/schedule', { params });
       return response.data;
     } catch (error) {
       console.error('Get schedule error:', error);
@@ -15,7 +15,7 @@ export const scheduleAPI = {
   // Create a new scheduled session
   createSession: async (sessionData) => {
     try {
-      const response = await api.post('/schedule', sessionData);
+      const response = await api.post('/api/schedule', sessionData);
       return response.data;
     } catch (error) {
       console.error('Create session error:', error);
@@ -26,7 +26,7 @@ export const scheduleAPI = {
   // Update an existing session
   updateSession: async (sessionId, updates) => {
     try {
-      const response = await api.put(`/schedule/${sessionId}`, updates);
+      const response = await api.put(`/api/schedule/${sessionId}`, updates);
       return response.data;
     } catch (error) {
       console.error('Update session error:', error);
@@ -37,7 +37,7 @@ export const scheduleAPI = {
   // Mark session as completed
   completeSession: async (sessionId, completionData) => {
     try {
-      const response = await api.patch(`/schedule/${sessionId}/complete`, completionData);
+      const response = await api.patch(`/api/schedule/${sessionId}/complete`, completionData);
       return response.data;
     } catch (error) {
       console.error('Complete session error:', error);
@@ -48,7 +48,7 @@ export const scheduleAPI = {
   // Delete a session
   deleteSession: async (sessionId) => {
     try {
-      const response = await api.delete(`/schedule/${sessionId}`);
+      const response = await api.delete(`/api/schedule/${sessionId}`);
       return response.data;
     } catch (error) {
       console.error('Delete session error:', error);
@@ -59,7 +59,7 @@ export const scheduleAPI = {
   // Get schedule templates
   getTemplates: async () => {
     try {
-      const response = await api.get('/schedule/templates');
+      const response = await api.get('/api/schedule/templates');
       return response.data;
     } catch (error) {
       console.error('Get templates error:', error);
@@ -70,7 +70,7 @@ export const scheduleAPI = {
   // Apply a schedule template
   applyTemplate: async (templateData) => {
     try {
-      const response = await api.post('/schedule/templates/apply', templateData);
+      const response = await api.post('/api/schedule/templates/apply', templateData);
       return response.data;
     } catch (error) {
       console.error('Apply template error:', error);
@@ -85,7 +85,7 @@ export const scheduleAPI = {
       const startDate = today.toISOString().split('T')[0];
       const endDate = startDate;
       
-      const response = await api.get('/schedule', {
+      const response = await api.get('/api/schedule', {
         params: { startDate, endDate }
       });
       
@@ -103,7 +103,7 @@ export const scheduleAPI = {
       const futureDate = new Date();
       futureDate.setDate(today.getDate() + 30); // Next 30 days
       
-      const response = await api.get('/schedule', {
+      const response = await api.get('/api/schedule', {
         params: {
           startDate: today.toISOString().split('T')[0],
           endDate: futureDate.toISOString().split('T')[0],
@@ -121,7 +121,7 @@ export const scheduleAPI = {
   // Get schedule statistics
   getStats: async (period = 'month') => {
     try {
-      const response = await api.get('/schedule/stats', {
+      const response = await api.get('/api/schedule/stats', {
         params: { period }
       });
       return response.data;

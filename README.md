@@ -107,6 +107,7 @@ npm run install:all
 # Backend environment
 cp backend/.env.example backend/.env
 # Configure MongoDB URI, JWT secrets, email credentials
+# See QUICK_EMAIL_SETUP.md for email configuration help
 
 # Frontend environment  
 cp frontend/.env.example frontend/.env
@@ -253,14 +254,28 @@ docker-compose up --build
 ### Environment Variables
 ```bash
 # Backend (.env)
-MONGODB_URI=mongodb://localhost:27017/yogaai
-JWT_SECRET=your_jwt_secret
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+NODE_ENV=development
+PORT=5001
+FRONTEND_URL=http://localhost:3002
+ML_API_URL=http://localhost:5000
+
+# Email Configuration (Required for user registration)
+EMAIL_PROVIDER=smtp
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-app-email@gmail.com
+SMTP_PASS=your-app-password
+EMAIL_FROM_NAME=YogaAI - Yoga Posture Detection
 
 # Frontend (.env)
 VITE_API_URL=http://localhost:5001
 VITE_ML_API_URL=http://localhost:5000
+```
+
+> 📧 **Email Setup Required:** The application requires email configuration for user registration and verification. See [QUICK_EMAIL_SETUP.md](QUICK_EMAIL_SETUP.md) for easy setup instructions or [EMAIL_PROVIDERS_GUIDE.md](EMAIL_PROVIDERS_GUIDE.md) for detailed provider options.
 VITE_DIET_API_URL=http://localhost:5002
 ```
 

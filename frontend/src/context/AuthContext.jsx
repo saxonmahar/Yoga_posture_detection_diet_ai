@@ -30,7 +30,8 @@ export const AuthProvider = ({ children }) => {
         bmi
       });
 
-      setUser(response.user);
+      // Don't set user here - they need to verify email first
+      // setUser(response.user); // ❌ REMOVED - This was auto-logging in users
       return response;
     } catch (error) {
       throw error;

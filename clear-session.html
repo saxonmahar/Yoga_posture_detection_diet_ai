@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear YogaAI Session</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #1e293b; color: white; }
+        .container { max-width: 500px; margin: 0 auto; text-align: center; }
+        button { background: #ef4444; color: white; padding: 15px 30px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin: 10px; }
+        button:hover { background: #dc2626; }
+        .success { background: #10b981; padding: 15px; border-radius: 8px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear YogaAI Session</h1>
+        <p>Click the button below to clear your login session and test registration flow:</p>
+        
+        <button onclick="clearSession()">Clear Session & Logout</button>
+        
+        <div id="result"></div>
+        
+        <p><a href="http://localhost:3002" style="color: #10b981;">← Back to YogaAI</a></p>
+    </div>
+
+    <script>
+        function clearSession() {
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear cookies
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            document.getElementById('result').innerHTML = '<div class="success">✅ Session cleared! You can now test registration flow.<br><a href="http://localhost:3002/register" style="color: white;">Go to Register Page</a></div>';
+        }
+    </script>
+</body>
+</html>

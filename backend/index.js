@@ -5,12 +5,16 @@ const cookieParser = require("cookie-parser");
 const axios = require("axios");
 
 const connectDB = require("./DbConfig/db.config");
+const { logEmailConfigStatus } = require("./utils/emailConfigValidator");
 const authRoutes = require("./routes/authRoutes");
 const poseRoutes = require("./routes/poseRoutes");
 const dietRoutes = require("./routes/dietRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const scheduleRoutes = require("./routes/scheduleRoutes");
+const emailVerificationRoutes = require("./routes/emailVerificationRoutes");
+const securityRoutes = require("./routes/securityRoutes");
+const forgotPasswordRoutes = require("./routes/forgotPasswordRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -43,6 +47,9 @@ app.use("/api/diet", dietRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/schedule", scheduleRoutes);
+app.use("/api/email", emailVerificationRoutes);
+app.use("/api/security", securityRoutes);
+app.use("/api/password", forgotPasswordRoutes);
 
 // ----------------------------
 // ML Proxy Endpoints
@@ -79,6 +86,9 @@ app.get("/", (req, res) => {
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`🤖 ML Service URL: ${ML_API_URL}`);
+
+    // Validate email configuration
+    logEmailConfigStatus();
 
     // Test ML service separately without blocking server start
     const testMLService = async () => {

@@ -42,9 +42,20 @@ export default function Register() {
     if (!form.name || !form.email || !form.password || !form.confirmPassword || !form.age || !form.weight || !form.height) {
       return alert("Please fill all required fields");
     }
-    if (!form.email.includes("@")) {
-      return alert("Please enter a valid email");
+    
+    // Enhanced email validation
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!emailRegex.test(form.email)) {
+      return alert("Please enter a valid email address");
     }
+    
+    // Check for suspicious domains
+    const domain = form.email.toLowerCase().split('@')[1];
+    const suspiciousDomains = ['test.com', 'fake.com', 'example.com', 'dummy.com', 'invalid.com'];
+    if (suspiciousDomains.includes(domain)) {
+      return alert("Please use a real email address. Temporary or fake email services are not allowed.");
+    }
+    
     if (form.password.length < 6) {
       return alert("Password must be at least 6 characters");
     }
@@ -85,23 +96,67 @@ export default function Register() {
       });
 
       console.log("Registration successful:", result);
-      navigate("/login");
+      
+      // Handle different success scenarios
+      if (result.success) {
+        // Check if email verification is required
+        if (result.requiresVerification) {
+          if (result.emailWarning) {
+            // Account created but email failed
+            alert("Account created successfully! However, verification email failed to send. You can still login and resend verification later.");
+            navigate("/login");
+          } else {
+            // Account created and email sent - redirect to login with verification needed
+            navigate("/login", { 
+              state: { 
+                email: form.email,
+                needsVerification: true,
+                message: "Please check your email for the OTP code, then enter it below with your password to complete registration."
+              }
+            });
+          }
+        } else {
+          // Account fully created
+          navigate("/login");
+        }
+      } else {
+        throw new Error(result.message || "Registration failed");
+      }
     } catch (err) {
       console.error("Registration error:", err);
+      console.error("Error response:", err.response);
+      console.error("Error message:", err.message);
+      console.error("Error status:", err.response?.status);
 
       let message = "Registration failed. Please try again.";
 
       if (err.response?.data) {
         const data = err.response.data;
-        if (Array.isArray(data.errors) && data.errors.length > 0) {
+        console.log("Backend error data:", data);
+        
+        // Handle email validation errors specifically
+        if (data.emailError) {
+          message = data.message || "Invalid email address";
+          if (data.validationDetails?.errors) {
+            message = data.validationDetails.errors.join(", ");
+          }
+        } else if (Array.isArray(data.errors) && data.errors.length > 0) {
           message = data.errors.join(", ");
         } else if (data.message) {
           message = data.message;
         }
       } else if (err.message) {
-        message = err.message;
+        // Network or other errors
+        if (err.message.includes('Network Error')) {
+          message = "Cannot connect to server. Please check if the backend is running.";
+        } else if (err.message.includes('timeout')) {
+          message = "Request timed out. Please try again.";
+        } else {
+          message = `Connection error: ${err.message}`;
+        }
       }
 
+      console.log("Final error message:", message);
       alert(message);
     } finally {
       setLoading(false);
