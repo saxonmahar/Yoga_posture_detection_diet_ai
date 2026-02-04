@@ -189,6 +189,11 @@ export default function Register() {
           <div>
             <h2 className="text-2xl font-bold text-white">Create Account</h2>
             <p className="text-slate-400 text-sm mt-1">Join our wellness community</p>
+            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mt-3">
+              <p className="text-sm text-blue-400">
+                💡 You can add your profile photo after registration in your Profile settings
+              </p>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

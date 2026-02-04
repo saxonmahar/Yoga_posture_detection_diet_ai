@@ -45,6 +45,9 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await loginRequest({ email, password });
+      console.log('🔍 Login Response:', response);
+      console.log('🔍 User Data:', response.data?.user);
+      console.log('🔍 Profile Photo:', response.data?.user?.profilePhoto);
       setUser(response.data.user);
       return response;
     } catch (error) {
@@ -92,16 +95,35 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update user profile photo
+  const updateUserPhoto = (photoUrl) => {
+    if (!user) return;
+    
+    const updatedUser = {
+      ...user,
+      profilePhoto: photoUrl
+    };
+    setUser(updatedUser);
+    return updatedUser;
+  };
+
   // Load user on refresh
   const loadUser = async () => {
     try {
       const response = await getMeRequest();
-      if (response?.data?.user) {
-        setUser(response.data.user);
-        console.log('✅ User loaded successfully:', response.data.user.name || response.data.user.email);
+      
+      // Handle different response structures
+      // Login response: {success: true, data: {user: {...}}}
+      // /me response: {success: true, user: {...}}
+      const userData = response?.data?.user || response?.user;
+      
+      if (userData) {
+        console.log('✅ User loaded from /me endpoint:', userData.name || userData.email);
+        console.log('📸 Profile photo from /me:', userData.profilePhoto);
+        setUser(userData);
       } else {
         setUser(null);
-        console.log('⚠️ No user data in response');
+        console.log('⚠️ No user data in /me response');
       }
     } catch (error) {
       // Suppress 401 error logs - these are expected for non-authenticated users
@@ -135,6 +157,7 @@ export const AuthProvider = ({ children }) => {
         login,
         logout,
         updateUserStats, // 👈 Added to context
+        updateUserPhoto, // 👈 Added photo update function
         loading
       }}
     >

@@ -36,7 +36,7 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/password/forgot`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/password/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/password/verify`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/password/verify`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -119,7 +119,7 @@ export default function ForgotPassword() {
     setMessage("");
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/password/reset`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/password/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

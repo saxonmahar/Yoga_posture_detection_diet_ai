@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Users, MessageCircle, Trophy, Target, Heart, Crown, Star, 
-  Medal, Award, Flame, Calendar, TrendingUp, User, Settings,
-  MoreHorizontal, ThumbsUp, Share2, BookOpen, Activity, Plus,
-  UserPlus, UserCheck, UserX, Edit3, Camera, Gift, Zap,
-  Facebook, Twitter, Instagram, Linkedin, Globe, MapPin,
-  Clock, CheckCircle, XCircle, Play, Pause, RotateCcw,
-  Filter, Search, Bell, Send, Image, Video, Smile
+  Users, Trophy, Target, Heart, Star, 
+  Medal, Award, Flame, Calendar, TrendingUp, User,
+  Activity, Plus, Clock, CheckCircle, Crown,
+  BarChart3, Zap, Globe, MapPin, ArrowRight,
+  MessageCircle, Share2, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -14,22 +12,17 @@ import { useNavigate } from 'react-router-dom';
 const CommunityPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState('profile');
   const [activeTab, setActiveTab] = useState('overview');
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
-  const [friendRequests, setFriendRequests] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [postContent, setPostContent] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [selectedSection, setSelectedSection] = useState(null);
 
   // Realistic user data based on actual usage
   const currentUserProfile = {
     id: user?.id || user?._id || 'current-user',
     name: user?.name || user?.fullName || 'Yoga Practitioner',
     username: `@${(user?.name || user?.fullName || 'user').toLowerCase().replace(/\s+/g, '')}`,
-    avatar: '/api/placeholder/40/40',
     level: 'Beginner',
     streak: 2, // Based on your February sessions (Tuesday & Wednesday)
     totalSessions: 10, // Your actual session count
@@ -78,6 +71,94 @@ const CommunityPage = () => {
     }
   ];
 
+  // Mock users data for community features
+  const mockUsers = [
+    {
+      id: 'user-1',
+      name: 'Yoga Enthusiast',
+      username: '@yogaenthusiast',
+      level: 'Intermediate',
+      streak: 15,
+      totalSessions: 45,
+      achievements: 5,
+      points: 680,
+      rank: 2,
+      badges: ['consistency-builder', 'pose-improver'],
+      friends: 32,
+      following: 18,
+      followers: 45,
+      bio: 'Passionate about wellness and mindful living',
+      isOnline: true,
+      lastActive: 'Active now',
+      isCurrentUser: false,
+      friendStatus: 'friend'
+    },
+    {
+      id: 'user-2',
+      name: 'Wellness Seeker',
+      username: '@wellnessseeker',
+      level: 'Beginner',
+      streak: 7,
+      totalSessions: 20,
+      achievements: 3,
+      points: 320,
+      rank: 5,
+      badges: ['first-steps', 'dedication'],
+      friends: 15,
+      following: 25,
+      followers: 12,
+      bio: 'New to yoga, loving the journey',
+      isOnline: false,
+      lastActive: '2 hours ago',
+      isCurrentUser: false,
+      friendStatus: 'none'
+    },
+    {
+      id: 'user-3',
+      name: 'Mindful Practitioner',
+      username: '@mindfulpractitioner',
+      level: 'Advanced',
+      streak: 30,
+      totalSessions: 85,
+      achievements: 8,
+      points: 1240,
+      rank: 1,
+      badges: ['streak-master', 'pose-perfectionist', 'community-helper'],
+      friends: 67,
+      following: 43,
+      followers: 89,
+      bio: 'Yoga teacher and wellness advocate',
+      isOnline: true,
+      lastActive: 'Active now',
+      isCurrentUser: false,
+      friendStatus: 'friend'
+    },
+    {
+      id: currentUserProfile.id,
+      name: currentUserProfile.name,
+      username: currentUserProfile.username,
+      level: currentUserProfile.level,
+      streak: currentUserProfile.streak,
+      totalSessions: currentUserProfile.totalSessions,
+      achievements: currentUserProfile.achievements,
+      points: currentUserProfile.points,
+      rank: 4,
+      badges: currentUserProfile.badges,
+      friends: 45,
+      following: 23,
+      followers: 67,
+      bio: 'On a wellness journey, one breath at a time 🧘‍♂️',
+      socialLinks: {
+        instagram: 'yourhandle',
+        twitter: 'yourhandle'
+      },
+      isOnline: true,
+      lastActive: 'Active now',
+      isCurrentUser: true,
+      friendStatus: 'self'
+    }
+  ];
+
   // Realistic challenges (optional community features)
   const challenges = [
     {
@@ -105,29 +186,30 @@ const CommunityPage = () => {
       category: 'skill'
     }
   ];
-      avatar: '/api/placeholder/40/40',
-      coverImage: '/api/placeholder/800/200',
-      level: 'Intermediate',
-      streak: 15,
-      totalSessions: 67,
-      achievements: 6,
-      points: 1240,
-      rank: 5,
-      location: 'Your City',
-      joinedDate: '2023-11-20',
-      badges: ['rising-star', 'consistent-practice'],
-      friends: 45,
-      following: 23,
-      followers: 67,
-      bio: 'On a wellness journey, one breath at a time 🧘‍♂️',
-      socialLinks: {
-        instagram: 'yourhandle',
-        twitter: 'yourhandle'
-      },
-      isOnline: true,
-      lastActive: 'Active now',
-      isCurrentUser: true,
-      friendStatus: 'self'
+
+  // Realistic achievements based on actual capabilities
+  const achievements = [
+    { 
+      id: 'first-steps', 
+      name: 'First Steps', 
+      description: 'Complete your first yoga session', 
+      icon: Star, 
+      color: 'from-green-500 to-emerald-500', 
+      rarity: 'common',
+      points: 50,
+      category: 'milestone',
+      unlocked: currentUserProfile.totalSessions >= 1
+    },
+    { 
+      id: 'consistency-starter', 
+      name: 'Consistency Starter', 
+      description: 'Practice yoga for 2 consecutive days', 
+      icon: Flame, 
+      color: 'from-orange-500 to-red-500', 
+      rarity: 'common',
+      points: 100,
+      category: 'consistency',
+      unlocked: currentUserProfile.currentStreak >= 2
     }
   ];
 
@@ -255,166 +337,6 @@ const CommunityPage = () => {
       achievement: 'pose-perfectionist',
       isLiked: false,
       video: true
-    }
-  ];
-
-  // Realistic achievements based on actual capabilities
-  const achievements = [
-    { 
-      id: 'first-steps', 
-      name: 'First Steps', 
-      description: 'Complete your first yoga session', 
-      icon: Star, 
-      color: 'from-green-500 to-emerald-500', 
-      rarity: 'common',
-      points: 50,
-      category: 'milestone'
-    },
-    { 
-      id: 'consistency-starter', 
-      name: 'Consistency Starter', 
-      description: 'Practice yoga for 2 consecutive days', 
-      icon: Flame, 
-      color: 'from-orange-500 to-red-500', 
-      rarity: 'common',
-      points: 100,
-      category: 'consistency'
-    },
-    { 
-      id: 'pose-improver', 
-      name: 'Pose Improver', 
-      description: 'Achieve 80%+ accuracy in any pose', 
-      icon: Target, 
-      color: 'from-blue-500 to-cyan-500', 
-      rarity: 'uncommon',
-      points: 150,
-      category: 'skill'
-    },
-    { 
-      id: 'dedication', 
-      name: 'Dedication', 
-      description: 'Complete 5 total yoga sessions', 
-      icon: Award, 
-      color: 'from-purple-500 to-pink-500', 
-      rarity: 'uncommon',
-      points: 200,
-      category: 'milestone'
-    },
-    { 
-      id: 'consistency-builder', 
-      name: 'Consistency Builder', 
-      description: 'Maintain a 7-day practice streak', 
-      icon: Calendar, 
-      color: 'from-indigo-500 to-purple-500', 
-      rarity: 'rare',
-      points: 300,
-      category: 'consistency'
-    },
-    { 
-      id: 'pose-perfectionist', 
-      name: 'Pose Perfectionist', 
-      description: 'Achieve 90%+ accuracy in any pose', 
-      icon: Trophy, 
-      color: 'from-yellow-500 to-orange-500', 
-      rarity: 'rare',
-      points: 400,
-      category: 'skill'
-    } 
-      description: 'Help 10+ community members', 
-      icon: Heart, 
-      color: 'from-pink-500 to-rose-500', 
-      rarity: 'uncommon',
-      points: 200,
-      unlockedBy: 634,
-      category: 'social'
-    },
-    { 
-      id: 'consistency-king', 
-      name: 'Consistency King', 
-      description: 'Complete 100+ yoga sessions', 
-      icon: Crown, 
-      color: 'from-yellow-500 to-orange-500', 
-      rarity: 'legendary',
-      points: 750,
-      unlockedBy: 234,
-      category: 'milestone'
-    },
-    { 
-      id: 'early-bird', 
-      name: 'Early Bird', 
-      description: 'Complete 20 morning sessions', 
-      icon: Star, 
-      color: 'from-emerald-500 to-teal-500', 
-      rarity: 'common',
-      points: 150,
-      unlockedBy: 1567,
-      category: 'timing'
-    },
-    { 
-      id: 'flexibility-master', 
-      name: 'Flexibility Master', 
-      description: 'Master all flexibility poses', 
-      icon: Activity, 
-      color: 'from-purple-500 to-indigo-500', 
-      rarity: 'epic',
-      points: 600,
-      unlockedBy: 445,
-      category: 'skill'
-    },
-    { 
-      id: 'zen-warrior', 
-      name: 'Zen Warrior', 
-      description: 'Complete mindfulness challenges', 
-      icon: Medal, 
-      color: 'from-indigo-500 to-purple-500', 
-      rarity: 'rare',
-      points: 400,
-      unlockedBy: 723,
-      category: 'mindfulness'
-    },
-    { 
-      id: 'newcomer', 
-      name: 'Newcomer', 
-      description: 'Welcome to the community!', 
-      icon: User, 
-      color: 'from-slate-500 to-slate-600', 
-      rarity: 'common',
-      points: 50,
-      unlockedBy: 5234,
-      category: 'welcome'
-    },
-    { 
-      id: 'dedicated-learner', 
-      name: 'Dedicated Learner', 
-      description: 'Complete 30 learning sessions', 
-      icon: BookOpen, 
-      color: 'from-green-500 to-emerald-500', 
-      rarity: 'uncommon',
-      points: 250,
-      unlockedBy: 1123,
-      category: 'learning'
-    },
-    { 
-      id: 'rising-star', 
-      name: 'Rising Star', 
-      description: 'Show rapid improvement', 
-      icon: TrendingUp, 
-      color: 'from-cyan-500 to-blue-500', 
-      rarity: 'rare',
-      points: 350,
-      unlockedBy: 567,
-      category: 'progress'
-    },
-    { 
-      id: 'consistent-practice', 
-      name: 'Consistent Practice', 
-      description: 'Practice regularly for 2 weeks', 
-      icon: Calendar, 
-      color: 'from-teal-500 to-cyan-500', 
-      rarity: 'uncommon',
-      points: 200,
-      unlockedBy: 1789,
-      category: 'consistency'
     }
   ];
 

@@ -1,5 +1,5 @@
 // controllers/authController.js
-const User = require("../models/User");
+const User = require("../models/user");
 
 // GET /api/auth/me - Get current logged-in user
 const getMeController = async (req, res) => {
@@ -34,6 +34,7 @@ const getMeController = async (req, res) => {
       height: user.height,
       isPremium: user.isPremium || false,
       level: user.fitnessLevel || 'beginner',
+      profilePhoto: user.profilePhoto, // Add profile photo to user data
       stats: {
         totalWorkouts: user.stats?.totalWorkouts || 0,
         currentStreak: user.stats?.currentStreak || 0,
@@ -45,6 +46,17 @@ const getMeController = async (req, res) => {
         age: user.age || 25
       }
     };
+
+    console.log('🔍 /ME DEBUG - User from DB:', {
+      id: user._id,
+      email: user.email,
+      profilePhoto: user.profilePhoto
+    });
+    console.log('🔍 /ME DEBUG - Mapped userData:', {
+      id: userData.id,
+      email: userData.email,
+      profilePhoto: userData.profilePhoto
+    });
 
     res.status(200).json({
       success: true,

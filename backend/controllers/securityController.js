@@ -1,5 +1,5 @@
 const LoginSecurity = require("../models/loginSecurity");
-const User = require("../models/User");
+const User = require("../models/user");
 const { sendSecurityAlert } = require("../services/emailService");
 
 // Confirm login security

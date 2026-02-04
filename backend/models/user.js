@@ -98,6 +98,14 @@ const userSchema = new mongoose.Schema(
 
     // Profile
     avatar: { type: String },
+    profilePhoto: {
+      type: String,
+      default: null
+    },
+    profilePhotoPublicId: {
+      type: String,
+      default: null
+    },
     bio: { type: String, maxlength: 500 },
     age: { type: Number, min: 1 },
     weight: { type: Number }, // kg
@@ -179,4 +187,4 @@ userSchema.methods.toJSON = function () {
   return user;
 };
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.models.User || mongoose.model("User", userSchema);

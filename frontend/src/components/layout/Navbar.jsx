@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Menu, X, User, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext' // Only keep this one
+import photoService from '../../services/photoService'
 
 function Navbar() {
   const navigate = useNavigate()
@@ -37,6 +38,7 @@ function Navbar() {
     { id: 'dashboard', label: 'Dashboard', page: 'dashboard' },
     { id: 'schedule', label: 'Schedule', page: 'schedule' },
     { id: 'community', label: 'Community', page: 'community' },
+    { id: 'profile', label: 'Profile', page: 'profile' },
   ] : []
 
   const handleNavigation = (page) => {
@@ -50,6 +52,40 @@ function Navbar() {
     setIsMenuOpen(false)
     navigate('/login')
   }
+
+  // Helper function to render user profile photo
+  const renderProfilePhoto = (size = 'w-10 h-10') => {
+    const photoUrl = user?.profilePhoto ? photoService.getPhotoUrl(user.profilePhoto) : null;
+    
+    console.log('🔍 Navbar - User:', user?.name);
+    console.log('🔍 Navbar - Profile Photo Path:', user?.profilePhoto);
+    console.log('🔍 Navbar - Photo URL:', photoUrl);
+    
+    if (photoUrl) {
+      return (
+        <img
+          src={photoUrl}
+          alt="Profile"
+          className={`${size} rounded-full object-cover border-2 border-accent/50`}
+          onError={(e) => {
+            console.log('🔍 Image load error:', e.target.src);
+            // Fallback to default icon if image fails to load
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+          onLoad={() => {
+            console.log('🔍 Image loaded successfully:', photoUrl);
+          }}
+        />
+      );
+    }
+    
+    return (
+      <div className={`${size} bg-gradient-to-br from-accent to-pink-500 rounded-full flex items-center justify-center`}>
+        <User className="w-5 h-5" />
+      </div>
+    );
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-surface/95 backdrop-blur-xl border-b border-white/10">
@@ -130,8 +166,12 @@ function Navbar() {
             {user ? (
               <>
                 <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-accent to-pink-500 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5" />
+                  <div className="relative">
+                    {renderProfilePhoto()}
+                    {/* Fallback icon (hidden by default, shown if image fails) */}
+                    <div className="w-10 h-10 bg-gradient-to-br from-accent to-pink-500 rounded-full flex items-center justify-center" style={{ display: 'none' }}>
+                      <User className="w-5 h-5" />
+                    </div>
                   </div>
                   <div>
                     <p className="text-sm font-semibold">{user.name || user.fullName || 'User'}</p>
@@ -209,8 +249,12 @@ function Navbar() {
                 {user ? (
                   <>
                     <div className="flex items-center space-x-3 p-3 bg-white/5 rounded-lg">
-                      <div className="w-10 h-10 bg-gradient-to-br from-accent to-pink-500 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5" />
+                      <div className="relative">
+                        {renderProfilePhoto()}
+                        {/* Fallback icon (hidden by default, shown if image fails) */}
+                        <div className="w-10 h-10 bg-gradient-to-br from-accent to-pink-500 rounded-full flex items-center justify-center" style={{ display: 'none' }}>
+                          <User className="w-5 h-5" />
+                        </div>
                       </div>
                       <div>
                         <p className="font-semibold">{user.name || user.fullName || 'User'}</p>

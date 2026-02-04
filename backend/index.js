@@ -25,13 +25,16 @@ const ML_API_URL = process.env.ML_API_URL || "http://localhost:5000"; // Correct
 // ----------------------------
 app.use(cookieParser());
 app.use(cors({
-    origin: true, // Allow all origins temporarily
+    origin: ['http://localhost:3002', 'http://localhost:3000'], // Allow specific frontend ports
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// Serve uploaded files
+app.use('/uploads', express.static('uploads'));
 
 // ----------------------------
 // Connect to MongoDB
@@ -41,15 +44,22 @@ connectDB(); // Single call only
 // ----------------------------
 // Routes
 // ----------------------------
-app.use("/api/auth", authRoutes);
-app.use("/api/pose", poseRoutes);
-app.use("/api/diet", dietRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/contact", contactRoutes);
-app.use("/api/schedule", scheduleRoutes);
-app.use("/api/email", emailVerificationRoutes);
-app.use("/api/security", securityRoutes);
-app.use("/api/password", forgotPasswordRoutes);
+try {
+    app.use("/api/auth", authRoutes);
+    app.use("/api/pose", poseRoutes);
+    app.use("/api/diet", dietRoutes);
+    app.use("/api/analytics", analyticsRoutes);
+    app.use("/api/contact", contactRoutes);
+    app.use("/api/schedule", scheduleRoutes);
+    app.use("/api/email", emailVerificationRoutes);
+    app.use("/api/security", securityRoutes);
+    app.use("/api/password", forgotPasswordRoutes);
+    
+    console.log('✅ All routes registered successfully');
+} catch (error) {
+    console.error('❌ Error registering routes:', error.message);
+    console.error(error.stack);
+}
 
 // ----------------------------
 // ML Proxy Endpoints
@@ -78,6 +88,17 @@ app.get("/", (req, res) => {
         ml_service: { url: ML_API_URL },
         mongo_uri: process.env.MONGO_URI
     });
+});
+
+// Simple test endpoint
+app.get("/test-simple", (req, res) => {
+    res.json({ success: true, message: "Simple test working!" });
+});
+
+// Photo test endpoint
+app.get('/photo-test', (req, res) => {
+    console.log('Photo test endpoint hit');
+    res.json({ success: true, message: 'Photo test working!' });
 });
 
 // ----------------------------

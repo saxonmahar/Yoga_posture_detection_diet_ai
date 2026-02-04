@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const User = require("../models/User"); // adjust path if needed
+const User = require("../models/user"); // adjust path if needed
 const { generateOTP, sendVerificationEmail } = require("../services/emailService");
 const { validateEmail, quickDomainCheck } = require("../services/emailValidationService");
 

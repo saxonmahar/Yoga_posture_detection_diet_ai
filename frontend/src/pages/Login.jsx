@@ -51,7 +51,7 @@ export default function Login() {
     try {
       // If user needs verification, verify OTP first
       if (needsVerification && form.otp) {
-        const verifyResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/email/verify`, {
+        const verifyResponse = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/email/verify`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -109,7 +109,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/email/resend`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/email/resend`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

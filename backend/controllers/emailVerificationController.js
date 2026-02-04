@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const User = require("../models/user");
 const { generateOTP, sendVerificationEmail, sendWelcomeEmail } = require("../services/emailService");
 
 // Verify email with OTP

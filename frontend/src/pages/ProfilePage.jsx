@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, Calendar, Target, Award, Edit, 
   Camera, Save, X, TrendingUp, Zap, Heart, Brain, 
   Settings, Bell, Moon, Globe, Ruler, Clock,
   Shield, Download, Trash2, CheckCircle
 } from 'lucide-react';
+import PhotoUpload from '../components/common/PhotoUpload';
+import { useAuth } from '../context/AuthContext';
+import photoService from '../services/photoService';
 
-function ProfilePage({ user, updateUserProfile, onNavigate }) {
+function ProfilePage() {
+  const { user, updateUserPhoto } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
+  const [profilePhoto, setProfilePhoto] = useState(null);
+  const [profilePhotoPreview, setProfilePhotoPreview] = useState(
+    user?.profilePhoto ? photoService.getPhotoUrl(user.profilePhoto) : null
+  );
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -73,11 +83,45 @@ function ProfilePage({ user, updateUserProfile, onNavigate }) {
   };
 
   const handleSave = () => {
-    if (updateUserProfile) {
-      updateUserProfile(formData);
-    }
+    // TODO: Implement API call to update user profile
+    console.log('Saving profile data:', formData);
     setIsEditing(false);
     alert('Profile updated successfully!');
+  };
+
+  // Handle photo upload
+  const handlePhotoChange = async (file, preview) => {
+    setProfilePhoto(file);
+    setProfilePhotoPreview(preview);
+    
+    if (file) {
+      // Validate file first
+      const validation = photoService.validateImageFile(file);
+      if (!validation.isValid) {
+        alert('Invalid file: ' + validation.errors.join(', '));
+        setProfilePhoto(null);
+        setProfilePhotoPreview(user?.profilePhoto ? photoService.getPhotoUrl(user.profilePhoto) : null);
+        return;
+      }
+
+      // Upload photo to server
+      try {
+        const result = await photoService.uploadProfilePhoto(file);
+        if (result.success) {
+          // Update user context with new photo URL
+          updateUserPhoto(result.photoUrl);
+          alert('Profile photo updated successfully!');
+        } else {
+          throw new Error(result.message);
+        }
+      } catch (error) {
+        console.error('Photo upload error:', error);
+        alert('Failed to upload photo: ' + error.message);
+        // Reset photo on error
+        setProfilePhoto(null);
+        setProfilePhotoPreview(user?.profilePhoto ? photoService.getPhotoUrl(user.profilePhoto) : null);
+      }
+    }
   };
 
   const handleInputChange = (e) => {
@@ -108,7 +152,7 @@ function ProfilePage({ user, updateUserProfile, onNavigate }) {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Please login to view profile</h2>
           <button 
-            onClick={() => onNavigate('login')}
+            onClick={() => navigate('/login')}
             className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/80 transition-colors"
           >
             Go to Login
@@ -166,13 +210,24 @@ function ProfilePage({ user, updateUserProfile, onNavigate }) {
             <div className="bg-card/50 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
               <div className="text-center mb-6">
                 <div className="relative inline-block mb-4">
-                  <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-4xl font-bold mx-auto">
-                    {formData.name?.charAt(0) || 'U'}
-                  </div>
-                  {isEditing && (
-                    <button className="absolute bottom-2 right-2 w-10 h-10 bg-surface rounded-full border border-white/10 flex items-center justify-center hover:bg-secondary transition">
-                      <Camera className="w-5 h-5" />
-                    </button>
+                  {isEditing ? (
+                    <PhotoUpload
+                      currentPhoto={profilePhotoPreview}
+                      onPhotoChange={handlePhotoChange}
+                      size="xlarge"
+                    />
+                  ) : (
+                    profilePhotoPreview ? (
+                      <img
+                        src={profilePhotoPreview}
+                        alt="Profile"
+                        className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-slate-600/50"
+                      />
+                    ) : (
+                      <div className="w-32 h-32 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center text-white text-4xl font-bold mx-auto">
+                        {formData.name?.charAt(0) || 'U'}
+                      </div>
+                    )
                   )}
                 </div>
                 <h2 className="text-xl font-bold">{formData.name || 'User'}</h2>
@@ -757,19 +812,19 @@ function ProfilePage({ user, updateUserProfile, onNavigate }) {
         {/* Bottom Actions */}
         <div className="mt-8 flex flex-wrap gap-4">
           <button
-            onClick={() => onNavigate('dashboard')}
+            onClick={() => navigate('/dashboard')}
             className="px-6 py-3 bg-surface border border-white/10 rounded-xl hover:bg-white/5 transition-colors"
           >
             Back to Dashboard
           </button>
           <button
-            onClick={() => onNavigate('progress')}
+            onClick={() => navigate('/progress')}
             className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-primary/80 transition-colors"
           >
             View Progress
           </button>
           <button
-            onClick={() => onNavigate('settings')}
+            onClick={() => navigate('/settings')}
             className="px-6 py-3 bg-surface border border-white/10 rounded-xl hover:bg-white/5 transition-colors"
           >
             App Settings

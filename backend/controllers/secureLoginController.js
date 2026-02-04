@@ -1,4 +1,4 @@
-const User = require("../models/User");
+const User = require("../models/user");
 const LoginSecurity = require("../models/loginSecurity");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -51,6 +51,8 @@ const getLocationInfo = async (ipAddress) => {
 
 // Enhanced login controller with security features
 const secureLoginController = async (req, res) => {
+  console.log('🔍 SECURE LOGIN CONTROLLER HIT - Email:', req.body.email);
+  
   try {
     const { email, password } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -95,7 +97,7 @@ const secureLoginController = async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password +profilePhoto");
 
     if (!user) {
       // Log failed attempt
@@ -223,6 +225,7 @@ const secureLoginController = async (req, res) => {
       bodyType: user.bodyType || 'mesomorphic',
       goal: user.goal || 'maintain',
       bmi: user.bmi,
+      profilePhoto: user.profilePhoto, // Add profile photo to user data
       stats: {
         totalWorkouts: user.stats?.totalWorkouts || 0,
         currentStreak: user.stats?.currentStreak || 0,
