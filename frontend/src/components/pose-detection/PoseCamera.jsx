@@ -174,6 +174,13 @@ const PoseCamera = ({
   useEffect(() => {
     if (selectedPose !== currentSelectedPose) {
       console.log(`🔄 Updating currentSelectedPose: ${currentSelectedPose} → ${selectedPose}`);
+      
+      // IMMEDIATELY STOP ALL TTS when switching poses
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        console.log('🔇 TTS CANCELLED - Pose switched!');
+      }
+      
       setCurrentSelectedPose(selectedPose);
       
       // Reset pose-specific states when switching poses
@@ -191,11 +198,6 @@ const PoseCamera = ({
         feedbackGiven: [],
         correctionsNeeded: []
       });
-      
-      // Stop any ongoing speech
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
       
       console.log(`✅ Pose switched to: ${selectedPose} - States reset`);
     }
@@ -341,6 +343,12 @@ const PoseCamera = ({
   };
 
   const stopDetection = () => {
+    // IMMEDIATELY STOP ALL TTS
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      console.log('🔇 TTS CANCELLED - Detection stopped!');
+    }
+
     if (detectionIntervalRef.current) {
       clearInterval(detectionIntervalRef.current);
       detectionIntervalRef.current = null;
@@ -367,11 +375,6 @@ const PoseCamera = ({
     setCurrentInstructionStep(0);
     setIsGivingInstructions(false);
 
-    // STOP ALL TTS IMMEDIATELY
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-    }
-
     // Clear canvas
     if (canvasRef.current) {
       const ctx = canvasRef.current.getContext('2d');
@@ -380,9 +383,10 @@ const PoseCamera = ({
   };
 
   const stopWebcam = () => {
-    // STOP ALL TTS IMMEDIATELY
+    // IMMEDIATELY STOP ALL TTS
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
+      console.log('🔇 TTS CANCELLED - Webcam stopped!');
     }
 
     stopDetection();
@@ -476,6 +480,13 @@ const PoseCamera = ({
                 } else if (newCount >= 3) {
                   // BRAVO! CELEBRATION TIME!
                   console.log(`🎉 TRIGGERING BRAVO CELEBRATION!`);
+                  
+                  // IMMEDIATELY STOP ALL ONGOING TTS
+                  if ('speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                    console.log('🔇 TTS CANCELLED - Pose completed!');
+                  }
+                  
                   setPoseCompleted(true);
                   setShowCelebration(true);
                   
@@ -490,7 +501,11 @@ const PoseCamera = ({
                   };
                   
                   const bravoMessage = poseMessages[currentSelectedPose] || 'BRAVO! 🎉 Perfect pose mastery! You completed 3 perfect poses! Well done!';
-                  speak(bravoMessage);
+                  
+                  // Wait a moment before speaking BRAVO to ensure previous TTS is cancelled
+                  setTimeout(() => {
+                    speak(bravoMessage);
+                  }, 200);
                   
                   // Record pose completion in session
                   const currentPose = PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose);
@@ -836,6 +851,15 @@ const PoseCamera = ({
   };
 
   const speak = (text) => {
+    // CRITICAL FIX: Stop TTS immediately when pose is completed or celebrating
+    if (poseCompleted || showCelebration) {
+      // If pose is completed, only allow BRAVO messages
+      if (!text.includes('BRAVO') && !text.includes('Perfect pose mastery') && !text.includes('Well done')) {
+        console.log(`🔇 TTS Blocked - Pose completed: "${text.substring(0, 30)}..."`);
+        return;
+      }
+    }
+
     // Only speak if detection is active and not celebrating (unless it's the bravo message)
     if ('speechSynthesis' in window && (isDetecting || text.includes('BRAVO') || text.includes('Welcome') || text.includes('Starting'))) {
       // Cancel any ongoing speech first
@@ -862,10 +886,15 @@ const PoseCamera = ({
           console.error(`❌ TTS Error:`, event.error);
         };
         
-        window.speechSynthesis.speak(utterance);
+        // CRITICAL: Add check before speaking to ensure pose isn't completed
+        if (!poseCompleted || text.includes('BRAVO') || text.includes('Perfect pose mastery') || text.includes('Well done')) {
+          window.speechSynthesis.speak(utterance);
+        } else {
+          console.log(`🔇 TTS Cancelled - Pose completed during utterance creation`);
+        }
       }, 100);
     } else {
-      console.log(`🔇 TTS Skipped: isDetecting=${isDetecting}, text="${text.substring(0, 30)}..."`);
+      console.log(`🔇 TTS Skipped: isDetecting=${isDetecting}, poseCompleted=${poseCompleted}, text="${text.substring(0, 30)}..."`);
     }
   };
 
