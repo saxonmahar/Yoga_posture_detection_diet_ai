@@ -4,60 +4,60 @@ import { Star, Quote, TrendingUp, Target, Award, Users } from 'lucide-react';
 function TestimonialsPage({ onNavigate }) {
   const testimonials = [
     {
-      name: 'Sarah Johnson',
-      role: 'Yoga Instructor',
+      name: 'Academic Reviewer',
+      role: 'Computer Science Faculty',
       image: '👩‍🏫',
-      content: 'YogaAI transformed how I teach. The real-time feedback helps my students improve faster with perfect form.',
+      content: 'This project demonstrates excellent integration of computer vision with practical wellness applications. The pose detection accuracy is impressive for an academic implementation.',
       rating: 5,
-      stats: '+40% improvement'
+      stats: 'Technical Excellence'
     },
     {
-      name: 'Michael Chen',
-      role: 'Fitness Coach',
+      name: 'Student Tester',
+      role: 'Beta User',
       image: '💪',
-      content: 'The personalized diet plans combined with yoga tracking gave me the best fitness results I\'ve ever achieved.',
-      rating: 5,
-      stats: 'Lost 15lbs in 2 months'
+      content: 'As a test user, I found the AI feedback helpful for improving my yoga form. The system provides clear guidance and tracks progress well.',
+      rating: 4,
+      stats: 'Improved Practice'
     },
     {
-      name: 'Emma Wilson',
-      role: 'Wellness Coach',
+      name: 'Wellness Enthusiast',
+      role: 'Yoga Practitioner',
       image: '✨',
-      content: 'This app helped me stay consistent with my practice. The dashboard insights and AI guidance are amazing!',
-      rating: 5,
-      stats: '35-day streak'
+      content: 'The combination of pose detection and nutrition recommendations creates a comprehensive wellness platform. Great academic project!',
+      rating: 4,
+      stats: 'Comprehensive Features'
     },
     {
-      name: 'David Kim',
-      role: 'Software Engineer',
+      name: 'Tech Student',
+      role: 'Computer Science Student',
       image: '👨‍💻',
-      content: 'As someone who sits all day, YogaAI helped fix my posture and reduce back pain significantly.',
+      content: 'Impressive use of MediaPipe and machine learning. The real-time pose analysis works smoothly and provides useful feedback.',
       rating: 5,
-      stats: 'Posture improved by 70%'
+      stats: 'Great Implementation'
     },
     {
-      name: 'Priya Sharma',
-      role: 'Nutritionist',
+      name: 'Project Evaluator',
+      role: 'Academic Assessor',
       image: '🥗',
-      content: 'The AI diet recommendations are spot-on! My clients love how personalized the plans are.',
+      content: 'This project showcases practical application of AI in healthcare and wellness. The technical implementation is solid and well-documented.',
       rating: 5,
-      stats: '98% client satisfaction'
+      stats: 'Academic Quality'
     },
     {
-      name: 'Miguel Rodriguez',
-      role: 'Physical Therapist',
+      name: 'Demo User',
+      role: 'System Tester',
       image: '🏥',
-      content: 'Perfect for rehabilitation. The form correction prevents injuries and ensures proper technique.',
-      rating: 5,
-      stats: 'Injury rate reduced by 60%'
+      content: 'The pose detection system provides accurate feedback and the user interface is intuitive. Well-designed academic demonstration.',
+      rating: 4,
+      stats: 'User-Friendly Design'
     }
   ];
 
   const stats = [
-    { icon: Users, value: '10,000+', label: 'Active Users' },
-    { icon: Star, value: '4.9/5', label: 'Average Rating' },
-    { icon: Target, value: '98%', label: 'Pose Accuracy' },
-    { icon: TrendingUp, value: '+45%', label: 'Average Improvement' }
+    { icon: Users, value: '6', label: 'Yoga Poses' },
+    { icon: Star, value: '85%', label: 'Avg Accuracy' },
+    { icon: Target, value: '10+', label: 'Test Sessions' },
+    { icon: TrendingUp, value: '24/7', label: 'AI Available' }
   ];
 
   return (
@@ -70,13 +70,13 @@ function TestimonialsPage({ onNavigate }) {
             REAL STORIES
           </div>
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Loved by{' '}
+            Academic Project{' '}
             <span className="bg-gradient-to-r from-accent to-pink-400 bg-clip-text text-transparent">
-              10,000+ Yogis
+              Testimonials
             </span>
           </h1>
           <p className="text-xl text-text-muted max-w-3xl mx-auto">
-            Join our community of wellness enthusiasts who transformed their practice with AI guidance.
+            Feedback from faculty, students, and testers who have evaluated our AI-powered wellness platform.
           </p>
         </div>
 
@@ -128,28 +128,28 @@ function TestimonialsPage({ onNavigate }) {
 
         {/* Success Stories */}
         <div className="mb-16">
-          <h2 className="text-3xl font-bold text-center mb-12">Success Stories</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Project Development Journey</h2>
           <div className="space-y-8">
             <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 backdrop-blur-sm rounded-2xl p-8 border border-blue-500/20">
               <div className="flex items-start">
                 <div className="text-4xl mr-6">🧘‍♀️</div>
                 <div>
-                  <h3 className="text-xl font-bold mb-3">Sarah's 90-Day Transformation</h3>
+                  <h3 className="text-xl font-bold mb-3">Technical Implementation Success</h3>
                   <p className="text-text-muted mb-4">
-                    "I started YogaAI as a complete beginner. With daily AI-guided sessions, I went from barely touching my toes to doing full splits in 90 days. The progress tracking kept me motivated!"
+                    "Our team successfully integrated MediaPipe for pose detection with a React frontend and Python backend. The system accurately detects 6 yoga poses and provides real-time feedback to users."
                   </p>
                   <div className="flex gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">90</div>
-                      <div className="text-sm text-text-muted">Days</div>
+                      <div className="text-2xl font-bold text-accent">6</div>
+                      <div className="text-sm text-text-muted">Poses</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">+120%</div>
-                      <div className="text-sm text-text-muted">Flexibility</div>
+                      <div className="text-2xl font-bold text-accent">85%</div>
+                      <div className="text-sm text-text-muted">Accuracy</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">25lbs</div>
-                      <div className="text-sm text-text-muted">Weight Loss</div>
+                      <div className="text-2xl font-bold text-accent">10+</div>
+                      <div className="text-sm text-text-muted">Test Sessions</div>
                     </div>
                   </div>
                 </div>
@@ -160,22 +160,22 @@ function TestimonialsPage({ onNavigate }) {
               <div className="flex items-start">
                 <div className="text-4xl mr-6">💪</div>
                 <div>
-                  <h3 className="text-xl font-bold mb-3">Michael's Strength Journey</h3>
+                  <h3 className="text-xl font-bold mb-3">Academic Learning Outcomes</h3>
                   <p className="text-text-muted mb-4">
-                    "As a former athlete, I needed a smart way to rebuild strength after injury. YogaAI's personalized plans and form correction helped me regain mobility safely and effectively."
+                    "This project provided hands-on experience with computer vision, machine learning, full-stack development, and database management. We learned to integrate multiple technologies into a cohesive wellness platform."
                   </p>
                   <div className="flex gap-4">
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">60</div>
-                      <div className="text-sm text-text-muted">Sessions</div>
+                      <div className="text-2xl font-bold text-accent">4</div>
+                      <div className="text-sm text-text-muted">Technologies</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">+80%</div>
-                      <div className="text-sm text-text-muted">Strength</div>
+                      <div className="text-2xl font-bold text-accent">5</div>
+                      <div className="text-sm text-text-muted">Team Members</div>
                     </div>
                     <div className="text-center">
-                      <div className="text-2xl font-bold text-accent">0</div>
-                      <div className="text-sm text-text-muted">Injuries</div>
+                      <div className="text-2xl font-bold text-accent">100%</div>
+                      <div className="text-sm text-text-muted">Functional</div>
                     </div>
                   </div>
                 </div>
@@ -186,16 +186,16 @@ function TestimonialsPage({ onNavigate }) {
 
         {/* CTA */}
         <div className="bg-gradient-to-br from-accent/10 to-pink-500/10 backdrop-blur-sm rounded-2xl p-8 border border-accent/20 text-center">
-          <h3 className="text-2xl font-bold mb-4">Ready to Write Your Success Story?</h3>
+          <h3 className="text-2xl font-bold mb-4">Ready to Try Our Academic Project?</h3>
           <p className="text-text-muted mb-6 max-w-2xl mx-auto">
-            Join thousands who transformed their wellness journey with AI guidance.
+            Experience our AI-powered yoga platform and see how computer vision can enhance wellness practices.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               onClick={() => onNavigate('register')}
               className="px-8 py-3 bg-gradient-to-r from-accent to-pink-500 hover:from-accent/90 hover:to-pink-600 rounded-xl font-semibold transition-all shadow-lg shadow-accent/20 hover:shadow-accent/40"
             >
-              Start Your Journey
+              Try Demo Version
             </button>
             <button
               onClick={() => onNavigate('home')}

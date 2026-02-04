@@ -315,9 +315,9 @@ const Dashboard = () => {
 
   const achievements = [
     { name: 'First Steps', description: 'Complete your first session', unlocked: hasCompletedSession, icon: Star },
-    { name: 'Consistency', description: '7-day streak', unlocked: stats.currentStreak >= 7, icon: Flame },
-    { name: 'Perfectionist', description: '95%+ accuracy', unlocked: stats.averageAccuracy >= 95, icon: Trophy },
-    { name: 'Dedicated', description: '10 total sessions', unlocked: stats.totalSessions >= 10, icon: Award }
+    { name: 'Consistency', description: '3-day streak', unlocked: stats.currentStreak >= 3, icon: Flame },
+    { name: 'Good Form', description: '80%+ average accuracy', unlocked: stats.averageAccuracy >= 80, icon: Trophy },
+    { name: 'Regular Practice', description: '5 total sessions', unlocked: stats.totalSessions >= 5, icon: Award }
   ];
 
   const todayGoals = [
@@ -370,7 +370,7 @@ const Dashboard = () => {
                 </span>
               </h1>
               <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
-                Your personalized AI wellness companion is ready to guide you through another amazing day of growth and mindfulness.
+                Track your yoga progress, access personalized nutrition recommendations, and maintain your wellness routine with AI-powered guidance.
               </p>
             </div>
 
@@ -385,8 +385,8 @@ const Dashboard = () => {
                         <User className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-bold text-white">Premium Member</h3>
-                        <p className="text-slate-400">All features unlocked • Level: Intermediate</p>
+                        <h3 className="text-lg font-bold text-white">Active User</h3>
+                        <p className="text-slate-400">All features available • Yoga Level: Beginner</p>
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">

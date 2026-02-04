@@ -38,84 +38,87 @@ function PricingPage({ user }) {
 
   const plans = [
     {
-      name: 'Starter',
-      price: '$0',
+      name: 'Demo Version',
+      price: 'Free',
       originalPrice: null,
-      period: 'forever',
-      description: 'Perfect for beginners exploring yoga',
-      color: 'from-slate-500 to-slate-700',
-      bgGradient: 'from-slate-500/10 to-slate-700/10',
-      borderColor: 'border-slate-500/30',
-      features: [
-        'Basic AI pose detection',
-        '5 sessions per week',
-        'Community access',
-        'Basic progress tracking',
-        'Mobile app access'
-      ],
-      limitations: [
-        'Limited pose library',
-        'Basic feedback only',
-        'No diet plans'
-      ],
-      buttonText: user ? 'Current Plan' : 'Start Free',
-      buttonDisabled: user?.isPremium === false,
-      icon: Target
-    },
-    {
-      name: 'Premium',
-      price: '$19',
-      originalPrice: null,
-      period: 'per month',
-      description: 'Most popular for serious practitioners',
+      period: 'academic project',
+      description: 'Full access to all features for demonstration',
       color: 'from-emerald-500 to-cyan-500',
       bgGradient: 'from-emerald-500/10 to-cyan-500/10',
       borderColor: 'border-emerald-500/30',
       popular: true,
       features: [
-        'Advanced AI pose detection',
-        'Unlimited yoga sessions',
-        'Personalized diet plans',
-        'Live yoga classes',
-        'Priority support',
-        'Advanced analytics',
-        'Offline mode',
-        'Custom workout plans'
+        'AI pose detection (6 poses)',
+        'Real-time feedback and scoring',
+        'Personalized diet recommendations',
+        'Progress tracking and analytics',
+        'Session scheduling system',
+        'Community features',
+        'Complete user dashboard',
+        'All ML services included'
       ],
       bonuses: [
-        'Free nutrition consultation',
-        'Exclusive content library',
-        'Early feature access'
+        'Full source code available',
+        'Academic documentation',
+        'Technical implementation details'
       ],
-      buttonText: user?.isPremium ? 'Current Plan' : 'Upgrade to Premium',
-      buttonDisabled: user?.isPremium === true,
+      buttonText: user ? 'Currently Using' : 'Try Demo',
+      buttonDisabled: false,
       icon: Crown
     },
     {
-      name: 'Enterprise',
-      price: 'Custom',
-      originalPrice: null,
-      period: 'pricing',
-      description: 'For studios, gyms, and organizations',
+      name: 'Student Plan',
+      price: 'Rs 500',
+      originalPrice: 'Rs 1,000',
+      period: 'month',
+      description: 'Affordable plan for students in Nepal',
+      color: 'from-blue-500 to-indigo-500',
+      bgGradient: 'from-blue-500/10 to-indigo-500/10',
+      borderColor: 'border-blue-500/30',
+      features: [
+        'All demo features included',
+        'Priority customer support',
+        'Advanced progress analytics',
+        'Custom workout plans',
+        'Nutrition meal planning',
+        'Community challenges',
+        'Mobile app access',
+        'Offline mode support'
+      ],
+      bonuses: [
+        '50% student discount',
+        'Free first month trial',
+        'Educational institution support'
+      ],
+      buttonText: 'Start Student Plan',
+      buttonDisabled: false,
+      icon: Brain
+    },
+    {
+      name: 'Professional Plan',
+      price: 'Rs 2,000',
+      originalPrice: 'Rs 3,000',
+      period: 'month',
+      description: 'For yoga instructors and wellness professionals',
       color: 'from-purple-500 to-pink-500',
       bgGradient: 'from-purple-500/10 to-pink-500/10',
       borderColor: 'border-purple-500/30',
       features: [
-        'Everything in Premium',
+        'Everything in Student Plan',
         'Multi-user management',
-        'Custom branding',
-        'API access',
-        'Dedicated support',
-        'Advanced reporting',
+        'Custom branding options',
+        'Advanced analytics dashboard',
+        'API access for integration',
         'White-label solution',
-        'Custom integrations'
+        'Priority technical support',
+        'Custom pose training'
       ],
       bonuses: [
+        'Free setup and training',
         'Dedicated account manager',
-        'Custom training sessions',
-        'SLA guarantee'
+        'Custom integration support'
       ],
-      buttonText: 'Contact Sales',
+      buttonText: 'Contact for Demo',
       buttonDisabled: false,
       icon: Users
     }
@@ -123,85 +126,85 @@ function PricingPage({ user }) {
 
   const testimonials = [
     {
-      name: 'Sarah Johnson',
-      role: 'Yoga Instructor',
+      name: 'Priya Sharma',
+      role: 'Computer Science Student',
       image: '👩‍🏫',
       rating: 5,
-      text: 'YogaAI has transformed how I teach. The AI feedback helps my students perfect their poses even in virtual classes.',
-      plan: 'Premium'
+      text: 'This academic project showcases excellent use of AI technology. The pose detection system works remarkably well for a student implementation.',
+      plan: 'Demo Version'
     },
     {
-      name: 'Michael Chen',
-      role: 'Fitness Enthusiast',
+      name: 'Rajesh Thapa',
+      role: 'Yoga Instructor, Kathmandu',
       image: '🧘‍♂️',
-      rating: 5,
-      text: 'The personalized diet plans combined with pose detection have helped me achieve my wellness goals faster than ever.',
-      plan: 'Premium'
+      rating: 4,
+      text: 'Impressive technical implementation! The real-time feedback could be very useful for remote yoga instruction in Nepal.',
+      plan: 'Student Plan'
     },
     {
-      name: 'Lisa Rodriguez',
-      role: 'Beginner Yogi',
+      name: 'Sita Gurung',
+      role: 'Wellness Enthusiast',
       image: '🌟',
       rating: 5,
-      text: 'Started with the free plan and upgraded within a week. The AI guidance makes yoga accessible for complete beginners.',
-      plan: 'Starter → Premium'
+      text: 'Great to see Nepalese students creating innovative wellness technology. The pricing in Rupees makes it accessible for local users.',
+      plan: 'Demo → Student'
     }
   ];
 
   const guarantees = [
     {
       icon: Shield,
-      title: '30-Day Money Back',
-      description: 'Not satisfied? Get a full refund within 30 days, no questions asked.'
+      title: 'Academic Quality',
+      description: 'Professional-grade implementation with comprehensive documentation and source code access.'
     },
     {
       icon: Lock,
       title: 'Secure & Private',
-      description: 'Your data is encrypted and never shared. GDPR compliant and privacy-first.'
+      description: 'Your data is encrypted and protected. Privacy-first design with local data storage options.'
     },
     {
       icon: Zap,
       title: 'Instant Access',
-      description: 'Start immediately after signup. No waiting, no setup required.'
+      description: 'Start immediately with demo version. No complex setup or installation required.'
     },
     {
       icon: Heart,
-      title: 'Cancel Anytime',
-      description: 'No contracts, no commitments. Cancel your subscription anytime.'
+      title: 'Student Friendly',
+      description: 'Affordable pricing in Nepalese Rupees with special discounts for students and educational institutions.'
     }
   ];
 
   const stats = [
-    { number: '50K+', label: 'Active Users', icon: Users },
-    { number: '98%', label: 'Accuracy Rate', icon: Target },
-    { number: '4.9/5', label: 'User Rating', icon: Star },
-    { number: '24/7', label: 'Support', icon: Clock }
+    { number: '6', label: 'Yoga Poses', icon: Users },
+    { number: '85%', label: 'Avg Accuracy', icon: Target },
+    { number: '10+', label: 'Test Sessions', icon: Star },
+    { number: 'Rs 500', label: 'Student Price', icon: Clock }
   ];
 
   const faqs = [
     {
       question: 'How does the AI pose detection work?',
-      answer: 'Our advanced computer vision technology analyzes your body position in real-time using your device camera, providing instant feedback on form and alignment.'
+      answer: 'Our system uses MediaPipe computer vision technology to analyze your body position in real-time through your device camera, providing feedback on yoga pose accuracy.'
     },
     {
-      question: 'Can I use YogaAI offline?',
-      answer: 'Premium users can download sessions and use core features offline. An internet connection is required for live classes and real-time AI analysis.'
+      question: 'Why are prices in Nepalese Rupees?',
+      answer: 'This project is developed by students at Cosmos College in Nepal. We use local currency to make our hypothetical pricing accessible to Nepalese users.'
     },
     {
       question: 'What devices are supported?',
-      answer: 'YogaAI works on all modern devices including smartphones, tablets, and computers with camera access. iOS, Android, and web browsers are fully supported.'
+      answer: 'The system works on modern web browsers with camera access. Tested on smartphones, tablets, and computers running Chrome, Firefox, and Safari.'
     },
     {
-      question: 'Is there a family plan available?',
-      answer: 'Yes! Premium accounts can add up to 4 family members at 50% off each additional user. Perfect for families practicing together.'
+      question: 'Is this a real commercial product?',
+      answer: 'This is an academic project demonstrating AI applications in wellness. The pricing shown is hypothetical to showcase potential commercial viability.'
     },
     {
       question: 'How accurate is the pose detection?',
-      answer: 'Our AI achieves 98% accuracy in pose recognition, trained on millions of yoga poses from certified instructors worldwide.'
+      answer: 'Our testing shows approximately 85% accuracy across 6 supported yoga poses. Accuracy varies based on lighting conditions and camera quality.'
     },
     {
-      question: 'What if I need help getting started?',
-      answer: 'All users get access to our comprehensive onboarding, video tutorials, and 24/7 support. Premium users get priority assistance.'
+      question: 'Can I access the source code?',
+      answer: 'Yes! As an academic project, we provide full source code access for educational purposes. Perfect for students learning AI and web development.'
     }
   ];
 
@@ -494,15 +497,15 @@ function PricingPage({ user }) {
                 </div>
                 
                 <h3 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  Still Have{" "}
+                  Interested in Our{" "}
                   <span className="bg-gradient-to-r from-emerald-400 to-purple-400 bg-clip-text text-transparent">
-                    Questions?
+                    Academic Project?
                   </span>
                 </h3>
                 
                 <p className="text-xl text-slate-400 mb-8 max-w-2xl mx-auto">
-                  Our wellness experts are here to help you choose the perfect plan for your journey. 
-                  Get personalized recommendations and answers to all your questions.
+                  Connect with our development team at Cosmos College to learn more about our AI-powered wellness platform 
+                  and explore potential collaboration opportunities.
                 </p>
                 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -511,7 +514,7 @@ function PricingPage({ user }) {
                     className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 rounded-xl font-semibold text-white transition-all shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 flex items-center justify-center group"
                   >
                     <Mail className="w-5 h-5 mr-2 group-hover:animate-pulse" />
-                    Contact Sales Team
+                    Contact Project Team
                     <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </button>
                   <button
@@ -525,7 +528,7 @@ function PricingPage({ user }) {
 
                 <div className="mt-8 pt-8 border-t border-slate-700/50">
                   <p className="text-slate-500 text-sm">
-                    Available Monday-Friday, 9AM-6PM NPT • Response within 2 hours
+                    Available Monday-Friday, 9AM-6PM NPT • Academic project inquiries welcome
                   </p>
                 </div>
               </div>

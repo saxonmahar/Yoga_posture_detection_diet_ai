@@ -5,8 +5,8 @@ const PressPage = ({ onNavigate }) => {
   const pressReleases = [
     {
       date: 'Mar 1, 2024',
-      title: 'YogaAI Raises $10M Series A to Expand AI Wellness Platform',
-      summary: 'Funding led by HealthTech Ventures to accelerate development of advanced pose detection algorithms.'
+      title: 'Cosmos College Students Develop AI Wellness Platform for Academic Project',
+      summary: 'Innovative academic project demonstrates practical AI applications in wellness technology using MediaPipe and machine learning.'
     },
     {
       date: 'Feb 15, 2024',

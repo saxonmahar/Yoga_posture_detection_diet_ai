@@ -5,73 +5,73 @@ const BlogPage = ({ onNavigate }) => {
   const blogPosts = [
     {
       id: 1,
-      title: 'The Science Behind AI Pose Detection',
-      excerpt: 'How computer vision is revolutionizing yoga practice',
-      author: 'Dr. Sarah Chen',
-      date: 'Mar 15, 2024',
-      readTime: '5 min read',
+      title: 'Implementing AI Pose Detection with MediaPipe',
+      excerpt: 'Technical overview of our computer vision implementation',
+      author: 'Development Team',
+      date: 'Feb 15, 2026',
+      readTime: '8 min read',
       category: 'Technology',
       image: '🔬'
     },
     {
       id: 2,
-      title: 'Yoga for Mental Health: A Complete Guide',
-      excerpt: 'Discover how specific poses can reduce anxiety and stress',
-      author: 'Emma Wilson',
-      date: 'Mar 10, 2024',
-      readTime: '8 min read',
-      category: 'Wellness',
+      title: 'Building a Full-Stack Wellness Platform',
+      excerpt: 'Architecture decisions and technology stack overview',
+      author: 'Project Team',
+      date: 'Feb 10, 2026',
+      readTime: '10 min read',
+      category: 'Development',
       image: '🧠'
     },
     {
       id: 3,
-      title: 'Nutrition Tips for Yogis',
-      excerpt: 'What to eat before and after your practice',
-      author: 'Michael Chen',
-      date: 'Mar 5, 2024',
+      title: 'Machine Learning for Nutrition Recommendations',
+      excerpt: 'How we implemented personalized diet suggestions',
+      author: 'ML Team',
+      date: 'Feb 5, 2026',
       readTime: '6 min read',
-      category: 'Nutrition',
+      category: 'AI/ML',
       image: '🥗'
     },
     {
       id: 4,
-      title: 'Building a Consistent Yoga Practice',
-      excerpt: 'Tips for maintaining daily yoga habits',
-      author: 'Priya Sharma',
-      date: 'Feb 28, 2024',
+      title: 'User Experience Design for Wellness Apps',
+      excerpt: 'Design principles for health and fitness applications',
+      author: 'UI/UX Team',
+      date: 'Jan 28, 2026',
       readTime: '7 min read',
-      category: 'Lifestyle',
+      category: 'Design',
       image: '📅'
     },
     {
       id: 5,
-      title: 'The Future of Digital Wellness',
-      excerpt: 'How AI is shaping the future of health and fitness',
-      author: 'Alex Johnson',
-      date: 'Feb 20, 2024',
-      readTime: '10 min read',
-      category: 'Future',
+      title: 'Database Design for User Progress Tracking',
+      excerpt: 'Schema design and data management strategies',
+      author: 'Backend Team',
+      date: 'Jan 20, 2026',
+      readTime: '5 min read',
+      category: 'Database',
       image: '🚀'
     },
     {
       id: 6,
-      title: 'Morning Yoga Routines for Energy',
-      excerpt: 'Start your day right with these 15-minute sequences',
-      author: 'Miguel Rodriguez',
-      date: 'Feb 15, 2024',
+      title: 'Testing and Quality Assurance Process',
+      excerpt: 'Our approach to ensuring system reliability and accuracy',
+      author: 'QA Team',
+      date: 'Jan 15, 2026',
       readTime: '4 min read',
-      category: 'Routines',
+      category: 'Testing',
       image: '🌅'
     }
   ];
 
-  const categories = ['All', 'Technology', 'Wellness', 'Nutrition', 'Lifestyle', 'Future', 'Routines'];
+  const categories = ['All', 'Technology', 'Development', 'AI/ML', 'Design', 'Database', 'Testing'];
 
   return (
     <div className="company-page">
       <div className="company-hero blog-hero">
-        <h1>YogaAI Blog</h1>
-        <p className="subtitle">Insights, tips, and news about yoga, wellness, and technology</p>
+        <h1>Project Development Blog</h1>
+        <p className="subtitle">Technical insights and development journey of our AI-powered wellness platform</p>
       </div>
 
       <div className="company-content">
@@ -133,12 +133,12 @@ const BlogPage = ({ onNavigate }) => {
         <section className="section newsletter-section">
           <div className="newsletter-card">
             <h2>Stay Updated</h2>
-            <p>Subscribe to our newsletter for the latest articles and tips</p>
+            <p>Follow our project development and technical documentation</p>
             <div className="newsletter-form">
               <input type="email" placeholder="Enter your email" />
               <button className="subscribe-btn">Subscribe</button>
             </div>
-            <p className="newsletter-note">No spam, unsubscribe anytime</p>
+            <p className="newsletter-note">Get updates on our academic project progress</p>
           </div>
         </section>
       </div>

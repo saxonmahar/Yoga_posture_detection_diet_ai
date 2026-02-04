@@ -41,8 +41,8 @@ const CareersPage = ({ onNavigate }) => {
     { icon: '💻', title: 'Remote First', desc: 'Work from anywhere' },
     { icon: '💰', title: 'Competitive Salary', desc: 'Above market rates' },
     { icon: '🏖️', title: 'Unlimited PTO', desc: 'Flexible time off' },
-    { icon: '🧘', title: 'Wellness Stipend', desc: '$500/month wellness budget' },
-    { icon: '📚', title: 'Learning Budget', desc: '$2000/year for courses' },
+    { icon: '🧘', title: 'Wellness Stipend', desc: 'Rs 5,000/month wellness budget' },
+    { icon: '📚', title: 'Learning Budget', desc: 'Rs 20,000/year for courses' },
     { icon: '🏥', title: 'Health Insurance', desc: 'Comprehensive coverage' },
   ];
 

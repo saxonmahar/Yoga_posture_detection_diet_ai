@@ -31,81 +31,81 @@ function AboutPage() {
     window.scrollTo(0, 0)
   }
 
-  // Team members with enhanced data
+  // Team members with realistic data
   const teamMembers = [
     {
       name: 'Anup Bhatt',
-      role: 'Co-Founder & Yoga Expert',
-      bio: '15+ years yoga experience, certified instructor',
-      expertise: 'Yoga Philosophy & Practice',
+      role: 'Project Team Member',
+      bio: 'Computer Science student with interest in wellness technology',
+      expertise: 'Backend Development & System Design',
       image: '/images/team/anup.jpg',
       gradient: 'from-emerald-500 to-teal-500',
-      achievements: ['500+ Students Trained', 'International Certified', 'Mindfulness Expert']
+      achievements: ['Backend Development', 'Database Design', 'API Integration']
     },
     {
       name: 'Ashish Karn',
-      role: 'Co-Founder & AI Researcher',
-      bio: 'PhD in Computer Vision, Stanford alumni',
-      expertise: 'Machine Learning & AI',
+      role: 'Project Team Member',
+      bio: 'Computer Science student specializing in machine learning',
+      expertise: 'Machine Learning & Computer Vision',
       image: '/images/team/ashish.jpg',
       gradient: 'from-blue-500 to-cyan-500',
-      achievements: ['PhD Computer Vision', 'AI Research Pioneer', '10+ Publications']
+      achievements: ['ML Implementation', 'Pose Detection', 'AI Integration']
     },
     {
       name: 'Bishist Pandey',
-      role: 'Nutrition Specialist',
-      bio: 'Registered dietitian, wellness coach',
-      expertise: 'Nutrition Science & Wellness',
+      role: 'Project Team Member',
+      bio: 'Computer Science student with focus on data science',
+      expertise: 'Data Analysis & Nutrition Systems',
       image: '/images/team/bistey.jpg',
       gradient: 'from-purple-500 to-pink-500',
-      achievements: ['Registered Dietitian', 'Wellness Coach', 'Nutrition Expert']
+      achievements: ['Data Processing', 'Nutrition Algorithm', 'Analytics']
     },
     {
       name: 'Sanjay Mahar',
-      role: 'Lead Developer',
-      bio: 'Full-stack developer, fitness enthusiast',
-      expertise: 'Software Architecture & Development',
+      role: 'Project Team Member',
+      bio: 'Computer Science student and full-stack developer',
+      expertise: 'Full-Stack Development & Architecture',
       image: '/images/team/sanjay.jpg',
       gradient: 'from-orange-500 to-red-500',
-      achievements: ['Full-Stack Expert', 'System Architect', 'Tech Innovation']
+      achievements: ['Full-Stack Development', 'System Architecture', 'Project Coordination']
     },
     {
       name: 'Shashank Yadav',
-      role: 'Lead Developer',
-      bio: 'Full-stack developer, fitness enthusiast',
-      expertise: 'Frontend & User Experience',
+      role: 'Project Team Member',
+      bio: 'Computer Science student specializing in frontend development',
+      expertise: 'Frontend Development & User Experience',
       image: '/images/team/shashank.jpg',
       gradient: 'from-indigo-500 to-purple-500',
-      achievements: ['UX/UI Specialist', 'Frontend Expert', 'Design Systems']
+      achievements: ['Frontend Development', 'UI/UX Design', 'User Interface']
     },
   ]
 
   const milestones = [
     { 
-      year: '2022', 
-      event: 'Founded YogaAI', 
-      description: 'Started with a vision to combine AI and wellness',
+      year: '2024', 
+      event: 'Project Inception', 
+      description: 'Started development as a computer science academic project',
       icon: Rocket,
       color: 'from-emerald-500 to-teal-500'
     },
     { 
-      year: '2023', 
-      event: 'First Prototype', 
-      description: 'Developed initial pose detection algorithm',
+      year: '2024', 
+      event: 'AI Integration', 
+      description: 'Successfully implemented pose detection using MediaPipe',
       icon: Brain,
       color: 'from-blue-500 to-cyan-500'
     },
     { 
-      year: '2024', 
-      event: '10,000 Users', 
-      description: 'Reached milestone of 10k active users',
+      year: '2026', 
+      event: 'System Completion', 
+      description: 'Completed full-stack development with AI integration and testing',
       icon: TrendingUp,
       color: 'from-purple-500 to-pink-500'
     },
     { 
-      year: '2025', 
-      event: 'AI Diet Features', 
-      description: 'Launched personalized nutrition plans',
+      year: '2026', 
+      event: 'Academic Presentation', 
+      description: 'Prepared for final academic evaluation and demonstration',
       icon: Sparkles,
       color: 'from-orange-500 to-red-500'
     },
@@ -114,47 +114,47 @@ function AboutPage() {
   const values = [
     { 
       icon: Target, 
-      title: 'Precision & Accuracy', 
-      description: 'Our AI delivers 98% accuracy in pose detection, ensuring you get the most precise feedback for your practice.',
+      title: 'Accuracy & Reliability', 
+      description: 'Our AI provides consistent pose detection and feedback to help improve your yoga practice over time.',
       color: 'from-emerald-500 to-teal-500'
     },
     { 
       icon: Heart, 
-      title: 'Wellness First', 
-      description: 'Every feature is designed with your health and wellbeing as the top priority, creating a holistic approach to fitness.',
+      title: 'Wellness Focus', 
+      description: 'Every feature is designed to support your health and wellbeing journey with practical, achievable goals.',
       color: 'from-pink-500 to-rose-500'
     },
     { 
       icon: Shield, 
       title: 'Privacy & Security', 
-      description: 'Your personal data and wellness journey are protected with enterprise-grade security and privacy measures.',
+      description: 'Your personal data and practice information are protected with secure authentication and data handling.',
       color: 'from-blue-500 to-cyan-500'
     },
     { 
       icon: Globe, 
-      title: 'Global Community', 
-      description: 'Building a worldwide community of wellness enthusiasts, connecting people through shared health goals.',
+      title: 'Accessible Technology', 
+      description: 'Making AI-powered wellness tools available to anyone with a computer and camera.',
       color: 'from-purple-500 to-indigo-500'
     },
     { 
       icon: Lightbulb, 
-      title: 'Innovation', 
-      description: 'Constantly pushing the boundaries of what\'s possible with AI and wellness technology.',
+      title: 'Practical Innovation', 
+      description: 'Applying computer vision and machine learning to create useful wellness applications.',
       color: 'from-yellow-500 to-orange-500'
     },
     { 
       icon: Users, 
-      title: 'Accessibility', 
-      description: 'Making expert-level wellness guidance accessible to everyone, regardless of location or experience level.',
+      title: 'User-Centered Design', 
+      description: 'Building features that address real user needs for yoga practice and nutrition guidance.',
       color: 'from-teal-500 to-green-500'
     },
   ]
 
   const stats = [
-    { number: '98%', label: 'AI Accuracy', icon: Target },
-    { number: '10K+', label: 'Active Users', icon: Users },
-    { number: '50+', label: 'Yoga Poses', icon: Heart },
-    { number: '24/7', label: 'AI Support', icon: Zap },
+    { number: '85%', label: 'Avg Accuracy', icon: Target },
+    { number: '6', label: 'Yoga Poses', icon: Users },
+    { number: '10+', label: 'Sessions Tracked', icon: Heart },
+    { number: '24/7', label: 'AI Available', icon: Zap },
   ]
 
   return (
@@ -174,14 +174,14 @@ function AboutPage() {
             REVOLUTIONIZING WELLNESS
           </div>
           <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-            Transforming Lives with{" "}
+            Academic Project:{" "}
             <span className="bg-gradient-to-r from-emerald-400 via-cyan-400 to-purple-400 bg-clip-text text-transparent">
-              AI Technology
+              AI Wellness Platform
             </span>
           </h1>
           <p className="text-xl text-slate-400 max-w-4xl mx-auto leading-relaxed mb-8">
-            We believe everyone deserves access to personalized wellness guidance. Our mission is to make 
-            expert-level yoga and nutrition advice accessible to all through cutting-edge artificial intelligence.
+            This academic project demonstrates the practical application of AI technology in wellness. 
+            Our goal is to create accessible tools that help people improve their yoga practice through computer vision and personalized nutrition recommendations.
           </p>
           
           {/* Stats Row */}

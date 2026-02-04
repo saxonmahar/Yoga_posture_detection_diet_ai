@@ -52,23 +52,23 @@ export default function HomePage() {
     {
       icon: Camera,
       title: "AI Pose Detection",
-      description: "Real-time feedback with 98% accuracy to perfect your form",
+      description: "Real-time feedback using computer vision to help improve your yoga form and alignment",
       color: "from-blue-500 to-cyan-400",
       targetPage: "/pose-detection",
-      badge: "Popular"
+      badge: "Core Feature"
     },
     {
       icon: Utensils,
-      title: "Personalized Diet",
-      description: "Custom nutrition plans tailored to your wellness goals",
+      title: "Smart Nutrition",
+      description: "Personalized meal recommendations based on your activity level and wellness goals",
       color: "from-purple-500 to-pink-500",
       targetPage: "/diet-plan",
-      badge: "New"
+      badge: "Personalized"
     },
     {
       icon: BarChart3,
-      title: "Progress Tracking",
-      description: "Detailed analytics and insights to track your journey",
+      title: "Progress Analytics",
+      description: "Track your yoga sessions, accuracy improvements, and consistency over time",
       color: "from-green-500 to-emerald-400",
       targetPage: "/progress",
       badge: "Insights"
@@ -123,40 +123,40 @@ export default function HomePage() {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight text-white">
-                Perfect Your Practice with{" "}
+                Enhance Your Yoga with{" "}
                 <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent">
-                  Intelligent Guidance
+                  AI Guidance
                 </span>
               </h1>
 
               <p className="text-xl text-slate-400 leading-relaxed">
-                Real-time yoga posture detection meets personalized diet recommendations to transform your wellness journey with AI-powered precision.
+                Get real-time feedback on your yoga poses and personalized nutrition recommendations to support your wellness journey with computer vision technology.
               </p>
 
               {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
-                  onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
+                  onClick={() => handleFeatureClick('/pose-detection')}
                   className="px-8 py-4 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 text-white rounded-xl text-lg font-semibold transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/40 flex items-center justify-center"
                 >
                   <Play className="w-5 h-5 mr-2" />
-                  Watch Demo
+                  {user ? 'Try Live Demo' : 'Sign In to Try'}
                 </button>
               </div>
 
               {/* Stats */}
               <div className="flex flex-wrap gap-8 pt-4">
                 <div>
-                  <div className="text-3xl font-bold text-green-400">98%</div>
-                  <div className="text-sm text-slate-400">Pose Accuracy</div>
+                  <div className="text-3xl font-bold text-green-400">85%</div>
+                  <div className="text-sm text-slate-400">Avg Accuracy</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-400">10K+</div>
-                  <div className="text-sm text-slate-400">Active Users</div>
+                  <div className="text-3xl font-bold text-green-400">6</div>
+                  <div className="text-sm text-slate-400">Yoga Poses</div>
                 </div>
                 <div>
-                  <div className="text-3xl font-bold text-green-400">4.9</div>
-                  <div className="text-sm text-slate-400">App Rating</div>
+                  <div className="text-3xl font-bold text-green-400">24/7</div>
+                  <div className="text-sm text-slate-400">AI Available</div>
                 </div>
               </div>
             </div>
@@ -184,7 +184,7 @@ export default function HomePage() {
 
                 {/* Floating Accuracy Badge */}
                 <div className="absolute top-4 left-4 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full backdrop-blur-sm">
-                  <span className="text-green-400 text-xs font-semibold">98% Accuracy</span>
+                  <span className="text-green-400 text-xs font-semibold">85% Avg Accuracy</span>
                 </div>
 
                 {/* Main Content Area */}
@@ -337,10 +337,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Powered by Advanced AI Technology
+              AI-Powered Wellness Technology
             </h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              Experience the future of wellness with our intelligent platform that combines computer vision, machine learning, and personalized recommendations.
+              Our platform combines computer vision for pose detection with machine learning for personalized nutrition recommendations to support your wellness journey.
             </p>
           </div>
 
@@ -394,10 +394,10 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-white mb-4">
-              Master 6 Essential Yoga Poses
+              6 Supported Yoga Poses
             </h2>
             <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              Our AI recognizes and provides real-time feedback on these fundamental yoga poses to help you perfect your practice.
+              Our AI currently recognizes these fundamental yoga poses and provides real-time feedback to help you improve your practice.
             </p>
           </div>
 
@@ -452,7 +452,7 @@ export default function HomePage() {
                     <div className={`h-full bg-gradient-to-r ${pose.color} rounded-full animate-pulse`} style={{width: '85%'}}></div>
                   </div>
                   <p className="text-xs text-slate-400 text-center mt-1">
-                    {user ? '85% Accuracy' : 'Sign In Required'}
+                    {user ? 'Avg 85% Accuracy' : 'Sign In Required'}
                   </p>
                 </div>
                 

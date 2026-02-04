@@ -42,28 +42,28 @@ const FeaturesPage = () => {
       icon: Brain,
       title: 'AI Yoga Coach',
       subtitle: 'Intelligent Personal Guidance',
-      description: 'Your personalized AI yoga assistant that adapts to your fitness level, goals, and preferences with advanced machine learning.',
+      description: 'AI-powered yoga guidance that provides real-time feedback and personalized recommendations based on your practice level and goals.',
       color: 'from-emerald-500 to-teal-500',
       bgColor: 'from-emerald-500/10 to-teal-500/10',
       borderColor: 'border-emerald-500/30',
       features: [
         {
-          title: 'Personalized Sessions',
-          description: 'AI-generated yoga sequences based on your mood, energy level, and fitness goals.',
+          title: 'Guided Sessions',
+          description: 'Step-by-step yoga sequences with voice guidance and visual demonstrations.',
           icon: Target,
-          stats: '98% Accuracy'
+          stats: 'Voice Guided'
         },
         {
-          title: 'Real-time Form Correction',
-          description: 'Advanced computer vision technology provides instant feedback on your posture and alignment.',
+          title: 'Form Feedback',
+          description: 'Computer vision technology provides feedback on your posture and alignment.',
           icon: Eye,
-          stats: 'Live Feedback'
+          stats: 'Real-time Tips'
         },
         {
-          title: 'Adaptive Difficulty',
-          description: 'Automatically adjusts poses and sequences as you progress in your wellness journey.',
+          title: 'Progress Tracking',
+          description: 'Monitor your improvement over time with session history and accuracy metrics.',
           icon: TrendingUp,
-          stats: 'Smart Progression'
+          stats: 'Track Progress'
         }
       ]
     },
@@ -72,28 +72,28 @@ const FeaturesPage = () => {
       icon: Camera,
       title: 'AI Pose Detection',
       subtitle: 'Computer Vision Technology',
-      description: 'State-of-the-art pose recognition technology that analyzes your form in real-time with precision and accuracy.',
+      description: 'Computer vision technology that recognizes yoga poses and provides feedback to help improve your form and technique.',
       color: 'from-blue-500 to-cyan-500',
       bgColor: 'from-blue-500/10 to-cyan-500/10',
       borderColor: 'border-blue-500/30',
       features: [
         {
-          title: 'Real-time Analysis',
-          description: 'Instant pose recognition and feedback using advanced computer vision algorithms.',
+          title: 'Pose Recognition',
+          description: 'Identifies 6 fundamental yoga poses using your device camera.',
           icon: Zap,
-          stats: '60 FPS'
+          stats: '6 Poses'
         },
         {
-          title: 'Precision Tracking',
-          description: '33 key body points tracked for comprehensive pose analysis and correction.',
+          title: 'Accuracy Scoring',
+          description: 'Provides accuracy scores and suggestions for pose improvement.',
           icon: Target,
-          stats: '33 Points'
+          stats: 'Score & Tips'
         },
         {
-          title: 'Progress Monitoring',
-          description: 'Track your improvement over time with detailed pose accuracy metrics.',
+          title: 'Session Recording',
+          description: 'Tracks your practice sessions and maintains a history of your progress.',
           icon: BarChart3,
-          stats: 'Detailed Metrics'
+          stats: 'Session History'
         }
       ]
     },
@@ -102,28 +102,28 @@ const FeaturesPage = () => {
       icon: Utensils,
       title: 'Smart Diet Plans',
       subtitle: 'Personalized Nutrition',
-      description: 'AI-curated nutrition plans tailored to your yoga practice, dietary preferences, and health goals.',
+      description: 'Personalized nutrition recommendations based on your activity level and dietary preferences to support your wellness goals.',
       color: 'from-purple-500 to-pink-500',
       bgColor: 'from-purple-500/10 to-pink-500/10',
       borderColor: 'border-purple-500/30',
       features: [
         {
-          title: 'Personalized Meals',
-          description: 'Custom meal plans based on your dietary preferences, restrictions, and fitness goals.',
+          title: 'Meal Suggestions',
+          description: 'Get breakfast, lunch, and dinner recommendations based on your preferences.',
           icon: Heart,
-          stats: '1000+ Recipes'
+          stats: 'Daily Meals'
         },
         {
-          title: 'Nutritional Balance',
-          description: 'Scientifically balanced macronutrients to support your yoga practice and recovery.',
+          title: 'Nutrition Info',
+          description: 'View calorie and macronutrient information for recommended meals.',
           icon: Activity,
-          stats: 'Macro Balanced'
+          stats: 'Nutrition Facts'
         },
         {
-          title: 'Shopping Lists',
-          description: 'Automated grocery lists and meal prep guides for effortless healthy eating.',
+          title: 'Dietary Options',
+          description: 'Support for various dietary preferences including vegetarian and vegan options.',
           icon: CheckCircle,
-          stats: 'Auto-Generated'
+          stats: 'Multiple Diets'
         }
       ]
     },
@@ -132,28 +132,28 @@ const FeaturesPage = () => {
       icon: BarChart3,
       title: 'Progress Analytics',
       subtitle: 'Data-Driven Insights',
-      description: 'Comprehensive analytics and insights to monitor your yoga journey with detailed progress tracking.',
+      description: 'Track your yoga practice with detailed analytics including session history, accuracy trends, and consistency metrics.',
       color: 'from-orange-500 to-red-500',
       bgColor: 'from-orange-500/10 to-red-500/10',
       borderColor: 'border-orange-500/30',
       features: [
         {
-          title: 'Performance Metrics',
-          description: 'Track accuracy, consistency, and improvement across all your yoga sessions.',
+          title: 'Session Statistics',
+          description: 'View your practice history including session count, accuracy, and duration.',
           icon: TrendingUp,
-          stats: 'Real-time Data'
+          stats: 'Session Data'
         },
         {
-          title: 'Streak Tracking',
-          description: 'Build and maintain your practice streak with motivational milestones.',
+          title: 'Consistency Tracking',
+          description: 'Monitor your practice frequency and build healthy habits over time.',
           icon: Flame,
-          stats: 'Daily Streaks'
+          stats: 'Daily Practice'
         },
         {
-          title: 'Goal Achievement',
-          description: 'Set and track personal goals with intelligent recommendations for improvement.',
+          title: 'Personal Goals',
+          description: 'Set practice goals and track your progress toward achieving them.',
           icon: Award,
-          stats: 'Smart Goals'
+          stats: 'Goal Setting'
         }
       ]
     }
@@ -161,26 +161,26 @@ const FeaturesPage = () => {
 
   const additionalFeatures = [
     {
-      title: 'Community Support',
-      description: 'Connect with fellow yogis worldwide',
+      title: 'Community Features',
+      description: 'Connect with other yoga practitioners',
       icon: Users,
       color: 'from-green-500 to-emerald-500'
     },
     {
-      title: 'Offline Mode',
-      description: 'Practice anywhere without internet',
+      title: 'Schedule Planning',
+      description: 'Plan and organize your yoga sessions',
       icon: Globe,
       color: 'from-indigo-500 to-purple-500'
     },
     {
-      title: 'Privacy First',
-      description: 'Your data stays secure and private',
+      title: 'Secure Platform',
+      description: 'Your data is protected and private',
       icon: Shield,
       color: 'from-pink-500 to-rose-500'
     },
     {
-      title: '24/7 Support',
-      description: 'Get help whenever you need it',
+      title: 'Regular Updates',
+      description: 'Continuous improvements and new features',
       icon: Clock,
       color: 'from-yellow-500 to-orange-500'
     }
