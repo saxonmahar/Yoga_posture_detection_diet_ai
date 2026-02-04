@@ -141,13 +141,15 @@ scheduleSchema.statics.getTodaySessions = function(userId) {
   }).sort({ time: 1 });
 };
 
-// Static method to get upcoming sessions
+// Static method to get upcoming sessions (excluding today)
 scheduleSchema.statics.getUpcomingSessions = function(userId, limit = 5) {
-  const now = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
   
   return this.find({
     user: userId,
-    date: { $gte: now },
+    date: { $gte: tomorrow },
     status: 'scheduled'
   })
   .sort({ date: 1, time: 1 })
@@ -155,12 +157,12 @@ scheduleSchema.statics.getUpcomingSessions = function(userId, limit = 5) {
 };
 
 // Pre-save middleware to handle recurring sessions
-scheduleSchema.pre('save', function(next) {
-  // Auto-mark overdue sessions as missed
-  if (this.isOverdue() && this.status === 'scheduled') {
-    this.status = 'missed';
-  }
-  next();
-});
+// scheduleSchema.pre('save', function(next) {
+//   // Auto-mark overdue sessions as missed
+//   if (this.isOverdue() && this.status === 'scheduled') {
+//     this.status = 'missed';
+//   }
+//   next();
+// });
 
 module.exports = mongoose.model('Schedule', scheduleSchema);

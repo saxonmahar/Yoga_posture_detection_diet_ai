@@ -1,4 +1,55 @@
 const Schedule = require('../models/schedule');
+const YogaSession = require('../models/yogaSession');
+
+// Helper function to calculate user's current streak
+const calculateUserStreak = async (userId) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let currentStreak = 0;
+    let checkDate = new Date(today);
+    
+    // Go backwards day by day to calculate streak
+    while (true) {
+      const nextDay = new Date(checkDate);
+      nextDay.setDate(checkDate.getDate() + 1);
+      
+      // Check both schedule sessions and yoga sessions
+      const scheduleSession = await Schedule.findOne({
+        user: userId,
+        date: {
+          $gte: checkDate,
+          $lt: nextDay
+        },
+        status: 'completed'
+      });
+
+      const yogaSession = await YogaSession.findOne({
+        user_id: userId,
+        session_date: {
+          $gte: checkDate,
+          $lt: nextDay
+        }
+      });
+      
+      if (scheduleSession || yogaSession) {
+        currentStreak++;
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        break;
+      }
+      
+      // Prevent infinite loop - max 365 days
+      if (currentStreak >= 365) break;
+    }
+    
+    return currentStreak;
+  } catch (error) {
+    console.error('Calculate streak error:', error);
+    return 0;
+  }
+};
 
 // Get user's schedule for a specific month/date range
 const getSchedule = async (req, res) => {
@@ -18,16 +69,47 @@ const getSchedule = async (req, res) => {
       end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     }
 
+    // Set proper time boundaries
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
     const schedule = await Schedule.getUserSchedule(userId, start, end);
 
-    // Get user's streak and stats for context
+    // Get today's sessions with proper date filtering
     const todaySessions = await Schedule.getTodaySessions(userId);
+    
+    // Get upcoming sessions (excluding today)
     const upcomingSessions = await Schedule.getUpcomingSessions(userId, 5);
 
-    // Calculate completion rate for the period
-    const totalSessions = schedule.length;
-    const completedSessions = schedule.filter(s => s.status === 'completed').length;
+    // Calculate completion rate including both scheduled sessions and yoga sessions
+    const scheduledSessions = schedule.length;
+    const completedScheduledSessions = schedule.filter(s => s.status === 'completed').length;
+    
+    // Get yoga sessions (from pose detection) for the same period
+    const yogaSessions = await YogaSession.find({
+      user_id: userId,
+      session_date: {
+        $gte: start,
+        $lte: end
+      }
+    });
+
+    // Combined statistics
+    const totalSessions = scheduledSessions + yogaSessions.length;
+    const completedSessions = completedScheduledSessions + yogaSessions.length; // All yoga sessions are considered completed
     const completionRate = totalSessions > 0 ? (completedSessions / totalSessions) * 100 : 0;
+
+    // Calculate current streak
+    const currentStreak = await calculateUserStreak(userId);
+
+    console.log('Schedule data:', {
+      scheduledSessions,
+      completedScheduledSessions,
+      yogaSessions: yogaSessions.length,
+      totalSessions,
+      completedSessions,
+      userId
+    });
 
     res.json({
       success: true,
@@ -39,7 +121,11 @@ const getSchedule = async (req, res) => {
           totalSessions,
           completedSessions,
           completionRate: Math.round(completionRate),
-          currentStreak: 0 // Will be calculated from sessions
+          currentStreak,
+          // Additional breakdown
+          scheduledSessions,
+          yogaSessions: yogaSessions.length,
+          completedScheduledSessions
         },
         period: {
           startDate: start,
@@ -414,9 +500,67 @@ const applyTemplate = async (req, res) => {
     const userId = req.user.id;
     const { templateId, startDate, customTime } = req.body;
 
-    // Get the template
+    // Get the template (same templates as in getScheduleTemplates)
     const templates = [
-      // ... (same templates as above - in real app, store in database)
+      {
+        id: 'beginner-3day',
+        name: 'Beginner 3-Day Program',
+        description: 'Perfect for starting your yoga journey',
+        sessions: 3,
+        duration: 20,
+        difficulty: 'beginner',
+        schedule: [
+          { day: 1, time: '07:00', poses: ['tpose', 'tree'] }, // Monday
+          { day: 3, time: '07:00', poses: ['warrior2', 'goddess'] }, // Wednesday
+          { day: 5, time: '07:00', poses: ['downdog', 'plank'] } // Friday
+        ]
+      },
+      {
+        id: 'intermediate-4day',
+        name: 'Intermediate 4-Day Program',
+        description: 'Build strength and flexibility',
+        sessions: 4,
+        duration: 35,
+        difficulty: 'intermediate',
+        schedule: [
+          { day: 1, time: '06:30', poses: ['warrior2', 'tree', 'downdog'] },
+          { day: 2, time: '18:00', poses: ['tpose', 'goddess', 'plank'] },
+          { day: 4, time: '06:30', poses: ['tree', 'downdog', 'warrior2'] },
+          { day: 6, time: '09:00', poses: ['goddess', 'plank', 'tpose'] }
+        ]
+      },
+      {
+        id: 'advanced-daily',
+        name: 'Advanced Daily Practice',
+        description: 'Comprehensive daily yoga routine',
+        sessions: 7,
+        duration: 45,
+        difficulty: 'advanced',
+        schedule: [
+          { day: 0, time: '06:00', poses: ['warrior2', 'tree', 'downdog', 'plank'] },
+          { day: 1, time: '06:00', poses: ['tpose', 'goddess', 'tree', 'downdog'] },
+          { day: 2, time: '06:00', poses: ['warrior2', 'plank', 'goddess', 'tree'] },
+          { day: 3, time: '06:00', poses: ['downdog', 'tpose', 'warrior2', 'plank'] },
+          { day: 4, time: '06:00', poses: ['tree', 'goddess', 'downdog', 'tpose'] },
+          { day: 5, time: '06:00', poses: ['plank', 'warrior2', 'tree', 'goddess'] },
+          { day: 6, time: '09:00', poses: ['goddess', 'downdog', 'tpose', 'warrior2'] }
+        ]
+      },
+      {
+        id: 'stress-relief',
+        name: 'Stress Relief Program',
+        description: 'Evening sessions for relaxation',
+        sessions: 5,
+        duration: 25,
+        difficulty: 'beginner',
+        schedule: [
+          { day: 1, time: '19:00', poses: ['tree', 'goddess'] },
+          { day: 2, time: '19:00', poses: ['tpose', 'tree'] },
+          { day: 3, time: '19:00', poses: ['goddess', 'downdog'] },
+          { day: 4, time: '19:00', poses: ['tree', 'tpose'] },
+          { day: 5, time: '19:00', poses: ['goddess', 'tree'] }
+        ]
+      }
     ];
 
     const template = templates.find(t => t.id === templateId);

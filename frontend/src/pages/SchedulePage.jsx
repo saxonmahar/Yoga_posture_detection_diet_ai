@@ -34,17 +34,23 @@ const SchedulePage = () => {
   const loadSchedule = async () => {
     try {
       setLoading(true);
+      setError(null);
+      
+      console.log('Loading schedule data...');
       const response = await scheduleAPI.getSchedule();
       
       if (response.success) {
+        console.log('Schedule loaded successfully:', response.data);
         setSchedule(response.data.schedule);
         setTodaySessions(response.data.todaySessions);
         setUpcomingSessions(response.data.upcomingSessions);
         setStats(response.data.stats);
+      } else {
+        setError(response.message || 'Failed to load schedule');
       }
     } catch (error) {
       console.error('Load schedule error:', error);
-      setError('Failed to load schedule');
+      setError(error.message || 'Failed to load schedule');
     } finally {
       setLoading(false);
     }
@@ -125,18 +131,25 @@ const SchedulePage = () => {
   // Handle complete session
   const handleCompleteSession = async (sessionId) => {
     try {
+      const session = schedule.find(s => s._id === sessionId) || 
+                     todaySessions.find(s => s._id === sessionId);
+      
       await scheduleAPI.completeSession(sessionId, {
         accuracy: 85, // Default accuracy
         sessionData: {
-          totalPoses: selectedSession?.poses?.length || 0,
+          totalPoses: session?.poses?.length || 0,
           averageAccuracy: 85,
-          duration: selectedSession?.duration || 30
+          duration: session?.duration || 30
         }
       });
-      await loadSchedule(); // Refresh data
+      
+      // Refresh all data to show updated status
+      await loadSchedule();
+      
+      console.log('Session completed successfully');
     } catch (error) {
       console.error('Complete session error:', error);
-      throw error;
+      setError('Failed to complete session');
     }
   };
 
@@ -278,11 +291,19 @@ const SchedulePage = () => {
             <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
                 <Clock className="w-5 h-5 mr-2 text-emerald-400" />
-                Today's Sessions
+                Today's Sessions ({new Date().toLocaleDateString()})
               </h3>
               
               {todaySessions.length === 0 ? (
-                <p className="text-slate-400 text-sm">No sessions scheduled for today</p>
+                <div className="text-center py-4">
+                  <p className="text-slate-400 text-sm mb-2">No sessions scheduled for today</p>
+                  <button
+                    onClick={() => handleCreateSession(new Date())}
+                    className="text-emerald-400 hover:text-emerald-300 text-sm underline"
+                  >
+                    Schedule a session
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {todaySessions.map((session) => (
@@ -296,7 +317,8 @@ const SchedulePage = () => {
                         <span className={`px-2 py-1 rounded text-xs ${
                           session.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
                           session.status === 'scheduled' ? 'bg-blue-500/20 text-blue-400' :
-                          'bg-red-500/20 text-red-400'
+                          session.status === 'missed' ? 'bg-red-500/20 text-red-400' :
+                          'bg-yellow-500/20 text-yellow-400'
                         }`}>
                           {session.status}
                         </span>
@@ -309,6 +331,17 @@ const SchedulePage = () => {
                         <Users className="w-4 h-4 mr-1" />
                         <span>{session.poses?.length || 0} poses</span>
                       </div>
+                      {session.status === 'scheduled' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCompleteSession(session._id);
+                          }}
+                          className="mt-2 w-full px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded text-xs hover:bg-emerald-500/30 transition-colors"
+                        >
+                          Mark Complete
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -323,37 +356,57 @@ const SchedulePage = () => {
               </h3>
               
               {upcomingSessions.length === 0 ? (
-                <p className="text-slate-400 text-sm">No upcoming sessions</p>
+                <div className="text-center py-4">
+                  <p className="text-slate-400 text-sm mb-2">No upcoming sessions</p>
+                  <button
+                    onClick={() => handleCreateSession()}
+                    className="text-blue-400 hover:text-blue-300 text-sm underline"
+                  >
+                    Schedule future sessions
+                  </button>
+                </div>
               ) : (
                 <div className="space-y-3">
-                  {upcomingSessions.map((session) => (
-                    <div
-                      key={session._id}
-                      className="p-3 bg-slate-700/30 rounded-lg border border-slate-600/50 cursor-pointer hover:bg-slate-600/30 transition-colors"
-                      onClick={() => handleSessionClick(session)}
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-white">{session.title}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEditSession(session);
-                          }}
-                          className="p-1 hover:bg-slate-600/50 rounded transition-colors"
-                        >
-                          <Settings className="w-4 h-4 text-slate-400" />
-                        </button>
+                  {upcomingSessions.map((session) => {
+                    const sessionDate = new Date(session.date);
+                    const isThisWeek = sessionDate <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                    
+                    return (
+                      <div
+                        key={session._id}
+                        className="p-3 bg-slate-700/30 rounded-lg border border-slate-600/50 cursor-pointer hover:bg-slate-600/30 transition-colors"
+                        onClick={() => handleSessionClick(session)}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-white">{session.title}</span>
+                          <div className="flex items-center space-x-2">
+                            {isThisWeek && (
+                              <span className="px-2 py-1 bg-orange-500/20 text-orange-400 rounded text-xs">
+                                This Week
+                              </span>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditSession(session);
+                              }}
+                              className="p-1 hover:bg-slate-600/50 rounded transition-colors"
+                            >
+                              <Settings className="w-4 h-4 text-slate-400" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center text-sm text-slate-400">
+                          <Clock className="w-4 h-4 mr-1" />
+                          <span>{sessionDate.toLocaleDateString()} • {session.time}</span>
+                        </div>
+                        <div className="flex items-center text-sm text-slate-400 mt-1">
+                          <Target className="w-4 h-4 mr-1" />
+                          <span className="capitalize">{session.difficulty} • {session.poses?.length || 0} poses</span>
+                        </div>
                       </div>
-                      <div className="flex items-center text-sm text-slate-400">
-                        <Clock className="w-4 h-4 mr-1" />
-                        <span>{new Date(session.date).toLocaleDateString()} • {session.time}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-slate-400 mt-1">
-                        <Target className="w-4 h-4 mr-1" />
-                        <span className="capitalize">{session.difficulty}</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
