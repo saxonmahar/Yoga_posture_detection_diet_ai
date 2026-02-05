@@ -19,6 +19,7 @@ import ProgressPage from "../pages/ProgressPage";
 import ProfilePage from "../pages/ProfilePage";
 import SettingsPage from "../pages/SettingsPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import LeaderboardPage from "../pages/LeaderboardPage";
 
 // Static pages
 import FeaturesPage from "../pages/FeaturesPage";
@@ -135,6 +136,7 @@ export default function Router() {
     ["/blog", <BlogPage />],
     ["/press", <PressPage />],
     ["/contact", <ContactPage />],
+    ["/leaderboard", <LeaderboardPage />],
   ];
 
   const protectedRoutes = [

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import RankingWidget from '../components/dashboard/RankingWidget';
 import { 
   Activity, 
   Target, 
@@ -657,6 +658,9 @@ const Dashboard = () => {
 
             {/* Right Sidebar */}
             <div className="space-y-8">
+              
+              {/* Ranking Widget */}
+              <RankingWidget />
               
               {/* Achievements */}
               <div className="relative">

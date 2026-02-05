@@ -54,6 +54,7 @@ try {
     app.use("/api/email", emailVerificationRoutes);
     app.use("/api/security", securityRoutes);
     app.use("/api/password", forgotPasswordRoutes);
+    app.use("/api/ranking", require('./routes/rankingRoutes'));
     
     console.log('✅ All routes registered successfully');
 } catch (error) {
