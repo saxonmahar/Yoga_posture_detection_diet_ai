@@ -29,7 +29,6 @@ function Navbar() {
       ]
     },
     { id: 'pricing', label: 'Pricing', page: 'pricing' },
-    { id: 'leaderboard', label: 'Leaderboard', page: 'leaderboard' },
     { id: 'about', label: 'About', page: 'about' },
     { id: 'contact', label: 'Contact', page: 'contact' },
   ]

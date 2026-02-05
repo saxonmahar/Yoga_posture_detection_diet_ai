@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import YogaLeaderboard from '../components/ranking/YogaLeaderboard';
+import photoService from '../services/photoService';
 
 const CommunityPage = () => {
   const { user } = useAuth();
@@ -34,7 +36,8 @@ const CommunityPage = () => {
     badges: ['first-steps', 'consistency-starter'],
     bio: 'Learning yoga with AI guidance. Focused on building a consistent practice.',
     isOnline: true,
-    lastActive: 'Active now'
+    lastActive: 'Active now',
+    profilePhoto: user?.profilePhoto // Add real profile photo
   };
 
   // Sample community members (realistic, not fake profiles)
@@ -155,7 +158,8 @@ const CommunityPage = () => {
       isOnline: true,
       lastActive: 'Active now',
       isCurrentUser: true,
-      friendStatus: 'self'
+      friendStatus: 'self',
+      profilePhoto: currentUserProfile.profilePhoto // Add real profile photo
     }
   ];
 
@@ -376,12 +380,40 @@ const CommunityPage = () => {
     }
   };
 
+  // Helper function to render user profile photo
+  const renderUserProfilePhoto = (userData, size = 'w-16 h-16') => {
+    const userId = userData.id || userData._id;
+    const photoUrl = userData.profilePhoto ? photoService.getPhotoUrl(userData.profilePhoto, userId) : null;
+    
+    if (photoUrl) {
+      return (
+        <img
+          src={photoUrl}
+          alt={userData.name}
+          className={`${size} rounded-full object-cover border-2 border-white shadow-md`}
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+        />
+      );
+    }
+    
+    return (
+      <div className={`${size} bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md`}>
+        {userData.name?.charAt(0)?.toUpperCase() || 'U'}
+      </div>
+    );
+  };
+
   const renderUserProfile = (userData) => (
     <div className={`bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl ${userData.isCurrentUser ? 'ring-2 ring-emerald-500/30' : ''}`}>
       <div className="flex items-center space-x-4 mb-4">
         <div className="relative">
-          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-            {userData.name.charAt(0)}
+          {renderUserProfilePhoto(userData)}
+          {/* Fallback hidden by default */}
+          <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md" style={{ display: 'none' }}>
+            {userData.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           {userData.rank <= 3 && (
             <div className={`absolute -top-1 -right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -600,8 +632,14 @@ const CommunityPage = () => {
                 <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/50 shadow-xl">
                   <div className="flex items-center space-x-6 mb-6">
                     <div className="relative">
-                      <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                        {(user?.name || 'You').charAt(0)}
+                      {renderUserProfilePhoto({ 
+                        id: user?.id || user?._id, 
+                        name: user?.name || user?.fullName || 'You', 
+                        profilePhoto: user?.profilePhoto 
+                      }, 'w-20 h-20')}
+                      {/* Fallback hidden by default */}
+                      <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-md" style={{ display: 'none' }}>
+                        {(user?.name || user?.fullName || 'You').charAt(0)}
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-slate-800"></div>
                     </div>
@@ -648,7 +686,9 @@ const CommunityPage = () => {
                     {mockPosts.slice(0, 2).map((post) => (
                       <div key={post.id} className="p-4 bg-slate-700/30 rounded-xl">
                         <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {renderUserProfilePhoto(post.user, 'w-10 h-10')}
+                          {/* Fallback hidden by default */}
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ display: 'none' }}>
                             {post.user.name.charAt(0)}
                           </div>
                           <div>
@@ -733,7 +773,9 @@ const CommunityPage = () => {
                     {mockUsers.filter(u => !u.isCurrentUser && u.isOnline).slice(0, 3).map((friend) => (
                       <div key={friend.id} className="flex items-center space-x-3">
                         <div className="relative">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                          {renderUserProfilePhoto(friend, 'w-10 h-10')}
+                          {/* Fallback hidden by default */}
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ display: 'none' }}>
                             {friend.name.charAt(0)}
                           </div>
                           <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border border-slate-800"></div>
@@ -802,7 +844,9 @@ const CommunityPage = () => {
               {mockPosts.map((post) => (
                 <div key={post.id} className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                    {renderUserProfilePhoto(post.user, 'w-12 h-12')}
+                    {/* Fallback hidden by default */}
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold" style={{ display: 'none' }}>
                       {post.user.name.charAt(0)}
                     </div>
                     <div className="flex-1">
@@ -878,65 +922,7 @@ const CommunityPage = () => {
         )}
 
         {activeTab === 'leaderboard' && (
-          <div className="max-w-4xl mx-auto">
-            <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden">
-              <div className="p-6 border-b border-slate-700">
-                <h2 className="text-2xl font-bold text-white">Community Leaderboard</h2>
-              </div>
-              <div className="divide-y divide-slate-700">
-                {mockUsers.map((userData) => (
-                  <div key={userData.id} className={`p-6 hover:bg-slate-700/30 transition-colors ${userData.isCurrentUser ? 'bg-emerald-500/10 border-l-4 border-emerald-500' : ''}`}>
-                    <div className="flex items-center space-x-6">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
-                        userData.rank === 1 ? 'bg-gradient-to-br from-yellow-400 to-orange-400 text-yellow-900' :
-                        userData.rank === 2 ? 'bg-gradient-to-br from-slate-300 to-slate-400 text-slate-900' :
-                        userData.rank === 3 ? 'bg-gradient-to-br from-orange-400 to-red-400 text-orange-100' :
-                        'bg-slate-600 text-white'
-                      }`}>
-                        {userData.rank <= 3 ? (
-                          userData.rank === 1 ? <Crown size={20} /> :
-                          userData.rank === 2 ? <Medal size={20} /> :
-                          <Award size={20} />
-                        ) : userData.rank}
-                      </div>
-                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                        {userData.name.charAt(0)}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2">
-                          <h3 className="text-lg font-bold text-white">{userData.name}</h3>
-                          {userData.isCurrentUser && (
-                            <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs rounded-full border border-emerald-500/30">
-                              You
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-slate-400">{userData.level}</p>
-                      </div>
-                      <div className="grid grid-cols-4 gap-6 text-center">
-                        <div>
-                          <div className="text-xl font-bold text-emerald-400">{userData.points}</div>
-                          <div className="text-xs text-slate-400">Points</div>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold text-white">{userData.streak}</div>
-                          <div className="text-xs text-slate-400">Streak</div>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold text-white">{userData.totalSessions}</div>
-                          <div className="text-xs text-slate-400">Sessions</div>
-                        </div>
-                        <div>
-                          <div className="text-xl font-bold text-white">{userData.achievements}</div>
-                          <div className="text-xs text-slate-400">Achievements</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <YogaLeaderboard />
         )}
 
         {activeTab === 'achievements' && (
@@ -1001,7 +987,9 @@ const CommunityPage = () => {
                 <div key={friend.id} className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
                   <div className="flex items-center space-x-4 mb-4">
                     <div className="relative">
-                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                      {renderUserProfilePhoto(friend)}
+                      {/* Fallback hidden by default */}
+                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-lg" style={{ display: 'none' }}>
                         {friend.name.charAt(0)}
                       </div>
                       {friend.isOnline && (

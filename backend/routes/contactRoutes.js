@@ -1,24 +1,6 @@
 const express = require('express');
-const nodemailer = require('nodemailer');
 const router = express.Router();
-
-// Email configuration - using a more reliable setup
-const createTransporter = () => {
-  // For development, we'll use a simple SMTP setup
-  // In production, you would use proper Gmail App Password
-  return nodemailer.createTransporter({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.EMAIL_USER || 'sanjaymahar2058@gmail.com',
-      pass: process.env.EMAIL_PASS || 'your-app-password'
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
-};
+const emailService = require('../services/emailService');
 
 // Send contact form email
 router.post('/send-email', async (req, res) => {
@@ -33,8 +15,6 @@ router.post('/send-email', async (req, res) => {
       });
     }
 
-    // For now, let's just log the message and return success
-    // This allows the form to work while email setup is being configured
     console.log('📧 Contact Form Submission:');
     console.log('👤 Name:', name);
     console.log('📧 Email:', email);
@@ -45,52 +25,23 @@ router.post('/send-email', async (req, res) => {
     console.log('⏰ Time:', new Date().toLocaleString());
     console.log('-----------------------------------');
 
-    // Try to send email, but don't fail if it doesn't work
-    try {
-      const transporter = createTransporter();
-      
-      const mailOptions = {
-        from: `"YogaAI Contact Form" <${process.env.EMAIL_USER || 'noreply@yogaai.com'}>`,
-        to: to || 'sanjaymahar2058@gmail.com',
-        replyTo: email,
-        subject: `YogaAI Contact: ${subject}`,
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #10b981;">New Contact Form Submission</h2>
-            <p><strong>Name:</strong> ${name}</p>
-            <p><strong>Email:</strong> ${email}</p>
-            ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
-            <p><strong>Subject:</strong> ${subject}</p>
-            <p><strong>Message:</strong></p>
-            <div style="background: #f3f4f6; padding: 15px; border-radius: 8px;">
-              ${message.replace(/\n/g, '<br>')}
-            </div>
-            <hr>
-            <p style="color: #666; font-size: 12px;">Sent from YogaAI Contact Form - Cosmos College of Management and Technology</p>
-          </div>
-        `,
-        text: `
-          New Contact Form Submission:
-          Name: ${name}
-          Email: ${email}
-          ${phone ? `Phone: ${phone}` : ''}
-          Subject: ${subject}
-          Message: ${message}
-        `
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully!');
-      
-    } catch (emailError) {
-      console.log('⚠️ Email sending failed, but form submission logged:', emailError.message);
-      // Don't return error - we still want to show success to user
+    // Send contact email using the existing email service
+    const result = await sendContactEmail(email, name, phone, subject, message, to);
+    
+    if (result.success) {
+      console.log('✅ Contact email sent successfully!');
+      res.status(200).json({
+        success: true,
+        message: 'Message sent successfully! We will get back to you within 24 hours.'
+      });
+    } else {
+      console.log('⚠️ Email sending failed:', result.error);
+      // Still return success to user, but log the error
+      res.status(200).json({
+        success: true,
+        message: 'Message received! We will get back to you soon.'
+      });
     }
-
-    res.status(200).json({
-      success: true,
-      message: 'Message received successfully! We will get back to you soon.'
-    });
 
   } catch (error) {
     console.error('❌ Error processing contact form:', error);
@@ -102,6 +53,115 @@ router.post('/send-email', async (req, res) => {
     });
   }
 });
+
+// Send contact email function
+const sendContactEmail = async (senderEmail, senderName, phone, subject, message, recipientEmail) => {
+  try {
+    const nodemailer = require('nodemailer');
+    
+    // Create transporter using the same config as emailService
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT) || 465,
+      secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    });
+
+    const mailOptions = {
+      from: {
+        name: 'YogaAI Contact Form',
+        address: process.env.SMTP_USER
+      },
+      to: recipientEmail || 'sanjaymahar2058@gmail.com',
+      replyTo: senderEmail,
+      subject: `YogaAI Contact: ${subject}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Contact Form Submission - YogaAI</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #10b981, #06b6d4); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+            .content { background: #f8fafc; padding: 30px; border-radius: 0 0 10px 10px; }
+            .info-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 15px 0; }
+            .message-box { background: #f0fdf4; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 15px 0; }
+            .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>📧 New Contact Form Submission</h1>
+              <p>YogaAI - Yoga Posture Detection & Diet AI</p>
+            </div>
+            <div class="content">
+              <h2>Contact Details</h2>
+              
+              <div class="info-box">
+                <h3>👤 Sender Information</h3>
+                <p><strong>Name:</strong> ${senderName}</p>
+                <p><strong>Email:</strong> ${senderEmail}</p>
+                ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
+                <p><strong>Subject:</strong> ${subject}</p>
+                <p><strong>Submitted:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' })} NPT</p>
+              </div>
+              
+              <div class="message-box">
+                <h3>💬 Message</h3>
+                <p style="white-space: pre-wrap;">${message}</p>
+              </div>
+              
+              <div class="info-box">
+                <h3>📋 Next Steps</h3>
+                <ul>
+                  <li>Reply directly to this email to respond to ${senderName}</li>
+                  <li>The sender's email (${senderEmail}) is set as the reply-to address</li>
+                  <li>Expected response time: Within 24 hours</li>
+                </ul>
+              </div>
+            </div>
+            <div class="footer">
+              <p>© 2024 YogaAI - Cosmos College of Management and Technology</p>
+              <p>This message was sent through the YogaAI contact form</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+        New Contact Form Submission - YogaAI
+        
+        Sender Information:
+        Name: ${senderName}
+        Email: ${senderEmail}
+        ${phone ? `Phone: ${phone}` : ''}
+        Subject: ${subject}
+        Submitted: ${new Date().toLocaleString('en-US', { timeZone: 'Asia/Kathmandu' })} NPT
+        
+        Message:
+        ${message}
+        
+        ---
+        Reply directly to this email to respond to the sender.
+        YogaAI - Cosmos College of Management and Technology
+      `
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ Contact email sent:', result.messageId);
+    return { success: true, messageId: result.messageId };
+    
+  } catch (error) {
+    console.error('❌ Contact email failed:', error);
+    return { success: false, error: error.message };
+  }
+};
 
 // Health check endpoint
 router.get('/health', (req, res) => {

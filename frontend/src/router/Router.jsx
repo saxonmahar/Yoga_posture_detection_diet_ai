@@ -136,7 +136,6 @@ export default function Router() {
     ["/blog", <BlogPage />],
     ["/press", <PressPage />],
     ["/contact", <ContactPage />],
-    ["/leaderboard", <LeaderboardPage />],
   ];
 
   const protectedRoutes = [
