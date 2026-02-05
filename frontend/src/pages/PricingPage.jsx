@@ -219,7 +219,7 @@ function PricingPage({ user }) {
 
       <div className="relative z-10">
         {/* Hero Section */}
-        <section className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
+        <section className="relative overflow-hidden -mt-16 ">
           <div className="max-w-7xl mx-auto text-center">
             <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500/20 to-purple-500/20 rounded-full text-sm font-semibold text-emerald-400 mb-8 border border-emerald-500/30 backdrop-blur-sm">
               <Crown className="w-4 h-4 mr-2" />
