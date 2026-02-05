@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Webcam from 'react-webcam';
+import ttsService from '../../services/ttsService';
 
 const ML_API_URL = 'http://localhost:5000';
 
@@ -175,11 +176,9 @@ const PoseCamera = ({
     if (selectedPose !== currentSelectedPose) {
       console.log(`🔄 Updating currentSelectedPose: ${currentSelectedPose} → ${selectedPose}`);
       
-      // IMMEDIATELY STOP ALL TTS when switching poses
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        console.log('🔇 TTS CANCELLED - Pose switched!');
-      }
+      // IMMEDIATELY STOP ALL TTS when switching poses using TTS service
+      ttsService.stopAll();
+      console.log('🔇 TTS STOPPED - Pose switched!');
       
       setCurrentSelectedPose(selectedPose);
       
@@ -258,7 +257,7 @@ const PoseCamera = ({
     }
   }, [isStreaming, showLandmarks, showCelebration, user]);
 
-  // Live Guided Session Management
+  // Live Guided Session Management - RESTORED ORIGINAL
   const startLiveGuidedSession = () => {
     console.log('🎯 Starting Live Guided Session for:', selectedPose);
     setGuidancePhase('preparation');
@@ -278,8 +277,8 @@ const PoseCamera = ({
     if (currentStep) {
       console.log(`📢 Step ${currentInstructionStep + 1}: ${currentStep.instruction}`);
       
-      // Speak the instruction
-      speak(currentStep.instruction);
+      // NO TTS - Just log the instruction but don't speak it
+      console.log('🔇 TTS DISABLED - Instruction logged only:', currentStep.instruction);
       
       // Set timer for next instruction
       const timer = setTimeout(() => {
@@ -319,6 +318,10 @@ const PoseCamera = ({
     setIsDetecting(true);
     setDebugInfo('Starting MediaPipe detection...');
 
+    // START TTS SESSION
+    ttsService.startSession();
+    console.log('🎯 TTS Session started with detection');
+
     // Initialize session data
     setSessionData({
       startTime: new Date(),
@@ -343,11 +346,9 @@ const PoseCamera = ({
   };
 
   const stopDetection = () => {
-    // IMMEDIATELY STOP ALL TTS
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      console.log('🔇 TTS CANCELLED - Detection stopped!');
-    }
+    // IMMEDIATELY END TTS SESSION
+    ttsService.endSession();
+    console.log('🛑 Detection stopped - TTS session ended');
 
     if (detectionIntervalRef.current) {
       clearInterval(detectionIntervalRef.current);
@@ -383,11 +384,9 @@ const PoseCamera = ({
   };
 
   const stopWebcam = () => {
-    // IMMEDIATELY STOP ALL TTS
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      console.log('🔇 TTS CANCELLED - Webcam stopped!');
-    }
+    // IMMEDIATELY END TTS SESSION
+    ttsService.endSession();
+    console.log('🛑 Webcam stopped - TTS session ended');
 
     stopDetection();
     setIsStreaming(false);
@@ -424,7 +423,7 @@ const PoseCamera = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: imageData,
-          pose_type: currentSelectedPose, // Use current selected pose instead of selectedPose
+          pose_type: currentSelectedPose,
           user_name: 'User'
         })
       });
@@ -435,9 +434,6 @@ const PoseCamera = ({
       }
 
       const result = await response.json();
-      
-      // Debug log to verify pose type being sent and received
-      console.log(`🎯 Detection Request: pose_type=${currentSelectedPose}, Response: pose_name=${result.pose_name}, accuracy=${result.accuracy_score}%`);
 
       if (result.success && result.landmarks && result.landmarks.length > 0) {
         setLandmarkCount(result.landmarks.length);
@@ -445,9 +441,6 @@ const PoseCamera = ({
 
         // DRAW LANDMARKS IMMEDIATELY
         drawLandmarks(result.landmarks, result);
-
-        // Debug logging for pose accuracy
-        console.log(`🎯 Pose accuracy: ${result.accuracy_score}% | Perfect count: ${perfectPoseCount}/3 | Consecutive frames: ${consecutiveFrames}`);
 
         // Record session data
         setSessionData(prev => ({
@@ -462,56 +455,33 @@ const PoseCamera = ({
         if (result.accuracy_score >= 90) {
           setConsecutiveFrames(prev => {
             const newFrames = prev + 1;
-            console.log(`🔥 PERFECT POSE DETECTED! Accuracy: ${result.accuracy_score}% | Consecutive frames: ${newFrames} | Last state: ${lastPoseState}`);
             
             // If pose held for 3 consecutive frames (about 0.6 seconds) and we haven't counted this pose yet
             if (newFrames >= 3 && !lastPoseState) {
-              // TTS for perfect pose achievement
-              speak("Perfect pose!");
-              
               setPerfectPoseCount(prevCount => {
                 const newCount = prevCount + 1;
-                console.log(`🎯 COUNTING PERFECT POSE ${newCount}/3!`);
                 
                 if (newCount === 1) {
-                  speak("Great! 1 out of 3 perfect poses!");
+                  ttsService.speak("Great! 1 out of 3 perfect poses!", true);
                 } else if (newCount === 2) {
-                  speak("Excellent! 2 out of 3 perfect poses!");
+                  ttsService.speak("Excellent! 2 out of 3 perfect poses!", true);
                 } else if (newCount >= 3) {
                   // BRAVO! CELEBRATION TIME!
-                  console.log(`🎉 TRIGGERING BRAVO CELEBRATION!`);
-                  
-                  // IMMEDIATELY STOP ALL ONGOING TTS
-                  if ('speechSynthesis' in window) {
-                    window.speechSynthesis.cancel();
-                    console.log('🔇 TTS CANCELLED - Pose completed!');
-                  }
+                  ttsService.stopAll();
                   
                   setPoseCompleted(true);
                   setShowCelebration(true);
                   
-                  // Pose-specific BRAVO messages
-                  const poseMessages = {
-                    'yog1': 'BRAVO! 🎉 Your Warrior II is magnificent! You are a true warrior with perfect strength and balance! Well done!',
-                    'yog2': 'BRAVO! 🎉 Your T Pose is perfect! Excellent arm extension and balance! You completed 3 perfect poses! Well done!',
-                    'yog3': 'BRAVO! 🎉 Your Tree Pose is beautiful! Perfect balance and grace like a strong tree! You completed 3 perfect poses! Well done!',
-                    'yog4': 'BRAVO! 🎉 Your Goddess Pose is powerful! You embody strength and confidence like a true goddess! Well done!',
-                    'yog5': 'BRAVO! 🎉 Your Downward Dog is excellent! Perfect inverted V-shape and strength! You completed 3 perfect poses! Well done!',
-                    'yog6': 'BRAVO! 🎉 Your Plank Pose is rock solid! Amazing core strength and alignment! You completed 3 perfect poses! Well done!'
-                  };
-                  
-                  const bravoMessage = poseMessages[currentSelectedPose] || 'BRAVO! 🎉 Perfect pose mastery! You completed 3 perfect poses! Well done!';
-                  
-                  // Wait a moment before speaking BRAVO to ensure previous TTS is cancelled
+                  // Use TTS service for celebration
                   setTimeout(() => {
-                    speak(bravoMessage);
+                    ttsService.celebratePerfectPose(currentSelectedPose, 3);
                   }, 200);
                   
                   // Record pose completion in session
                   const currentPose = PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose);
                   const poseEndTime = new Date();
                   const poseStartTime = sessionData.startTime || new Date();
-                  const poseDuration = Math.min(Math.max(Math.round((poseEndTime - poseStartTime) / 1000), 30), 300); // Between 30s and 5min
+                  const poseDuration = Math.min(Math.max(Math.round((poseEndTime - poseStartTime) / 1000), 30), 300);
                   
                   const completedPose = {
                     ...currentPose,
@@ -535,16 +505,16 @@ const PoseCamera = ({
                   
                   // STOP DETECTION AUTOMATICALLY after 3 perfect poses
                   setTimeout(() => {
-                    stopDetection(); // Stop detection immediately
+                    stopDetection();
                     setShowCelebration(false);
                     setShowPoseComplete(true);
                     setDebugInfo('🎉 Pose completed! 3 perfect poses achieved - Detection stopped.');
-                  }, 3000); // Show celebration for 3 seconds then stop
+                  }, 3000);
                 }
                 
                 return newCount;
               });
-              setLastPoseState(true); // Mark that we've counted this perfect pose
+              setLastPoseState(true);
             }
             
             return newFrames;
@@ -552,80 +522,25 @@ const PoseCamera = ({
         } else {
           // Reset when pose becomes imperfect
           if (result.accuracy_score < 90) {
-            console.log(`❌ Pose not perfect enough: ${result.accuracy_score}% (need ≥90%) - Resetting counters`);
             setConsecutiveFrames(0);
             setLastPoseState(false);
           }
         }
 
-        // TTS Feedback - only if not completed and detecting and not celebrating
-        if (!poseCompleted && isDetecting && !showCelebration) {
-          if (result.accuracy_score >= 90) {
-            // Perfect pose achieved - this will be handled by the counting logic above
-          } else if (result.accuracy_score >= 80 && result.accuracy_score < 90) {
-            if (Math.random() < 0.2) {
-              // Pose-specific encouragement messages
-              const encouragementMessages = {
-                'yog1': 'Strong Warrior II! Almost perfect - hold that powerful stance!',
-                'yog2': 'Excellent T Pose! Almost perfect - keep those arms straight and strong!',
-                'yog3': 'Beautiful Tree Pose! Almost perfect - find your balance and hold steady!',
-                'yog4': 'Powerful Goddess! Almost perfect - sink deeper and feel your strength!',
-                'yog5': 'Great Downward Dog! Almost perfect - lift those hips higher!',
-                'yog6': 'Solid Plank! Almost perfect - keep that body straight and strong!'
-              };
-              const message = encouragementMessages[currentSelectedPose] || 'Almost perfect! Hold steady for perfect pose!';
-              speak(message);
-            }
-          } else if (result.accuracy_score >= 70 && result.accuracy_score < 85) {
-            if (Math.random() < 0.1) {
-              // Pose-specific improvement messages
-              const improvementMessages = {
-                'yog1': 'Good Warrior II! Widen your stance and straighten those arms!',
-                'yog2': 'Good T Pose! Extend your arms fully and stand tall!',
-                'yog3': 'Good Tree Pose! Bring hands to prayer and lift that foot higher!',
-                'yog4': 'Good Goddess! Squat deeper and raise those victory arms!',
-                'yog5': 'Good Downward Dog! Press into your hands and lift your hips!',
-                'yog6': 'Good Plank! Keep your body straight like a strong plank!'
-              };
-              const message = improvementMessages[currentSelectedPose] || 'Good form! Minor adjustments needed.';
-              speak(message);
-            }
-          } else if (result.accuracy_score < 60 && result.feedback?.length > 0) {
-            // Pose-specific guidance messages
-            const guidanceMessages = {
-              'yog1': 'For Warrior II: Stand wide, bend front knee, arms parallel to floor',
-              'yog2': 'For T Pose: Stand straight, extend arms out to sides at shoulder height',
-              'yog3': 'For Tree Pose: Balance on one leg, hands in prayer, other foot on thigh',
-              'yog4': 'For Goddess Pose: Wide squat, knees bent, arms raised up high',
-              'yog5': 'For Downward Dog: Hands and feet down, hips up, make inverted V',
-              'yog6': 'For Plank Pose: Body straight, arms under shoulders, core engaged'
-            };
-            const message = guidanceMessages[currentSelectedPose] || result.feedback[0];
-            speak(message);
-          }
+        // ONLY give TTS feedback for corrections (accuracy < 85%)
+        if (result.landmarks && result.landmarks.length >= 25 && result.accuracy_score > 0 && result.accuracy_score < 85) {
+          ttsService.provideFeedback(
+            currentSelectedPose, 
+            result.accuracy_score, 
+            true,
+            result.landmarks.length
+          );
         }
 
       } else {
         setDebugInfo('No pose detected in webcam frame - Check lighting and distance');
         setLandmarkCount(0);
-        
-        // Provide helpful guidance when no pose is detected
-        if (isDetecting && !showCelebration) {
-          // Only speak guidance occasionally to avoid spam
-          if (Math.random() < 0.05) { // 5% chance per frame
-            // Pose-specific setup guidance
-            const setupMessages = {
-              'yog1': 'For Warrior II: Make sure your full body is visible, stand wide with arms extended',
-              'yog2': 'For T Pose: Make sure your full body is visible, stand straight with arms out',
-              'yog3': 'For Tree Pose: Make sure your full body is visible, try balancing on one leg',
-              'yog4': 'For Goddess Pose: Make sure your full body is visible, try a wide squat position',
-              'yog5': 'For Downward Dog: Make sure your full body is visible, get on hands and feet',
-              'yog6': 'For Plank Pose: Make sure your full body is visible, try a push-up position'
-            };
-            const message = setupMessages[currentSelectedPose] || 'Make sure your full body is visible and lighting is good';
-            speak(message);
-          }
-        }
+        ttsService.validateLandmarks(false, 0);
       }
 
     } catch (error) {
@@ -850,53 +765,7 @@ const PoseCamera = ({
     console.log('✅ LANDMARKS DRAWN WITH ENHANCED VISIBILITY!');
   };
 
-  const speak = (text) => {
-    // CRITICAL FIX: Stop TTS immediately when pose is completed or celebrating
-    if (poseCompleted || showCelebration) {
-      // If pose is completed, only allow BRAVO messages
-      if (!text.includes('BRAVO') && !text.includes('Perfect pose mastery') && !text.includes('Well done')) {
-        console.log(`🔇 TTS Blocked - Pose completed: "${text.substring(0, 30)}..."`);
-        return;
-      }
-    }
-
-    // Only speak if detection is active and not celebrating (unless it's the bravo message)
-    if ('speechSynthesis' in window && (isDetecting || text.includes('BRAVO') || text.includes('Welcome') || text.includes('Starting'))) {
-      // Cancel any ongoing speech first
-      window.speechSynthesis.cancel();
-      
-      // Small delay to ensure cancellation is processed
-      setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.volume = 0.8;
-        utterance.pitch = 1.0;
-        utterance.lang = 'en-US';
-        
-        // Add event listeners for debugging
-        utterance.onstart = () => {
-          console.log(`🔊 TTS Started: "${text.substring(0, 50)}..."`);
-        };
-        
-        utterance.onend = () => {
-          console.log(`✅ TTS Completed: "${text.substring(0, 30)}..."`);
-        };
-        
-        utterance.onerror = (event) => {
-          console.error(`❌ TTS Error:`, event.error);
-        };
-        
-        // CRITICAL: Add check before speaking to ensure pose isn't completed
-        if (!poseCompleted || text.includes('BRAVO') || text.includes('Perfect pose mastery') || text.includes('Well done')) {
-          window.speechSynthesis.speak(utterance);
-        } else {
-          console.log(`🔇 TTS Cancelled - Pose completed during utterance creation`);
-        }
-      }, 100);
-    } else {
-      console.log(`🔇 TTS Skipped: isDetecting=${isDetecting}, poseCompleted=${poseCompleted}, text="${text.substring(0, 30)}..."`);
-    }
-  };
+  // Old speak function removed - now using ttsService
 
   // Save completed session to database
   const saveSessionToDatabase = async (sessionState) => {
@@ -1026,7 +895,7 @@ const PoseCamera = ({
         // Show achievement notifications if any
         if (result.new_achievements && result.new_achievements.length > 0) {
           result.new_achievements.forEach(achievement => {
-            speak(`Achievement unlocked: ${achievement.name}!`);
+            ttsService.speak(`Achievement unlocked: ${achievement.name}!`, true);
           });
         }
 
@@ -1103,11 +972,8 @@ const PoseCamera = ({
                 console.log('📹 Webcam started with full body view');
                 onWebcamStart?.();
 
-                // Enhanced TTS Welcome with better guidance
-                const userData = JSON.parse(localStorage.getItem('user') || '{}');
-                const userName = userData.name || userData.username || 'User';
-                const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'yoga pose';
-                speak(`Welcome ${userName}! Let's practice ${poseName}. Please step back 3-4 meters from your camera for the best full body view. The camera is now set to maximum wide angle to capture your entire body. Make sure you have good lighting and center yourself in the view.`);
+                // NO AUTOMATIC TTS WELCOME - Strict mode
+                console.log('🔇 TTS Welcome DISABLED - Strict mode active, only corrective feedback during detection');
               }}
               onUserMediaError={(err) => {
                 setError(`Webcam failed: ${err.message}`);
@@ -1161,7 +1027,7 @@ const PoseCamera = ({
                       onClick={async () => {
                         // Navigate to Diet Recommendations with session data
                         setShowSessionComplete(false);
-                        speak("Great job! Let's get your personalized diet plan based on your workout!");
+                        ttsService.speak("Great job! Let's get your personalized diet plan based on your workout!", true);
                         
                         // Save session to database first
                         const sessionSaved = await saveSessionToDatabase(sessionState);
@@ -1219,7 +1085,7 @@ const PoseCamera = ({
                       onClick={async () => {
                         // Navigate to Progress Dashboard with session data
                         setShowSessionComplete(false);
-                        speak("Checking your progress dashboard!");
+                        ttsService.speak("Checking your progress dashboard!", true);
                         
                         // Save session to database first
                         const sessionSaved = await saveSessionToDatabase(sessionState);
@@ -1329,7 +1195,7 @@ const PoseCamera = ({
                             }
                             
                             setShowPoseSelection(false);
-                            speak(`Starting ${pose.name}. Get ready!`);
+                            ttsService.speak(`Starting ${pose.name}. Get ready!`, true);
                             
                             // Reset pose-specific states
                             setPerfectPoseCount(0);
@@ -1401,7 +1267,7 @@ const PoseCamera = ({
                         } else {
                           setShowPoseSelection(false);
                           setSessionState(prev => ({ ...prev, isSessionActive: false }));
-                          speak("Session ended. Great work!");
+                          ttsService.speak("Session ended. Great work!", true);
                         }
                       }}
                       className="px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg"
@@ -1449,7 +1315,7 @@ const PoseCamera = ({
                         } else {
                           setShowPoseComplete(false);
                           setSessionState(prev => ({ ...prev, isSessionActive: false }));
-                          speak("Session ended. Great work!");
+                          ttsService.speak("Session ended. Great work!", true);
                         }
                       }}
                       className="w-full px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import RankingWidget from '../components/dashboard/RankingWidget';
+import progressService from '../services/progressService';
 import { 
   Activity, 
   Target, 
@@ -48,6 +49,29 @@ const Dashboard = () => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [hasCompletedSession, setHasCompletedSession] = useState(false);
+  const [todayGoals, setTodayGoals] = useState([]);
+  const [weeklyProgress, setWeeklyProgress] = useState(null);
+
+  // Icon mapping for dynamic icons
+  const iconMap = {
+    Sun,
+    Moon,
+    Droplets,
+    Apple
+  };
+
+  // Update real-time data
+  const updateRealTimeData = () => {
+    // Auto-update goals based on time and activity
+    progressService.autoUpdateGoals();
+    
+    // Get updated goals and progress
+    const goals = progressService.getFormattedTodayGoals();
+    const weekly = progressService.getFormattedWeeklyProgress();
+    
+    setTodayGoals(goals);
+    setWeeklyProgress(weekly);
+  };
 
   // Check if user has completed a yoga session
   const checkSessionCompletion = async () => {
@@ -190,12 +214,19 @@ const Dashboard = () => {
     checkSessionCompletion();
     fetchUserStats();
     
+    // Initialize real-time data
+    updateRealTimeData();
+    
+    // Set up real-time updates every 30 seconds
+    const realTimeInterval = setInterval(updateRealTimeData, 30000);
+    
     // Add event listener for storage changes to update stats when new sessions are completed
     const handleStorageChange = (e) => {
       if (e.key === 'hasCompletedYogaSession' || e.key === 'yogaSessionData' || e.key === 'yogaProgressData') {
         console.log('🔄 Session data updated, refreshing dashboard stats');
         fetchUserStats();
         checkSessionCompletion();
+        updateRealTimeData();
       }
     };
     
@@ -206,11 +237,13 @@ const Dashboard = () => {
       console.log('🔄 Dashboard focused, refreshing stats');
       fetchUserStats();
       checkSessionCompletion();
+      updateRealTimeData();
     };
     
     window.addEventListener('focus', handleFocus);
     
     return () => {
+      clearInterval(realTimeInterval);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('focus', handleFocus);
     };
@@ -239,6 +272,7 @@ const Dashboard = () => {
             });
             console.log('✅ Dashboard stats refreshed from backend');
             checkSessionCompletion();
+            updateRealTimeData();
             setIsLoading(false);
             return;
           }
@@ -265,6 +299,9 @@ const Dashboard = () => {
         setHasCompletedSession(true);
         console.log('✅ Dashboard stats refreshed from localStorage');
       }
+      
+      // Update real-time data
+      updateRealTimeData();
       
     } catch (error) {
       console.error('Error refreshing stats:', error);
@@ -319,13 +356,6 @@ const Dashboard = () => {
     { name: 'Consistency', description: '3-day streak', unlocked: stats.currentStreak >= 3, icon: Flame },
     { name: 'Good Form', description: '80%+ average accuracy', unlocked: stats.averageAccuracy >= 80, icon: Trophy },
     { name: 'Regular Practice', description: '5 total sessions', unlocked: stats.totalSessions >= 5, icon: Award }
-  ];
-
-  const todayGoals = [
-    { title: 'Morning Yoga', completed: hasCompletedSession, time: '30 min', icon: Sun },
-    { title: 'Drink 2L Water', completed: false, progress: 60, icon: Droplets },
-    { title: 'Healthy Meal Plan', completed: hasCompletedSession, time: '3 meals', icon: Apple },
-    { title: 'Evening Meditation', completed: false, time: '15 min', icon: Moon },
   ];
 
   if (isLoading) {
@@ -569,7 +599,7 @@ const Dashboard = () => {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     {todayGoals.map((goal, index) => {
-                      const Icon = goal.icon
+                      const Icon = iconMap[goal.icon] || Target;
                       return (
                         <div 
                           key={index}
@@ -588,22 +618,24 @@ const Dashboard = () => {
                                 <p className={`font-semibold ${goal.completed ? 'text-white' : 'text-slate-300'}`}>
                                   {goal.title}
                                 </p>
-                                <p className="text-sm text-slate-400">{goal.time}</p>
+                                <p className="text-sm text-slate-400">
+                                  {goal.time || (goal.current && goal.target ? `${goal.current}/${goal.target}ml` : '')}
+                                </p>
                               </div>
                             </div>
                             {goal.completed && (
                               <CheckCircle className="w-5 h-5 text-emerald-400" fill="currentColor" />
                             )}
                           </div>
-                          {goal.progress && (
+                          {goal.progress !== undefined && (
                             <div className="mt-3">
                               <div className="w-full bg-slate-700/50 rounded-full h-2">
                                 <div 
                                   className="bg-gradient-to-r from-blue-500 to-cyan-400 h-2 rounded-full transition-all duration-300"
-                                  style={{ width: `${goal.progress}%` }}
+                                  style={{ width: `${Math.min(goal.progress, 100)}%` }}
                                 ></div>
                               </div>
-                              <p className="text-xs text-slate-400 mt-1">{goal.progress}% complete</p>
+                              <p className="text-xs text-slate-400 mt-1">{Math.min(goal.progress, 100)}% complete</p>
                             </div>
                           )}
                         </div>
@@ -628,26 +660,28 @@ const Dashboard = () => {
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-emerald-400">+23%</div>
+                      <div className="text-2xl font-bold text-emerald-400">
+                        {weeklyProgress?.improvement || '+23%'}
+                      </div>
                       <div className="text-xs text-slate-400">vs last week</div>
                     </div>
                   </div>
 
-                  {/* Simple Progress Visualization */}
+                  {/* Real-time Progress Visualization */}
                   <div className="space-y-4">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                      <div key={day} className="flex items-center">
-                        <div className="w-12 text-sm text-slate-400 font-medium">{day}</div>
+                    {weeklyProgress?.days?.map((dayData, index) => (
+                      <div key={dayData.day} className="flex items-center">
+                        <div className="w-12 text-sm text-slate-400 font-medium">{dayData.day}</div>
                         <div className="flex-1 mx-4">
                           <div className="w-full bg-slate-700 rounded-full h-2">
                             <div 
                               className="bg-gradient-to-r from-emerald-500 to-cyan-500 h-2 rounded-full transition-all duration-1000" 
-                              style={{width: `${Math.random() * 80 + 20}%`}}
+                              style={{width: `${dayData.progress}%`}}
                             ></div>
                           </div>
                         </div>
                         <div className="w-16 text-right">
-                          <span className="text-sm text-slate-300 font-medium">{Math.floor(Math.random() * 60 + 20)} min</span>
+                          <span className="text-sm text-slate-300 font-medium">{dayData.minutes} min</span>
                         </div>
                       </div>
                     ))}

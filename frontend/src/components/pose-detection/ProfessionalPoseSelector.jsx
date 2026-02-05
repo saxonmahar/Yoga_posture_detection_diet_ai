@@ -4,6 +4,7 @@ import { CheckCircle, Star, Target, Clock, Zap, Play, Info, X, Camera, Volume2, 
 import axios from 'axios';
 import PoseCamera from './PoseCamera';
 import PrePoseInstructions from './PrePoseInstructions';
+import ttsService from '../../services/ttsService';
 
 const ML_API_URL = 'http://localhost:5000';
 
@@ -15,11 +16,20 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
   const [startingPose, setStartingPose] = useState(null);
   const [showCameraModal, setShowCameraModal] = useState(false);
   const [activePose, setActivePose] = useState(null);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
   const [showImageModal, setShowImageModal] = useState(null);
-  const [lastSpokenMessage, setLastSpokenMessage] = useState('');
   const [showInstructions, setShowInstructions] = useState(false);
   const [instructionPose, setInstructionPose] = useState(null);
+
+  // Initialize TTS service
+  useEffect(() => {
+    // Set initial TTS state
+    ttsService.setEnabled(true);
+    
+    return () => {
+      // Cleanup TTS when component unmounts
+      ttsService.endSession();
+    };
+  }, []);
 
   // Professional yoga poses with real images from pose folder
   const PROFESSIONAL_POSES = [
@@ -119,60 +129,22 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
     loadAvailablePoses();
   }, []);
 
-  // Text-to-Speech function for pose feedback
+  // Text-to-Speech function for pose feedback - SIMPLIFIED
   const speakFeedback = (message) => {
-    if (!ttsEnabled || !message) return;
-    
-    // Don't repeat the same message
-    if (lastSpokenMessage === message) return;
-    
-    // Check if browser supports speech synthesis
-    if ('speechSynthesis' in window) {
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
-      
-      // Small delay to ensure cancellation is processed
-      setTimeout(() => {
-        const utterance = new SpeechSynthesisUtterance(message);
-        utterance.rate = 0.9;
-        utterance.pitch = 1.0;
-        utterance.volume = 0.8;
-        utterance.lang = 'en-US';
-        
-        utterance.onstart = () => {
-          console.log(`🔊 TTS Started: "${message.substring(0, 50)}..."`);
-        };
-        
-        utterance.onend = () => {
-          console.log(`✅ TTS Completed: "${message.substring(0, 30)}..."`);
-          setLastSpokenMessage('');
-        };
-        
-        utterance.onerror = (event) => {
-          console.error(`❌ TTS Error:`, event.error);
-          setLastSpokenMessage('');
-        };
-        
-        window.speechSynthesis.speak(utterance);
-        setLastSpokenMessage(message);
-      }, 100);
-    } else {
-      console.warn('⚠️ Speech synthesis not supported in this browser');
-    }
+    // Use the new TTS service for simplified feedback
+    ttsService.speak(message, false);
   };
 
-  // Handle pose detection results with TTS feedback
+  // Handle pose detection results with simplified TTS feedback
   const handlePoseDetection = (result) => {
-    if (result && result.feedback && result.feedback.length > 0) {
-      const cleanFeedback = result.feedback[0].replace(/[✅⚠️🌳🙏👁️⚔️💪🎯🐕🖐️🦵👠🏔️💆🦶🧒🤲😌🫁🐍👀]/g, '').trim();
-      
-      if (!result.is_correct && (result.accuracy_score || 0) < 70) {
-        // Speak correction feedback for poor form
-        speakFeedback(cleanFeedback);
-      } else if (result.is_correct || (result.accuracy_score || 0) >= 80) {
-        // Speak positive feedback for good form
-        speakFeedback('Excellent form! Keep it up');
-      }
+    if (result && result.accuracy_score !== undefined) {
+      // Use TTS service for simplified, actionable feedback with landmark validation
+      ttsService.provideFeedback(
+        activePose || selectedPose, 
+        result.accuracy_score, 
+        result.landmarks && result.landmarks.length > 0,
+        result.landmarks ? result.landmarks.length : 0
+      );
     }
   };
 
@@ -191,7 +163,7 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
       if (response.data.success) {
         console.log('✅ Professional pose detection started:', response.data.message);
         
-        // Set active pose and show camera modal directly (no pre-instructions)
+        // Select this pose and notify parent
         setActivePose(poseId);
         setShowCameraModal(true);
         
@@ -199,11 +171,8 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
         onPoseSelect?.(poseId);
         onStartPose?.(poseId, response.data);
         
-        // Speak welcome message
-        const pose = PROFESSIONAL_POSES.find(p => p.id === poseId);
-        if (pose) {
-          speakFeedback(`Starting live guided ${pose.name} practice. Get ready for step-by-step instructions.`);
-        }
+        // NO AUTOMATIC TTS WELCOME - Strict mode
+        console.log('🔇 TTS Welcome DISABLED - Strict mode active, only corrective feedback during detection');
       } else {
         throw new Error(response.data.error || 'Failed to start pose detection');
       }
@@ -215,15 +184,14 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
     }
   };
 
-  // Close camera modal
+  // Close camera modal and END TTS SESSION
   const closeCameraModal = () => {
     setShowCameraModal(false);
     setActivePose(null);
     
-    // Stop any ongoing speech
-    if (window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    // CRITICAL: End TTS session when closing modal
+    ttsService.endSession();
+    console.log('🛑 Camera modal closed - TTS session ended');
   };
 
   const getPoseBenefits = (poseId) => {
@@ -292,20 +260,18 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
         <div className="mb-6">
           <button
             onClick={() => {
-              setTtsEnabled(!ttsEnabled);
-              if (ttsEnabled) {
-                window.speechSynthesis?.cancel();
-              }
+              const newState = !ttsService.getStatus().enabled;
+              ttsService.setEnabled(newState);
             }}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all ${
-              ttsEnabled
+              ttsService.getStatus().enabled
                 ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400'
                 : 'bg-slate-700/50 border border-slate-600 text-slate-400'
             }`}
           >
-            {ttsEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {ttsService.getStatus().enabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
             <span className="font-medium">Voice Feedback</span>
-            <span className="text-sm">{ttsEnabled ? 'ON' : 'OFF'}</span>
+            <span className="text-sm">{ttsService.getStatus().enabled ? 'ON' : 'OFF'}</span>
           </button>
         </div>
 
