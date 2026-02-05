@@ -55,8 +55,10 @@ function Navbar() {
 
   // Helper function to render user profile photo
   const renderProfilePhoto = (size = 'w-10 h-10') => {
-    const photoUrl = user?.profilePhoto ? photoService.getPhotoUrl(user.profilePhoto) : null;
+    const userId = user?.id || user?._id;
+    const photoUrl = user?.profilePhoto ? photoService.getPhotoUrl(user.profilePhoto, userId) : null;
     
+    console.log('🔍 Navbar - User ID:', userId);
     console.log('🔍 Navbar - User:', user?.name);
     console.log('🔍 Navbar - Profile Photo Path:', user?.profilePhoto);
     console.log('🔍 Navbar - Photo URL:', photoUrl);

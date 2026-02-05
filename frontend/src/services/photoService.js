@@ -86,7 +86,7 @@ class PhotoService {
   }
 
   // Get photo URL (handles both relative and absolute URLs)
-  getPhotoUrl(photoPath) {
+  getPhotoUrl(photoPath, userId = null) {
     if (!photoPath) return null;
     
     // If it's already a full URL, return as is
@@ -94,8 +94,12 @@ class PhotoService {
       return photoPath;
     }
     
+    // Add cache-busting parameters to prevent browser caching issues
+    const timestamp = Date.now();
+    const userParam = userId ? `u=${userId}&` : '';
+    
     // Use the photo server (port 5010) for serving photos
-    return `http://localhost:5010${photoPath}`;
+    return `http://localhost:5010${photoPath}?${userParam}t=${timestamp}`;
   }
 
   // Validate image file

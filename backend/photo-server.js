@@ -26,8 +26,16 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Serve uploaded files
-app.use('/uploads', express.static('uploads'));
+// Serve uploaded files with proper cache control and authentication
+app.use('/uploads', (req, res, next) => {
+  // Add cache control headers to prevent aggressive caching
+  res.set({
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    'Pragma': 'no-cache',
+    'Expires': '0'
+  });
+  next();
+}, express.static('uploads'));
 
 // Configure multer for photo uploads
 const storage = multer.diskStorage({

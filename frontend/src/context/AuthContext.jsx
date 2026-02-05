@@ -67,6 +67,22 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", error);
     } finally {
       setUser(null); // 👈 ALWAYS clear user
+      
+      // Clear any cached user data from localStorage
+      try {
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('user') || key.includes('User'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        console.log('🧹 Cleared cached user data from localStorage');
+      } catch (error) {
+        console.error('Error clearing localStorage:', error);
+      }
+      
       setLoading(false);
     }
   };
