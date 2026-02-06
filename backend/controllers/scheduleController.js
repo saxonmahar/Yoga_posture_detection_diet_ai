@@ -330,6 +330,12 @@ const updateSession = async (req, res) => {
 
 // Mark session as completed
 const completeSession = async (req, res) => {
+  console.log('🎯 Complete session request received:', {
+    sessionId: req.params.sessionId,
+    userId: req.user?.id,
+    body: req.body
+  });
+  
   try {
     const userId = req.user.id;
     const { sessionId } = req.params;
