@@ -251,9 +251,13 @@ const PoseCamera = ({
         cleanupSharedData();
       }
       
+      // INSTANT START - Skip instructions, start detection immediately
+      console.log('⚡ INSTANT START - Skipping instructions, starting detection now!');
       setTimeout(() => {
-        startLiveGuidedSession();
-      }, 1000);
+        setGuidancePhase('analysis');
+        setIsGivingInstructions(false);
+        startDetection();
+      }, 500); // Minimal 500ms delay for webcam to stabilize
     }
   }, [isStreaming, showLandmarks, showCelebration, user]);
 

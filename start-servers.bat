@@ -22,7 +22,7 @@ start "ML API" cmd /k "cd backend/Ml && python app.py"
 
 timeout /t 3 /nobreak >nul
 
-echo Starting Diet API (Port 8080)...
+echo Starting Diet API (Port 5002)...
 start "Diet API" cmd /k "cd backend/Diet_Recommendation_System && python app.py"
 
 echo.
@@ -31,6 +31,6 @@ echo - Backend: http://localhost:5001
 echo - Photo Server: http://localhost:5010
 echo - Frontend: http://localhost:3002
 echo - ML API: http://localhost:5000
-echo - Diet API: http://localhost:8080
+echo - Diet API: http://localhost:5002
 echo.
 pause
