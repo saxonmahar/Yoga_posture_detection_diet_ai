@@ -290,8 +290,8 @@ const ProgressPage = () => {
       analytics.pose_progress.forEach(pose => {
         poseData.push({
           pose: pose.pose_name || 'Unknown Pose',
-          accuracy: Math.round(pose.best_accuracy || 0),
-          improvement: Math.round((pose.best_accuracy || 0) - (pose.average_accuracy || 0)),
+          accuracy: Math.round(pose.best_score || pose.average_score || 0), // Use best_score or average_score
+          improvement: Math.round((pose.best_score || 0) - (pose.average_score || 0)),
           sessions: pose.total_attempts || 0
         });
       });

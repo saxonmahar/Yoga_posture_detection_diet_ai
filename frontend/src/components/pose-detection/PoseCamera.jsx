@@ -1216,10 +1216,12 @@ const PoseCamera = ({
                               correctionsNeeded: []
                             });
                             
-                            // Start new pose session
+                            // Start new pose session INSTANTLY - no instruction delay
                             setTimeout(() => {
-                              startLiveGuidedSession();
-                            }, 1000);
+                              setGuidancePhase('analysis');
+                              setIsGivingInstructions(false);
+                              startDetection();
+                            }, 500); // Minimal delay for state updates
                           }}
                           className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-gray-200 hover:border-blue-400 cursor-pointer transition-all hover:shadow-lg group"
                         >
