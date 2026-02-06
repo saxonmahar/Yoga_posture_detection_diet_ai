@@ -369,7 +369,7 @@ function ProfilePage() {
                         value={formData.name}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 
@@ -383,7 +383,7 @@ function ProfilePage() {
                         value={formData.email}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 
@@ -397,7 +397,7 @@ function ProfilePage() {
                         value={formData.age}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 
@@ -411,7 +411,7 @@ function ProfilePage() {
                         value={formData.weight}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 
@@ -425,7 +425,7 @@ function ProfilePage() {
                         value={formData.height}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       />
                     </div>
 
@@ -438,7 +438,7 @@ function ProfilePage() {
                         value={formData.yogaExperience}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         {yogaExperiences.map(exp => (
                           <option key={exp.id} value={exp.id}>
@@ -457,7 +457,7 @@ function ProfilePage() {
                         value={formData.activityLevel}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         {activityLevels.map(level => (
                           <option key={level.id} value={level.id}>
@@ -476,7 +476,7 @@ function ProfilePage() {
                         value={formData.goal}
                         onChange={handleInputChange}
                         disabled={!isEditing}
-                        className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                        className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                       >
                         {goals.map(g => (
                           <option key={g.id} value={g.id}>
@@ -497,7 +497,7 @@ function ProfilePage() {
                       onChange={handleInputChange}
                       disabled={!isEditing}
                       rows="3"
-                      className="w-full bg-background border border-white/10 rounded-lg px-4 py-3 disabled:opacity-50"
+                      className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary"
                     />
                   </div>
                 </div>
@@ -549,7 +549,7 @@ function ProfilePage() {
                           value={formData.preferredCuisine || 'mediterranean'}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="mediterranean">Mediterranean</option>
                           <option value="indian">Indian</option>
@@ -569,7 +569,7 @@ function ProfilePage() {
                           value={formData.mealsPerDay || '3'}
                           onChange={handleInputChange}
                           disabled={!isEditing}
-                          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="2">2 meals</option>
                           <option value="3">3 meals</option>
@@ -625,7 +625,7 @@ function ProfilePage() {
                         <input
                           type="text"
                           placeholder="Enter a new fitness goal..."
-                          className="flex-1 bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
                           onKeyPress={(e) => {
                             if (e.key === 'Enter' && e.target.value.trim()) {
                               setFormData(prev => ({
@@ -694,7 +694,7 @@ function ProfilePage() {
                           name="theme"
                           value={formData.theme}
                           onChange={handleInputChange}
-                          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="light">Light Mode</option>
                           <option value="dark">Dark Mode</option>
@@ -710,7 +710,7 @@ function ProfilePage() {
                           name="language"
                           value={formData.language}
                           onChange={handleInputChange}
-                          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="en">English</option>
                           <option value="es">Spanish</option>
@@ -727,7 +727,7 @@ function ProfilePage() {
                           name="units"
                           value={formData.units}
                           onChange={handleInputChange}
-                          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="metric">Metric (kg, cm)</option>
                           <option value="imperial">Imperial (lbs, in)</option>
@@ -742,7 +742,7 @@ function ProfilePage() {
                           name="timeFormat"
                           value={formData.timeFormat}
                           onChange={handleInputChange}
-                          className="w-full bg-background border border-white/10 rounded-lg px-4 py-3"
+                          className="w-full bg-slate-800 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary"
                         >
                           <option value="24h">24-hour</option>
                           <option value="12h">12-hour</option>
