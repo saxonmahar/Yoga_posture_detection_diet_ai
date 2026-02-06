@@ -1,9 +1,11 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CheckCircle, ArrowRight, Download } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { CheckCircle, ArrowRight, Download, Sparkles } from 'lucide-react';
 
 function PaymentSuccess() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   
   // Get payment details from URL params
@@ -12,9 +14,22 @@ function PaymentSuccess() {
   const refId = searchParams.get('refId');
 
   useEffect(() => {
-    // Confetti effect
-    console.log('✅ Payment Successful!', { oid, amt, refId });
-  }, [oid, amt, refId]);
+    // Set premium status in localStorage
+    if (user?._id || user?.id) {
+      const userId = user._id || user.id;
+      localStorage.setItem(`premium_${userId}`, 'true');
+      localStorage.setItem(`premium_since_${userId}`, new Date().toISOString());
+      localStorage.setItem(`premium_plan_${userId}`, amt === '6000' ? 'yearly' : 'monthly');
+      console.log('✅ Premium status activated for user:', userId);
+    }
+
+    // Auto-redirect to Premium Dashboard after 5 seconds
+    const timer = setTimeout(() => {
+      navigate('/premium-dashboard');
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [user, navigate, amt]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4">
@@ -67,22 +82,30 @@ function PaymentSuccess() {
 
             {/* Premium Features */}
             <div className="bg-gradient-to-r from-emerald-500/10 to-cyan-500/10 rounded-2xl p-6 mb-8 border border-emerald-500/30">
-              <h3 className="text-lg font-semibold text-white mb-3">🎁 Premium Features Unlocked</h3>
+              <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+                <Sparkles className="w-5 h-5 text-yellow-400 mr-2" />
+                🎁 Premium Features Unlocked
+              </h3>
               <div className="grid grid-cols-2 gap-3 text-sm text-slate-300">
                 <div>✓ Advanced AI Coaching</div>
                 <div>✓ Custom Diet Plans</div>
                 <div>✓ Live Yoga Classes</div>
                 <div>✓ Priority Support</div>
               </div>
+              <div className="mt-4 pt-4 border-t border-emerald-500/20">
+                <p className="text-emerald-400 text-sm font-semibold">
+                  🚀 Redirecting to Premium Dashboard in 5 seconds...
+                </p>
+              </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/premium-dashboard')}
                 className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 rounded-xl font-semibold text-white transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center group"
               >
-                Go to Dashboard
+                Go to Premium Dashboard
                 <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
               </button>
               <button

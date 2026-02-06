@@ -403,27 +403,33 @@ function PricingPage({ user }) {
                           }
                         }}
                         disabled={plan.buttonDisabled || isProcessing}
-                        className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center group ${
+                        className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center gap-3 group ${
                           plan.popular
-                            ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20'
+                            ? 'bg-white hover:bg-gray-50 text-gray-700 shadow-lg hover:shadow-xl'
                             : plan.name === 'Demo Version'
                             ? 'bg-slate-700/50 hover:bg-slate-700 text-white border border-slate-600/50'
-                            : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/20'
+                            : 'bg-white hover:bg-gray-50 text-gray-700 shadow-lg hover:shadow-xl'
                         } ${plan.buttonDisabled || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         {isProcessing ? (
                           <>
-                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
-                            Redirecting to eSewa...
+                            <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                            <span>Processing...</span>
                           </>
                         ) : (
                           <>
                             {plan.name !== 'Demo Version' && (
-                              <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-6 mr-2 bg-white px-2 rounded" />
+                              <div className="flex items-center gap-2 bg-[#60bb46] px-3 py-1.5 rounded-lg">
+                                <img 
+                                  src="https://esewa.com.np/common/images/esewa_logo.png" 
+                                  alt="eSewa" 
+                                  className="h-5 w-auto"
+                                />
+                              </div>
                             )}
-                            {plan.buttonText}
-                            {!plan.buttonDisabled && (
-                              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                            <span className="font-semibold">{plan.name === 'Demo Version' ? plan.buttonText : 'Pay with eSewa'}</span>
+                            {!plan.buttonDisabled && plan.name === 'Demo Version' && (
+                              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                             )}
                           </>
                         )}

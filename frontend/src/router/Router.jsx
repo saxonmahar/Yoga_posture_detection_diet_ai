@@ -38,6 +38,7 @@ import SecurityConfirmation from "../pages/SecurityConfirmation";
 import ForgotPassword from "../pages/ForgotPassword";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import PaymentFailure from "../pages/PaymentFailure";
+import PremiumDashboard from "../pages/PremiumDashboard";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -145,6 +146,7 @@ export default function Router() {
   const protectedRoutes = [
     ["/dashboard", <Dashboard />],
     ["/premium", <Premium />],
+    ["/premium-dashboard", <PremiumDashboard />],
     ["/pose-detection", <PoseDetectionWrapper />], // Updated to use wrapper
     ["/yoga-session", <YogaSessionPage />],
     ["/diet-plan", <DietPlanPage />],

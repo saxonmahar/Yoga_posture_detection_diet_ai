@@ -211,19 +211,25 @@ function Premium({ onNavigate, user }) {
                 <button
                   onClick={() => handleUpgrade(selectedPlan, selectedPlan === 'yearly' ? 6000 : 800)}
                   disabled={isProcessing}
-                  className="w-full py-4 bg-gradient-to-r from-premium to-orange-500 hover:from-premium/90 hover:to-orange-600 rounded-xl font-bold transition-all shadow-lg shadow-premium/20 hover:shadow-premium/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  className="w-full py-4 bg-white hover:bg-gray-50 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
                 >
                   {isProcessing ? (
                     <>
-                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
-                      Opening Khalti...
+                      <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+                      <span className="text-gray-700">Processing...</span>
                     </>
                   ) : user?.isPremium ? (
-                    'You are Premium!'
+                    <span className="text-gray-700">You are Premium!</span>
                   ) : (
                     <>
-                      Pay with eSewa
-                      <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-6 ml-2 bg-white px-2 rounded" />
+                      <div className="flex items-center gap-2 bg-[#60bb46] px-4 py-2 rounded-lg">
+                        <img 
+                          src="https://esewa.com.np/common/images/esewa_logo.png" 
+                          alt="eSewa" 
+                          className="h-6 w-auto"
+                        />
+                      </div>
+                      <span className="text-gray-700 font-semibold">Pay with eSewa</span>
                     </>
                   )}
                 </button>

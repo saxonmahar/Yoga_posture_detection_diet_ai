@@ -134,7 +134,7 @@ function Footer() {
             
             {/* Copyright */}
             <div className="flex items-center text-slate-400 text-sm">
-              <span>© {new Date().getFullYear()} YogaAI. Made with</span>
+              <span>© {new Date().getFullYear()} YogaAI.</span>
               <Heart className="w-4 h-4 mx-2 text-red-500 animate-pulse" fill="currentColor" />
               <span>by Team YogaAI</span>
             </div>
