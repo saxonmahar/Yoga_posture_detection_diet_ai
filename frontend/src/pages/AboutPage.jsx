@@ -361,62 +361,74 @@ function AboutPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-10 lg:gap-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {teamMembers.map((member, index) => (
               <div key={index} className="group relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 to-slate-800/30 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-300"></div>
-                <div className="relative bg-slate-800/40 backdrop-blur-xl rounded-3xl p-10 border border-slate-700/50 shadow-2xl group-hover:border-slate-600 transition-all duration-300 hover:transform hover:scale-105 min-h-[550px] flex flex-col justify-between">
+                <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} opacity-5 rounded-2xl blur-xl group-hover:opacity-10 transition-all duration-300`}></div>
+                <div className="relative bg-slate-800/60 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-xl group-hover:border-slate-600/70 transition-all duration-300 overflow-hidden">
                   
-                  <div className="flex-1">
-                    {/* Profile Image */}
-                    <div className="team-image-container">
-                      <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity`}></div>
+                  {/* Header with gradient accent */}
+                  <div className={`h-1.5 bg-gradient-to-r ${member.gradient}`}></div>
+                  
+                  <div className="p-6">
+                    {/* Profile Image - Centered & Circular */}
+                    <div className="flex flex-col items-center mb-5">
                       <div className="relative">
-                        <img
-                          src={member.image}
-                          alt={member.name}
-                          className="team-image"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                          }}
-                        />
-                        {/* Fallback placeholder - Updated for larger sizes */}
-                        <div className="hidden w-40 h-40 sm:w-44 sm:h-44 lg:w-40 lg:h-40 xl:w-48 xl:h-48 rounded-3xl bg-gradient-to-br from-slate-600 to-slate-700 mx-auto items-center justify-center border-4 border-slate-600 shadow-2xl">
-                          <span className="text-4xl sm:text-5xl lg:text-4xl xl:text-6xl font-bold text-slate-400">
-                            {member.name.split(' ').map(n => n[0]).join('')}
-                          </span>
-                        </div>
                         {/* Glow effect */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-300`}></div>
-                      </div>
-                      <div className="absolute -bottom-4 -right-4 sm:-bottom-5 sm:-right-5 lg:-bottom-4 lg:-right-4 xl:-bottom-6 xl:-right-6 w-12 h-12 sm:w-14 sm:h-14 lg:w-12 lg:h-12 xl:w-16 xl:h-16 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center border-4 border-slate-800 shadow-lg">
-                        <Star className="w-6 h-6 sm:w-7 sm:h-7 lg:w-6 lg:h-6 xl:w-8 xl:h-8 text-white" fill="currentColor" />
+                        <div className={`absolute inset-0 bg-gradient-to-br ${member.gradient} rounded-full blur-xl opacity-40 group-hover:opacity-60 transition-opacity scale-110`}></div>
+                        
+                        {/* Image container with gradient border */}
+                        <div className={`relative p-1 bg-gradient-to-br ${member.gradient} rounded-full`}>
+                          <img
+                            src={member.image}
+                            alt={member.name}
+                            className="relative w-28 h-28 rounded-full object-cover bg-slate-800 shadow-2xl"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                          {/* Fallback */}
+                          <div className={`hidden w-28 h-28 rounded-full bg-gradient-to-br ${member.gradient} items-center justify-center shadow-2xl`}>
+                            <span className="text-3xl font-bold text-white">
+                              {member.name.split(' ').map(n => n[0]).join('')}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Badge */}
+                        <div className={`absolute -bottom-1 -right-1 w-9 h-9 bg-gradient-to-br ${member.gradient} rounded-full flex items-center justify-center border-3 border-slate-800 shadow-lg`}>
+                          <Star className="w-5 h-5 text-white" fill="currentColor" />
+                        </div>
                       </div>
                     </div>
 
-                    {/* Member Info */}
-                    <div className="text-center mb-8">
-                      <h3 className="text-2xl font-bold text-white mb-3">{member.name}</h3>
-                      <p className={`text-base font-semibold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent mb-3`}>
+                    {/* Name & Role - Centered */}
+                    <div className="text-center mb-4">
+                      <h3 className="text-xl font-bold text-white mb-2">{member.name}</h3>
+                      <p className={`text-sm font-semibold bg-gradient-to-r ${member.gradient} bg-clip-text text-transparent mb-3`}>
                         {member.role}
                       </p>
-                      <p className="text-slate-400 text-base mb-5 leading-relaxed">{member.bio}</p>
-                      <div className="px-4 py-2 bg-slate-700/50 rounded-full text-sm text-slate-300 inline-block border border-slate-600/50">
+                      <div className="px-3 py-1.5 bg-slate-700/40 rounded-full text-xs text-slate-300 inline-block border border-slate-600/30">
                         {member.expertise}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Achievements */}
-                  <div className="space-y-3 mt-auto">
-                    {member.achievements.map((achievement, idx) => (
-                      <div key={idx} className="flex items-center text-sm text-slate-400 p-2 bg-slate-700/20 rounded-lg border border-slate-600/30 hover:border-slate-600 transition-colors">
-                        <div className="w-2 h-2 bg-emerald-400 rounded-full mr-3 flex-shrink-0"></div>
-                        <span className="font-medium">{achievement}</span>
-                      </div>
-                    ))}
+                    {/* Bio */}
+                    <p className="text-sm text-slate-400 leading-relaxed mb-4 text-center">
+                      {member.bio}
+                    </p>
+
+                    {/* Achievements - Compact */}
+                    <div className="space-y-2">
+                      {member.achievements.map((achievement, idx) => (
+                        <div key={idx} className="flex items-center text-xs text-slate-400 group/item">
+                          <div className={`w-1.5 h-1.5 bg-gradient-to-r ${member.gradient} rounded-full mr-2 flex-shrink-0 group-hover/item:scale-125 transition-transform`}></div>
+                          <span className="font-medium group-hover/item:text-slate-300 transition-colors">{achievement}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>

@@ -15,6 +15,7 @@ const scheduleRoutes = require("./routes/scheduleRoutes");
 const emailVerificationRoutes = require("./routes/emailVerificationRoutes");
 const securityRoutes = require("./routes/securityRoutes");
 const forgotPasswordRoutes = require("./routes/forgotPasswordRoutes");
+const communityRoutes = require("./routes/communityRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -55,6 +56,7 @@ try {
     app.use("/api/security", securityRoutes);
     app.use("/api/password", forgotPasswordRoutes);
     app.use("/api/ranking", require('./routes/rankingRoutes'));
+    app.use("/api/community", communityRoutes);
     
     console.log('✅ All routes registered successfully');
 } catch (error) {

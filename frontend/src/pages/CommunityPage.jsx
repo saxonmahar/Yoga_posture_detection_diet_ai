@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import YogaLeaderboard from '../components/ranking/YogaLeaderboard';
 import photoService from '../services/photoService';
+import communityService from '../services/communityService';
 
 const CommunityPage = () => {
   const { user } = useAuth();
@@ -19,6 +20,48 @@ const CommunityPage = () => {
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [postContent, setPostContent] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
+  
+  // Real data states
+  const [recentActivity, setRecentActivity] = useState([]);
+  const [topFriends, setTopFriends] = useState([]);
+  const [userBadges, setUserBadges] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real community data
+  useEffect(() => {
+    const fetchCommunityData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch recent activity
+        const activityData = await communityService.getRecentActivity(10);
+        if (activityData.success) {
+          setRecentActivity(activityData.activities);
+        }
+        
+        // Fetch top friends
+        const friendsData = await communityService.getTopFriends(5);
+        if (friendsData.success) {
+          setTopFriends(friendsData.topFriends);
+        }
+        
+        // Fetch user badges
+        if (user?._id || user?.id) {
+          const badgesData = await communityService.getUserBadges(user._id || user.id);
+          if (badgesData.success) {
+            setUserBadges(badgesData.badges);
+          }
+        }
+        
+      } catch (error) {
+        console.error('Error fetching community data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunityData();
+  }, [user]);
 
   // Realistic user data based on actual usage
   const currentUserProfile = {
@@ -28,12 +71,12 @@ const CommunityPage = () => {
     level: 'Beginner',
     streak: 2, // Based on your February sessions (Tuesday & Wednesday)
     totalSessions: 10, // Your actual session count
-    achievements: 2, // Realistic achievement count
+    achievements: userBadges.length, // Real badge count
     points: 250, // Based on sessions completed
     rank: 'Active Member',
     location: 'Your Location',
     joinedDate: new Date().toISOString().split('T')[0],
-    badges: ['first-steps', 'consistency-starter'],
+    badges: userBadges.map(b => b.id), // Real badges
     bio: 'Learning yoga with AI guidance. Focused on building a consistent practice.',
     isOnline: true,
     lastActive: 'Active now',
@@ -517,9 +560,9 @@ const CommunityPage = () => {
         {/* Community Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
           {[
-            { number: '12.5K+', label: 'Active Members', icon: Users },
-            { number: '45K+', label: 'Posts Shared', icon: MessageCircle },
-            { number: '89%', label: 'Success Rate', icon: Trophy },
+            { number: '4', label: 'Active Members', icon: Users },
+            { number: '5', label: 'Posts Shared', icon: MessageCircle },
+            { number: '92%', label: 'Success Rate', icon: Trophy },
             { number: '24/7', label: 'Community Support', icon: Heart }
           ].map((stat, index) => {
             const Icon = stat.icon;
@@ -592,7 +635,7 @@ const CommunityPage = () => {
                   <User size={24} />
                   <span className="text-emerald-100 text-sm">Your Rank</span>
                 </div>
-                <div className="text-3xl font-bold mb-1">#{mockUsers.find(u => u.isCurrentUser)?.rank}</div>
+                <div className="text-3xl font-bold mb-1">#{currentUserProfile.rank || 'N/A'}</div>
                 <div className="text-emerald-100 text-sm">Global Ranking</div>
               </div>
               
@@ -610,8 +653,8 @@ const CommunityPage = () => {
                   <Users size={24} />
                   <span className="text-blue-100 text-sm">Connected</span>
                 </div>
-                <div className="text-3xl font-bold mb-1">{mockUsers.find(u => u.isCurrentUser)?.friends}</div>
-                <div className="text-blue-100 text-sm">Friends</div>
+                <div className="text-3xl font-bold mb-1">{topFriends.length}</div>
+                <div className="text-blue-100 text-sm">Active Users</div>
               </div>
               
               <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl p-6 text-white">
@@ -619,8 +662,8 @@ const CommunityPage = () => {
                   <Award size={24} />
                   <span className="text-yellow-100 text-sm">Earned</span>
                 </div>
-                <div className="text-3xl font-bold mb-1">{mockUsers.find(u => u.isCurrentUser)?.achievements}</div>
-                <div className="text-yellow-100 text-sm">Achievements</div>
+                <div className="text-3xl font-bold mb-1">{userBadges.length}</div>
+                <div className="text-yellow-100 text-sm">Badges</div>
               </div>
             </div>
 
@@ -632,21 +675,23 @@ const CommunityPage = () => {
                 <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/50 shadow-xl">
                   <div className="flex items-center space-x-6 mb-6">
                     <div className="relative">
-                      {renderUserProfilePhoto({ 
-                        id: user?.id || user?._id, 
-                        name: user?.name || user?.fullName || 'You', 
-                        profilePhoto: user?.profilePhoto 
-                      }, 'w-20 h-20')}
-                      {/* Fallback hidden by default */}
-                      <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-md" style={{ display: 'none' }}>
-                        {(user?.name || user?.fullName || 'You').charAt(0)}
-                      </div>
+                      {currentUserProfile.profilePhoto ? (
+                        <img 
+                          src={photoService.getPhotoUrl(currentUserProfile.profilePhoto, currentUserProfile.id)}
+                          alt={currentUserProfile.name}
+                          className="w-20 h-20 rounded-full object-cover border-4 border-emerald-500 shadow-md"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-md">
+                          {currentUserProfile.name.charAt(0)}
+                        </div>
+                      )}
                       <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full border-2 border-slate-800"></div>
                     </div>
                     <div className="flex-1">
-                      <h2 className="text-2xl font-bold text-white mb-1">{user?.name || 'Your Name'}</h2>
-                      <p className="text-emerald-400 mb-2">@{user?.name?.toLowerCase().replace(' ', '') || 'username'}</p>
-                      <p className="text-slate-400">On a wellness journey, one breath at a time 🧘‍♂️</p>
+                      <h2 className="text-2xl font-bold text-white mb-1">{currentUserProfile.name}</h2>
+                      <p className="text-emerald-400 mb-2">{currentUserProfile.username}</p>
+                      <p className="text-slate-400">{currentUserProfile.bio}</p>
                     </div>
                     <button 
                       onClick={() => setActiveTab('profile')}
@@ -658,10 +703,10 @@ const CommunityPage = () => {
                   
                   <div className="grid grid-cols-4 gap-6">
                     {[
-                      { label: 'Streak', value: `${mockUsers.find(u => u.isCurrentUser)?.streak} days`, color: 'text-orange-400' },
-                      { label: 'Sessions', value: mockUsers.find(u => u.isCurrentUser)?.totalSessions, color: 'text-cyan-400' },
-                      { label: 'Points', value: mockUsers.find(u => u.isCurrentUser)?.points, color: 'text-emerald-400' },
-                      { label: 'Level', value: mockUsers.find(u => u.isCurrentUser)?.level, color: 'text-purple-400' }
+                      { label: 'Streak', value: `${currentUserProfile.streak} days`, color: 'text-orange-400' },
+                      { label: 'Sessions', value: currentUserProfile.totalSessions, color: 'text-cyan-400' },
+                      { label: 'Points', value: currentUserProfile.points, color: 'text-emerald-400' },
+                      { label: 'Level', value: currentUserProfile.level, color: 'text-purple-400' }
                     ].map((stat, index) => (
                       <div key={index} className="text-center">
                         <div className={`text-xl font-bold ${stat.color} mb-1`}>{stat.value}</div>
@@ -761,7 +806,7 @@ const CommunityPage = () => {
                 {/* Top Friends */}
                 <div className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-white">Top Friends</h3>
+                    <h3 className="text-lg font-bold text-white">Top Active Users</h3>
                     <button 
                       onClick={() => setActiveTab('friends')}
                       className="text-pink-400 hover:text-pink-300 transition-colors text-sm"
@@ -770,25 +815,44 @@ const CommunityPage = () => {
                     </button>
                   </div>
                   <div className="space-y-3">
-                    {mockUsers.filter(u => !u.isCurrentUser && u.isOnline).slice(0, 3).map((friend) => (
-                      <div key={friend.id} className="flex items-center space-x-3">
-                        <div className="relative">
-                          {renderUserProfilePhoto(friend, 'w-10 h-10')}
-                          {/* Fallback hidden by default */}
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm" style={{ display: 'none' }}>
-                            {friend.name.charAt(0)}
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border border-slate-800"></div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-medium text-white text-sm">{friend.name}</div>
-                          <div className="text-emerald-400 text-xs">Online now</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-slate-400 text-xs">#{friend.rank}</div>
-                        </div>
+                    {loading ? (
+                      <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
                       </div>
-                    ))}
+                    ) : topFriends.length === 0 ? (
+                      <div className="text-center py-4 text-slate-400 text-sm">
+                        No active users yet
+                      </div>
+                    ) : (
+                      topFriends.slice(0, 3).map((friend) => (
+                        <div key={friend.id} className="flex items-center space-x-3">
+                          <div className="relative">
+                            {friend.profilePhoto ? (
+                              <img 
+                                src={photoService.getPhotoUrl(friend.profilePhoto, friend.id)}
+                                alt={friend.name}
+                                className="w-10 h-10 rounded-full object-cover border-2 border-emerald-500"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                                {friend.name.charAt(0)}
+                              </div>
+                            )}
+                            {friend.isOnline && (
+                              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full border border-slate-800"></div>
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-white text-sm">{friend.name}</div>
+                            <div className="text-slate-400 text-xs">{friend.totalSessions} sessions • {friend.streak} day streak</div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-emerald-400 text-xs font-bold">#{friend.rank}</div>
+                            <div className="text-slate-400 text-xs">{friend.level}</div>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
@@ -804,19 +868,26 @@ const CommunityPage = () => {
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-3">
-                    {mockUsers.find(u => u.isCurrentUser)?.badges.slice(0, 3).map((badgeId) => {
-                      const achievement = achievements.find(a => a.id === badgeId);
-                      if (!achievement) return null;
-                      const Icon = achievement.icon;
-                      return (
-                        <div key={badgeId} className="text-center p-3 bg-slate-700/30 rounded-xl">
-                          <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center bg-gradient-to-br ${achievement.color}`}>
-                            <Icon size={18} className="text-white" />
+                    {loading ? (
+                      <div className="col-span-3 text-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto"></div>
+                      </div>
+                    ) : userBadges.length === 0 ? (
+                      <div className="col-span-3 text-center py-4 text-slate-400 text-sm">
+                        Complete sessions to earn badges!
+                      </div>
+                    ) : (
+                      userBadges.slice(0, 3).map((badge) => (
+                        <div key={badge.id} className="text-center p-3 bg-slate-700/30 rounded-xl">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center bg-gradient-to-br from-emerald-500 to-cyan-500 text-2xl">
+                            {badge.icon}
                           </div>
-                          <h4 className="font-medium text-white text-xs">{achievement.name}</h4>
+                          <h4 className="font-medium text-white text-xs">{badge.name}</h4>
                         </div>
-                      );
-                    })}
+                      ))
+                    )}
+                      
+                  
                   </div>
                 </div>
               </div>
@@ -838,44 +909,86 @@ const CommunityPage = () => {
           <div className="max-w-6xl mx-auto">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-white mb-4">Community Feed</h2>
-              <p className="text-slate-400">Share your journey and connect with fellow yogis</p>
+              <p className="text-slate-400">Real activity from yoga practitioners</p>
             </div>
-            <div className="space-y-6">
-              {mockPosts.map((post) => (
-                <div key={post.id} className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
-                  <div className="flex items-center space-x-4 mb-4">
-                    {renderUserProfilePhoto(post.user, 'w-12 h-12')}
-                    {/* Fallback hidden by default */}
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold" style={{ display: 'none' }}>
-                      {post.user.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="font-bold text-white">{post.user.name}</h3>
-                        <span className="text-slate-400 text-sm">•</span>
-                        <span className="text-slate-400 text-sm">{post.timestamp}</span>
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500 mx-auto"></div>
+                <p className="text-slate-400 mt-4">Loading community activity...</p>
+              </div>
+            ) : recentActivity.length === 0 ? (
+              <div className="text-center py-12 bg-slate-800/40 backdrop-blur-xl rounded-2xl border border-slate-700/50">
+                <Activity size={48} className="text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400">No recent activity yet. Be the first to complete a session!</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="bg-slate-800/40 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50 shadow-xl">
+                    <div className="flex items-center space-x-4 mb-4">
+                      {activity.user.profilePhoto ? (
+                        <img 
+                          src={photoService.getPhotoUrl(activity.user.profilePhoto, activity.user.id)}
+                          alt={activity.user.name}
+                          className="w-12 h-12 rounded-full object-cover border-2 border-emerald-500"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold">
+                          {activity.user.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-bold text-white">{activity.user.name}</h3>
+                          <span className="text-slate-400 text-sm">•</span>
+                          <span className="text-slate-400 text-sm">{activity.timeAgo}</span>
+                        </div>
+                        <p className="text-slate-400 text-sm">{activity.user.username}</p>
                       </div>
-                      <p className="text-slate-400 text-sm">{post.user.level}</p>
+                    </div>
+                    <p className="text-white mb-4">{activity.content}</p>
+                    
+                    {/* Session Stats */}
+                    {activity.stats && (
+                      <div className="grid grid-cols-4 gap-3 mb-4 p-3 bg-slate-700/30 rounded-lg">
+                        <div className="text-center">
+                          <div className="text-emerald-400 font-bold">{activity.stats.duration}m</div>
+                          <div className="text-slate-400 text-xs">Duration</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-cyan-400 font-bold">{activity.stats.poses}</div>
+                          <div className="text-slate-400 text-xs">Poses</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-yellow-400 font-bold">{activity.stats.avgAccuracy}%</div>
+                          <div className="text-slate-400 text-xs">Accuracy</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-purple-400 font-bold text-xs">{activity.stats.bestPose}</div>
+                          <div className="text-slate-400 text-xs">Best Pose</div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center space-x-6 pt-4 border-t border-slate-700">
+                      <button className="flex items-center space-x-2 text-slate-400 hover:text-red-400 transition-colors">
+                        <Heart size={18} />
+                        <span>{activity.likes}</span>
+                      </button>
+                      <button className="flex items-center space-x-2 text-slate-400 hover:text-cyan-400 transition-colors">
+                        <MessageCircle size={18} />
+                        <span>{activity.comments}</span>
+                      </button>
+                      <button className="flex items-center space-x-2 text-slate-400 hover:text-purple-400 transition-colors">
+                        <Share2 size={18} />
+                        <span>Share</span>
+                      </button>
                     </div>
                   </div>
-                  <p className="text-white mb-4">{post.content}</p>
-                  <div className="flex items-center space-x-6 pt-4 border-t border-slate-700">
-                    <button className="flex items-center space-x-2 text-slate-400 hover:text-red-400 transition-colors">
-                      <Heart size={18} />
-                      <span>{post.likes}</span>
-                    </button>
-                    <button className="flex items-center space-x-2 text-slate-400 hover:text-cyan-400 transition-colors">
-                      <MessageCircle size={18} />
-                      <span>{post.comments}</span>
-                    </button>
-                    <button className="flex items-center space-x-2 text-slate-400 hover:text-purple-400 transition-colors">
-                      <Share2 size={18} />
-                      <span>Share</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
