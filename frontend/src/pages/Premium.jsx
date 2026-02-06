@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Check, 
   Star, 
@@ -17,6 +17,8 @@ import {
 function Premium({ onNavigate, user }) {
   const [selectedPlan, setSelectedPlan] = useState('yearly')
   const [isProcessing, setIsProcessing] = useState(false)
+
+  // No script loading needed for eSewa - it uses form submission
 
   const plans = [
     {
@@ -61,13 +63,50 @@ function Premium({ onNavigate, user }) {
     { icon: Shield, title: 'Priority Support', description: '24/7 dedicated help' },
   ]
 
-  const handleUpgrade = () => {
+  const handleUpgrade = async (planName, amount) => {
     setIsProcessing(true)
-    setTimeout(() => {
-      alert('Thank you for upgrading! You now have Premium access.')
-      setIsProcessing(false)
-      onNavigate('dashboard')
-    }, 2000)
+    
+    try {
+      // Call backend to generate signature
+      const response = await fetch('http://localhost:5001/api/payment/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount,
+          planName
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Create form with signed data from backend
+        const form = document.createElement("form");
+        form.setAttribute("method", "POST");
+        form.setAttribute("action", data.esewaUrl);
+
+        // Add all payment parameters
+        for (const key in data.paymentData) {
+          const hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", key);
+          hiddenField.setAttribute("value", data.paymentData[key]);
+          form.appendChild(hiddenField);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        alert('Payment initiation failed. Please try again.');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment initiation failed. Please try again.');
+      setIsProcessing(false);
+    }
   }
 
   return (
@@ -170,19 +209,22 @@ function Premium({ onNavigate, user }) {
                 </button>
               ) : (
                 <button
-                  onClick={handleUpgrade}
+                  onClick={() => handleUpgrade(selectedPlan, selectedPlan === 'yearly' ? 6000 : 800)}
                   disabled={isProcessing}
                   className="w-full py-4 bg-gradient-to-r from-premium to-orange-500 hover:from-premium/90 hover:to-orange-600 rounded-xl font-bold transition-all shadow-lg shadow-premium/20 hover:shadow-premium/40 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isProcessing ? (
                     <>
                       <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-3"></div>
-                      Processing...
+                      Opening Khalti...
                     </>
                   ) : user?.isPremium ? (
                     'You are Premium!'
                   ) : (
-                    'Upgrade to Premium'
+                    <>
+                      Pay with eSewa
+                      <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-6 ml-2 bg-white px-2 rounded" />
+                    </>
                   )}
                 </button>
               )}

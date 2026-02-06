@@ -57,6 +57,7 @@ try {
     app.use("/api/password", forgotPasswordRoutes);
     app.use("/api/ranking", require('./routes/rankingRoutes'));
     app.use("/api/community", communityRoutes);
+    app.use("/api/payment", require('./routes/paymentRoutes'));
     
     console.log('✅ All routes registered successfully');
 } catch (error) {

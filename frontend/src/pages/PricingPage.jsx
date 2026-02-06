@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Check, 
   Star, 
@@ -29,11 +29,61 @@ import { useNavigate } from 'react-router-dom';
 
 function PricingPage({ user }) {
   const navigate = useNavigate();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // No script loading needed for eSewa - it uses form submission
 
   // helper function to navigate and scroll to top
   const goTo = (path) => {
     navigate(path);
     window.scrollTo(0, 0);
+  };
+
+  // eSewa payment handler - Using backend to generate signature
+  const handlePayment = async (planName, amount) => {
+    setIsProcessing(true)
+    
+    try {
+      // Call backend to generate signature
+      const response = await fetch('http://localhost:5001/api/payment/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount,
+          planName
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Create form with signed data from backend
+        const form = document.createElement("form");
+        form.setAttribute("method", "POST");
+        form.setAttribute("action", data.esewaUrl);
+
+        // Add all payment parameters
+        for (const key in data.paymentData) {
+          const hiddenField = document.createElement("input");
+          hiddenField.setAttribute("type", "hidden");
+          hiddenField.setAttribute("name", key);
+          hiddenField.setAttribute("value", data.paymentData[key]);
+          form.appendChild(hiddenField);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+      } else {
+        alert('Payment initiation failed. Please try again.');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('Payment error:', error);
+      alert('Payment initiation failed. Please try again.');
+      setIsProcessing(false);
+    }
   };
 
   const plans = [
@@ -340,26 +390,42 @@ function PricingPage({ user }) {
                       {/* CTA Button */}
                       <button
                         onClick={() => {
-                          if (plan.name === 'Starter' && !user) {
-                            goTo('/register');
-                          } else if (plan.name === 'Premium' && !user?.isPremium) {
-                            goTo('/premium');
-                          } else if (plan.name === 'Enterprise') {
-                            goTo('/contact');
+                          if (plan.name === 'Demo Version') {
+                            if (!user) {
+                              goTo('/register');
+                            } else {
+                              goTo('/dashboard');
+                            }
+                          } else if (plan.name === 'Student Plan') {
+                            handlePayment('Student Plan', 500);
+                          } else if (plan.name === 'Professional Plan') {
+                            handlePayment('Professional Plan', 2000);
                           }
                         }}
-                        disabled={plan.buttonDisabled}
+                        disabled={plan.buttonDisabled || isProcessing}
                         className={`w-full py-4 rounded-xl font-semibold transition-all flex items-center justify-center group ${
                           plan.popular
                             ? 'bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-600 hover:to-cyan-600 text-white shadow-lg shadow-emerald-500/20'
-                            : plan.name === 'Starter'
+                            : plan.name === 'Demo Version'
                             ? 'bg-slate-700/50 hover:bg-slate-700 text-white border border-slate-600/50'
                             : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/20'
-                        } ${plan.buttonDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        } ${plan.buttonDisabled || isProcessing ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
-                        {plan.buttonText}
-                        {!plan.buttonDisabled && (
-                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                        {isProcessing ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                            Redirecting to eSewa...
+                          </>
+                        ) : (
+                          <>
+                            {plan.name !== 'Demo Version' && (
+                              <img src="https://esewa.com.np/common/images/esewa_logo.png" alt="eSewa" className="h-6 mr-2 bg-white px-2 rounded" />
+                            )}
+                            {plan.buttonText}
+                            {!plan.buttonDisabled && (
+                              <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                            )}
+                          </>
                         )}
                       </button>
                     </div>

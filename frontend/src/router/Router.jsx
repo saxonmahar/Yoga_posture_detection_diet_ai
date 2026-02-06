@@ -36,6 +36,8 @@ import SchedulePage from "../pages/SchedulePage";
 import EmailVerification from "../pages/EmailVerification";
 import SecurityConfirmation from "../pages/SecurityConfirmation";
 import ForgotPassword from "../pages/ForgotPassword";
+import PaymentSuccess from "../pages/PaymentSuccess";
+import PaymentFailure from "../pages/PaymentFailure";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -136,6 +138,8 @@ export default function Router() {
     ["/blog", <BlogPage />],
     ["/press", <PressPage />],
     ["/contact", <ContactPage />],
+    ["/payment-success", <PaymentSuccess />],
+    ["/payment-failure", <PaymentFailure />],
   ];
 
   const protectedRoutes = [
