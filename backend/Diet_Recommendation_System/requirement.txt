@@ -5,4 +5,3 @@ seaborn
 matplotlib
 flask
 flask-cors
-gunicorn==21.2.0
