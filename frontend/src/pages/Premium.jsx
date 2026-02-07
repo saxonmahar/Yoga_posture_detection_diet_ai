@@ -13,8 +13,12 @@ import {
   TrendingUp,
   Target
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-function Premium({ onNavigate, user }) {
+function Premium({ onNavigate }) {
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [selectedPlan, setSelectedPlan] = useState('yearly')
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -64,6 +68,15 @@ function Premium({ onNavigate, user }) {
   ]
 
   const handleUpgrade = async (planName, amount) => {
+    // Check if user is logged in
+    if (!user) {
+      // Store the current page to return after login
+      localStorage.setItem('redirectAfterLogin', '/premium');
+      // Redirect to login
+      navigate('/login');
+      return;
+    }
+
     setIsProcessing(true)
     
     try {

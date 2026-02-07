@@ -80,7 +80,15 @@ export default function Login() {
       });
 
       alert("Login successful!");
-      navigate("/dashboard");
+      
+      // Check if there's a redirect URL stored
+      const redirectUrl = localStorage.getItem('redirectAfterLogin');
+      if (redirectUrl) {
+        localStorage.removeItem('redirectAfterLogin');
+        navigate(redirectUrl);
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       let message = "Invalid email or password. Please try again.";
 
@@ -143,7 +151,15 @@ export default function Login() {
         });
 
         alert("Demo login successful!");
-        navigate("/dashboard"); // ✅ FIXED
+        
+        // Check if there's a redirect URL stored
+        const redirectUrl = localStorage.getItem('redirectAfterLogin');
+        if (redirectUrl) {
+          localStorage.removeItem('redirectAfterLogin');
+          navigate(redirectUrl);
+        } else {
+          navigate("/dashboard");
+        }
       } catch {
         alert("Demo login failed. Please create an account.");
         setLoading(false);

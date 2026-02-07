@@ -26,9 +26,11 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-function PricingPage({ user }) {
+function PricingPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
 
   // No script loading needed for eSewa - it uses form submission
@@ -41,6 +43,15 @@ function PricingPage({ user }) {
 
   // eSewa payment handler - Using backend to generate signature
   const handlePayment = async (planName, amount) => {
+    // Check if user is logged in
+    if (!user) {
+      // Store the current page to return after login
+      localStorage.setItem('redirectAfterLogin', '/pricing');
+      // Redirect to login
+      navigate('/login');
+      return;
+    }
+
     setIsProcessing(true)
     
     try {
