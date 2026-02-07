@@ -5,10 +5,6 @@ services:
     env: static
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: frontend/dist
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
 
   # Backend - Node.js API
   - type: web
@@ -18,47 +14,33 @@ services:
     startCommand: cd backend && node index.js
     envVars:
       - key: PORT
-        value: 5001
+        value: 10000
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      - key: ML_API_URL
-        fromService:
-          type: web
-          name: yoga-ml-pose
-          property: host
-      - key: DIET_API_URL
-        fromService:
-          type: web
-          name: yoga-diet
-          property: host
 
   # ML Pose Detection - Python Flask
   - type: web
     name: yoga-ml-pose
     env: python
     buildCommand: cd backend/Ml && pip install -r requirements.txt
-    startCommand: cd backend/Ml && python app.py
+    startCommand: cd backend/Ml && gunicorn -b 0.0.0.0:$PORT app:app
     envVars:
       - key: PORT
-        value: 5000
-      - key: FLASK_ENV
-        value: production
+        value: 10000
 
   # Diet Recommendation - Python Flask
   - type: web
     name: yoga-diet
     env: python
     buildCommand: cd backend/Diet_Recommendation_System && pip install -r requirement.txt
-    startCommand: cd backend/Diet_Recommendation_System && python app.py
+    startCommand: cd backend/Diet_Recommendation_System && gunicorn -b 0.0.0.0:$PORT app:app
     envVars:
       - key: PORT
-        value: 5002
-      - key: FLASK_ENV
-        value: production
+        value: 10000
 
   # Photo Upload Server - Node.js
   - type: web
@@ -68,6 +50,6 @@ services:
     startCommand: cd backend && node photo-server.js
     envVars:
       - key: PORT
-        value: 5010
+        value: 10000
       - key: MONGODB_URI
         sync: false
