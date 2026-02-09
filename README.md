@@ -14,6 +14,13 @@ YogaAI is an advanced wellness platform that leverages cutting-edge computer vis
 
 ## ✨ Key Features
 
+### 🤖 AI Chatbot Assistant (NEW!)
+- **Gemini-Powered**: Google's Gemini Pro AI for intelligent conversations
+- **24/7 Guidance**: Instant help with yoga poses, nutrition, and wellness
+- **Context-Aware**: Understands your current page and practice history
+- **Personalized**: Tailored advice based on your progress and goals
+- **Chat History**: Saves conversations for future reference
+
 ### 🎯 AI-Powered Pose Detection
 - **Real-time Analysis**: MediaPipe-powered pose detection with 90%+ accuracy
 - **6 Yoga Poses**: Warrior II, T Pose, Tree Pose, Goddess Pose, Downward Dog, Plank

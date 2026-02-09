@@ -463,26 +463,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      
-      {/* Floating Action Button */}
-      <div className="fixed bottom-8 right-8 z-50">
-        <button
-          onClick={() => handleFeatureClick('/pose-detection')}
-          className="group relative w-16 h-16 bg-gradient-to-r from-green-500 to-cyan-500 hover:from-green-600 hover:to-cyan-600 rounded-full shadow-2xl shadow-green-500/30 hover:shadow-green-500/50 transition-all duration-300 hover:scale-110 flex items-center justify-center"
-        >
-          <Camera className="w-8 h-8 text-white group-hover:animate-pulse" />
-          
-          {/* Pulse rings */}
-          <div className="absolute inset-0 rounded-full border-2 border-green-400 animate-ping opacity-75"></div>
-          <div className="absolute inset-0 rounded-full border-2 border-green-300 animate-ping opacity-50" style={{animationDelay: '0.5s'}}></div>
-          
-          {/* Tooltip */}
-          <div className="absolute right-full mr-4 px-3 py-2 bg-slate-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap border border-slate-700 shadow-xl">
-            Start AI Pose Detection
-            <div className="absolute top-1/2 -right-1 w-2 h-2 bg-slate-800 border-r border-b border-slate-700 transform rotate-45 -translate-y-1/2"></div>
-          </div>
-        </button>
-      </div>
     </div>
   );
 }

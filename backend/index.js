@@ -59,6 +59,7 @@ try {
     app.use("/api/community", communityRoutes);
     app.use("/api/payment", require('./routes/paymentRoutes'));
     app.use("/api/admin", require('./routes/adminRoutes'));
+    app.use("/api/chat", require('./routes/chatRoutes'));
     
     console.log('✅ All routes registered successfully');
 } catch (error) {

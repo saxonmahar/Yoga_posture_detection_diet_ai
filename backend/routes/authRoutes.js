@@ -9,7 +9,6 @@ const loginController = require('../controllers/loginController')
 
 const { getMeController, logoutController } = require('../controllers/authController')
 const { verifyToken } = require('../middleware/authMiddleware')
-const adminLoginController = require('../controllers/adminLoginController')
 
 authRouter.post('/register', registerValidation, registerController)
 authRouter.post('/login', loginValidation, loginController)

@@ -1,4 +1,25 @@
-# 🎯 How Admin System Works - Visual Guide
+# 🎯 Complete Admin System Guide
+
+## 📌 Admin Credentials
+
+**Admin Email:** `sanjaymahar2058@gmail.com`  
+**Admin Password:** `1234567890`  
+**Admin Role:** `admin`
+
+> ⚠️ **Important**: Only ONE admin account exists in the database. When selling the product, new owner should run `node change-admin.js` to update credentials.
+
+## 🔑 Admin Management Scripts
+
+Located in `backend/` directory:
+
+- **setup-your-admin.js** - Initial admin setup (first time)
+- **change-admin.js** - Change admin credentials (when selling product)
+- **make-admin.js** - Promote existing user to admin
+- **set-admin-password.js** - Reset admin password
+- **list-users.js** - List all users in database
+- **reset-user-password.js** - Reset any user's password
+
+## 🎯 How Admin System Works - Visual Guide
 
 ## 📋 The Flow
 
@@ -275,6 +296,53 @@ If logged in as admin: Shows admin panel ✅
 5. Watch the magic! 🎉
 
 You should be automatically redirected to the admin panel!
+
+---
+
+## 📊 Admin Dashboard Features
+
+### Main Dashboard (`/admin`)
+- **System Overview**: Total users, active users, sessions, revenue, premium users
+- **Server Status**: Real-time monitoring of Backend, ML, Diet, Photo services, and Database
+- **Recent Activity**: Latest user sessions and logins
+- **Auto-refresh**: Updates every 30 seconds
+
+### User Management (`/admin/users`)
+- View all users in table format
+- Search by name or email
+- Filter: All / Premium / Regular users
+- Pagination support
+- Edit/Delete user actions
+- Shows last login time
+
+### Analytics Dashboard (`/admin/analytics`)
+- User growth chart (last 7 days)
+- Session completion chart (last 7 days)
+- Visual progress bars
+- Summary statistics
+
+### System Settings (`/admin/settings`)
+- General settings (site name, maintenance mode)
+- Feature toggles (registration, premium, payments)
+- Notification settings (email, push)
+- Advanced settings (session timeout, max users)
+
+### System Logs (`/admin/logs`)
+- View system logs with filtering
+- Filter by type: Error / Warning / Success / Info
+- Refresh and export functionality
+- Real-time log monitoring
+
+## 🔐 Login Tracking System
+
+Every user login is automatically tracked with:
+- User information (name, email, avatar)
+- Login timestamp
+- IP address
+- Browser and OS information
+- Device type
+
+View recent logins in the "Recent User Logins" section on the main admin dashboard.
 
 ---
 
