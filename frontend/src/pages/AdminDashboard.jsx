@@ -72,17 +72,16 @@ export default function AdminDashboard() {
   const handleQuickAction = (action) => {
     switch(action) {
       case 'users':
-        // Create a users management page
-        alert('User Management: Coming soon!\nThis will show all users with edit/delete options.');
+        navigate('/admin/users');
         break;
       case 'analytics':
-        alert('Analytics: Coming soon!\nThis will show detailed charts and graphs.');
+        navigate('/admin/analytics');
         break;
       case 'settings':
-        alert('System Settings: Coming soon!\nThis will allow you to configure system settings.');
+        navigate('/admin/settings');
         break;
       case 'logs':
-        alert('System Logs: Coming soon!\nThis will show system logs and error reports.');
+        navigate('/admin/logs');
         break;
       default:
         break;

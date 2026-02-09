@@ -41,6 +41,10 @@ import PaymentFailure from "../pages/PaymentFailure";
 import PremiumDashboard from "../pages/PremiumDashboard";
 import AdminDashboard from "../pages/AdminDashboard";
 import AdminLogin from "../pages/AdminLogin";
+import AdminUsers from "../pages/AdminUsers";
+import AdminAnalytics from "../pages/AdminAnalytics";
+import AdminSettings from "../pages/AdminSettings";
+import AdminLogs from "../pages/AdminLogs";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -185,6 +189,10 @@ export default function Router() {
 
   const adminRoutes = [
     ["/admin/dashboard", <AdminDashboard />],
+    ["/admin/users", <AdminUsers />],
+    ["/admin/analytics", <AdminAnalytics />],
+    ["/admin/settings", <AdminSettings />],
+    ["/admin/logs", <AdminLogs />],
   ];
 
   const sessionAwareRoutes = [
