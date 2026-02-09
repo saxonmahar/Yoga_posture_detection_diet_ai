@@ -58,6 +58,7 @@ try {
     app.use("/api/ranking", require('./routes/rankingRoutes'));
     app.use("/api/community", communityRoutes);
     app.use("/api/payment", require('./routes/paymentRoutes'));
+    app.use("/api/admin", require('./routes/adminRoutes'));
     
     console.log('✅ All routes registered successfully');
 } catch (error) {

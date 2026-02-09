@@ -39,6 +39,8 @@ import ForgotPassword from "../pages/ForgotPassword";
 import PaymentSuccess from "../pages/PaymentSuccess";
 import PaymentFailure from "../pages/PaymentFailure";
 import PremiumDashboard from "../pages/PremiumDashboard";
+import AdminDashboard from "../pages/AdminDashboard";
+import AdminLogin from "../pages/AdminLogin";
 
 // Layout wrapper
 const Layout = ({ children, footer = true }) => {
@@ -49,6 +51,30 @@ const Layout = ({ children, footer = true }) => {
       {footer && <Footer />}
     </div>
   );
+};
+
+// Admin route (requires admin role)
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Check if user has admin role
+  if (user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return children;
 };
 
 // Session-aware route (allows access with session data even without login)
@@ -157,6 +183,10 @@ export default function Router() {
     ["/schedule", <SchedulePage />],
   ];
 
+  const adminRoutes = [
+    ["/admin/dashboard", <AdminDashboard />],
+  ];
+
   const sessionAwareRoutes = [
     // Remove diet-plan and progress from here - they should be protected
   ];
@@ -223,6 +253,25 @@ export default function Router() {
             <ProtectedRoute>
               {withLayout(page, false)}
             </ProtectedRoute>
+          }
+        />
+      ))}
+
+      {/* Admin Login - No layout */}
+      <Route
+        path="/admin"
+        element={<AdminLogin />}
+      />
+
+      {/* Admin Dashboard - No layout */}
+      {adminRoutes.map(([path, page]) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            <AdminRoute>
+              {page}
+            </AdminRoute>
           }
         />
       ))}

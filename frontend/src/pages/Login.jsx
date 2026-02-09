@@ -74,14 +74,15 @@ export default function Login() {
         alert("Email verified successfully!");
       }
 
-      await login({
+      const response = await login({
         email: form.email,
         password: form.password
       });
 
       alert("Login successful!");
       
-      // Check if there's a redirect URL stored
+      // Regular users go to dashboard
+      // Admins should use /admin login page
       const redirectUrl = localStorage.getItem('redirectAfterLogin');
       if (redirectUrl) {
         localStorage.removeItem('redirectAfterLogin');
@@ -145,14 +146,14 @@ export default function Login() {
     setTimeout(async () => {
       setLoading(true);
       try {
-        await login({
+        const response = await login({
           email: "demo@yogaai.com",
           password: "demo123"
         });
 
         alert("Demo login successful!");
         
-        // Check if there's a redirect URL stored
+        // Demo users go to dashboard
         const redirectUrl = localStorage.getItem('redirectAfterLogin');
         if (redirectUrl) {
           localStorage.removeItem('redirectAfterLogin');

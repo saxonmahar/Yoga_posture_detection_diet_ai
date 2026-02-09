@@ -9,9 +9,14 @@ const loginController = require('../controllers/loginController')
 
 const { getMeController, logoutController } = require('../controllers/authController')
 const { verifyToken } = require('../middleware/authMiddleware')
+const adminLoginController = require('../controllers/adminLoginController')
 
 authRouter.post('/register', registerValidation, registerController)
 authRouter.post('/login', loginValidation, loginController)
+authRouter.post('/admin-login', (req, res) => {
+  console.log('🔐 Admin login route hit!');
+  res.json({ success: true, message: 'Test route works!' });
+}) // Test route
 authRouter.get('/me', verifyToken, getMeController)
 authRouter.post('/logout', logoutController)
 

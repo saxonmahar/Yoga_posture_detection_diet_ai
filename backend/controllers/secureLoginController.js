@@ -51,8 +51,6 @@ const getLocationInfo = async (ipAddress) => {
 
 // Enhanced login controller with security features
 const secureLoginController = async (req, res) => {
-  console.log('🔍 SECURE LOGIN CONTROLLER HIT - Email:', req.body.email);
-  
   try {
     const { email, password } = req.body;
     const ipAddress = req.ip || req.connection.remoteAddress || 'Unknown';
@@ -96,7 +94,7 @@ const secureLoginController = async (req, res) => {
       });
     }
 
-    // Find user by email
+    // Find user by email (include password and profilePhoto which are normally excluded)
     const user = await User.findOne({ email }).select("+password +profilePhoto");
 
     if (!user) {
@@ -221,6 +219,7 @@ const secureLoginController = async (req, res) => {
       weight: user.weight,
       height: user.height,
       isPremium: user.isPremium || false,
+      role: user.role || 'user', // Add role field
       level: user.fitnessLevel || 'beginner',
       bodyType: user.bodyType || 'mesomorphic',
       goal: user.goal || 'maintain',
@@ -241,7 +240,12 @@ const secureLoginController = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Login successful",
-      data: { user: userData },
+      data: { 
+        user: {
+          ...userData,
+          role: user.role || 'user' // Force role field
+        }
+      },
       security: {
         isNewDevice,
         isNewLocation,

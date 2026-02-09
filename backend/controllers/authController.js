@@ -33,6 +33,7 @@ const getMeController = async (req, res) => {
       weight: user.weight,
       height: user.height,
       isPremium: user.isPremium || false,
+      role: user.role || 'user', // Add role field
       level: user.fitnessLevel || 'beginner',
       profilePhoto: user.profilePhoto, // Add profile photo to user data
       stats: {

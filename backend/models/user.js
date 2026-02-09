@@ -96,6 +96,13 @@ const userSchema = new mongoose.Schema(
     },
     subscriptionExpiry: { type: Date },
 
+    // User role
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user"
+    },
+
     // Profile
     avatar: { type: String },
     profilePhoto: {
