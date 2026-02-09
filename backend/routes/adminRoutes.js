@@ -15,4 +15,13 @@ router.get('/stats', adminController.getAdminStats);
 // Get database status
 router.get('/db-status', adminController.getDatabaseStatus);
 
+// Get all server statuses
+router.get('/server-status', adminController.getServerStatus);
+
+// Get all users (for user management)
+router.get('/users', adminController.getAllUsers);
+
+// Get analytics data
+router.get('/analytics', adminController.getAnalytics);
+
 module.exports = router;
