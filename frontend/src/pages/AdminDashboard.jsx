@@ -14,17 +14,21 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [serverStatus, setServerStatus] = useState([]);
   const [recentActivity, setRecentActivity] = useState([]);
+  const [loginLogs, setLoginLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
-      const [statsRes, serverRes] = await Promise.all([
+      const [statsRes, serverRes, logsRes] = await Promise.all([
         fetch('http://localhost:5001/api/admin/stats', {
           credentials: 'include'
         }),
         fetch('http://localhost:5001/api/admin/server-status', {
+          credentials: 'include'
+        }),
+        fetch('http://localhost:5001/api/admin/login-logs?limit=10', {
           credentials: 'include'
         })
       ]);
@@ -42,6 +46,14 @@ export default function AdminDashboard() {
           serverData.database
         ];
         setServerStatus(allServers);
+      }
+
+      if (logsRes.ok) {
+        const logsData = await logsRes.json();
+        console.log('📊 Login logs received:', logsData);
+        setLoginLogs(logsData.logs || []);
+      } else {
+        console.error('❌ Failed to fetch login logs:', logsRes.status);
       }
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
@@ -336,6 +348,55 @@ export default function AdminDashboard() {
             <div className="text-center py-12">
               <Activity size={48} className="text-slate-600 mx-auto mb-4" />
               <p className="text-slate-500">No recent activity</p>
+            </div>
+          )}
+        </div>
+
+        {/* Recent Login Logs */}
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/50">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Users className="text-blue-400" size={24} />
+              <h2 className="text-xl font-bold text-white">Recent User Logins</h2>
+              <span className="text-slate-500 text-sm">({loginLogs.length})</span>
+            </div>
+            <button
+              onClick={() => navigate('/admin/users')}
+              className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors"
+            >
+              View All Users →
+            </button>
+          </div>
+          
+          {loginLogs.length > 0 ? (
+            <div className="space-y-3">
+              {loginLogs.map((log, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg hover:bg-slate-700/50 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm">
+                        {log.userName?.charAt(0).toUpperCase() || 'U'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{log.userName}</p>
+                      <p className="text-slate-400 text-sm">
+                        {log.email} • {log.browser} on {log.os}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-slate-300 text-sm">{log.timeAgo}</p>
+                    <p className="text-slate-500 text-xs">{log.ipAddress}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <Users size={48} className="text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-500">No login logs yet</p>
+              <p className="text-slate-600 text-sm mt-2">Login logs will appear here when users log in</p>
             </div>
           )}
         </div>

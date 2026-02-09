@@ -24,4 +24,7 @@ router.get('/users', adminController.getAllUsers);
 // Get analytics data
 router.get('/analytics', adminController.getAnalytics);
 
+// Get recent login logs
+router.get('/login-logs', adminController.getLoginLogs);
+
 module.exports = router;

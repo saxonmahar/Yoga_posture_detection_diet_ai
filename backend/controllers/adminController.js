@@ -3,6 +3,7 @@ const User = require('../models/user');
 const YogaSession = require('../models/yogaSession');
 const PoseSession = require('../models/posesession');
 const Schedule = require('../models/schedule');
+const LoginLog = require('../models/loginLog');
 const axios = require('axios');
 
 // Get admin dashboard stats
@@ -303,6 +304,53 @@ exports.getAnalytics = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch analytics',
+      error: error.message
+    });
+  }
+};
+
+// Get recent login logs
+exports.getLoginLogs = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ 
+        success: false, 
+        message: 'Access denied. Admin only.' 
+      });
+    }
+
+    const limit = parseInt(req.query.limit) || 20;
+
+    const logs = await LoginLog.find()
+      .sort({ loginTime: -1 })
+      .limit(limit)
+      .select('user email userName loginTime ipAddress deviceInfo status');
+
+    // Format logs
+    const formattedLogs = logs.map(log => ({
+      id: log._id,
+      userId: log.user,
+      email: log.email,
+      userName: log.userName,
+      loginTime: log.loginTime,
+      timeAgo: getTimeAgo(log.loginTime),
+      ipAddress: log.ipAddress,
+      device: log.deviceInfo?.device || 'Unknown',
+      browser: log.deviceInfo?.browser || 'Unknown',
+      os: log.deviceInfo?.os || 'Unknown',
+      status: log.status
+    }));
+
+    res.json({
+      success: true,
+      logs: formattedLogs
+    });
+
+  } catch (error) {
+    console.error('Login logs error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch login logs',
       error: error.message
     });
   }

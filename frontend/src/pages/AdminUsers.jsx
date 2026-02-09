@@ -198,6 +198,11 @@ export default function AdminUsers() {
                             <Calendar size={16} className="text-slate-500" />
                             {new Date(user.createdAt).toLocaleDateString()}
                           </div>
+                          {user.stats?.lastLogin && (
+                            <p className="text-slate-500 text-xs mt-1">
+                              Last login: {new Date(user.stats.lastLogin).toLocaleDateString()}
+                            </p>
+                          )}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2 text-slate-300">

@@ -1,5 +1,6 @@
 const User = require("../models/user");
 const LoginSecurity = require("../models/loginSecurity");
+const LoginLog = require("../models/loginLog");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
@@ -209,6 +210,31 @@ const secureLoginController = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/",
     });
+
+    // Log successful login to LoginLog collection
+    try {
+      await LoginLog.create({
+        user: user._id,
+        email: user.email,
+        userName: user.fullName || user.name || 'Unknown',
+        loginTime: new Date(),
+        ipAddress,
+        userAgent,
+        deviceInfo,
+        status: 'success'
+      });
+    } catch (logError) {
+      console.error('Failed to log login:', logError);
+      // Don't fail the login if logging fails
+    }
+
+    // Update user's last login time
+    try {
+      user.stats.lastLogin = new Date();
+      await user.save();
+    } catch (updateError) {
+      console.error('Failed to update last login:', updateError);
+    }
 
     // Map user data to match frontend expectations
     const userData = {
