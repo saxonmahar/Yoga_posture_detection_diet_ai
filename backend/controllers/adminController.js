@@ -8,30 +8,39 @@ const axios = require('axios');
 // Get admin dashboard stats
 exports.getAdminStats = async (req, res) => {
   try {
+    console.log('📊 Admin stats requested by:', req.user?.email, 'Role:', req.user?.role);
+    
     // Check if user is admin
     if (!req.user || req.user.role !== 'admin') {
+      console.log('❌ Access denied - not admin');
       return res.status(403).json({ 
         success: false, 
         message: 'Access denied. Admin only.' 
       });
     }
 
+    console.log('✅ Admin verified, fetching stats...');
+
     // Get total users
     const totalUsers = await User.countDocuments();
+    console.log('👥 Total users:', totalUsers);
     
     // Get active users (logged in last 24 hours)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const activeUsers = await User.countDocuments({
       'stats.lastLogin': { $gte: oneDayAgo }
     });
+    console.log('🟢 Active users (24h):', activeUsers);
 
     // Get premium users
     const premiumUsers = await User.countDocuments({
       isPremium: true
     });
+    console.log('💎 Premium users:', premiumUsers);
 
     // Get total sessions (using PoseSession)
     const totalSessions = await PoseSession.countDocuments();
+    console.log('🧘 Total sessions:', totalSessions);
 
     // Get today's sessions
     const todayStart = new Date();
@@ -39,14 +48,17 @@ exports.getAdminStats = async (req, res) => {
     const todaySessions = await PoseSession.countDocuments({
       createdAt: { $gte: todayStart }
     });
+    console.log('📅 Today sessions:', todaySessions);
 
     // Get active today (users who had sessions today)
     const activeToday = await PoseSession.distinct('userId', {
       createdAt: { $gte: todayStart }
     });
+    console.log('👤 Active today:', activeToday.length);
 
     // Calculate total revenue (from premium users)
     const totalRevenue = premiumUsers * 500; // Assuming Rs 500 per premium user
+    console.log('💰 Total revenue:', totalRevenue);
 
     // Get recent activity (last 10 sessions)
     const recentActivity = await PoseSession.find()
@@ -54,6 +66,8 @@ exports.getAdminStats = async (req, res) => {
       .limit(10)
       .populate('userId', 'fullName email')
       .select('userId sessionName avgAccuracy duration totalPoses createdAt');
+
+    console.log('📋 Recent activity count:', recentActivity.length);
 
     // Format recent activity
     const formattedActivity = recentActivity.map(session => ({
@@ -71,8 +85,9 @@ exports.getAdminStats = async (req, res) => {
     const scheduledSessions = await Schedule.countDocuments({
       date: { $gte: new Date() }
     });
+    console.log('📆 Scheduled sessions:', scheduledSessions);
 
-    res.json({
+    const responseData = {
       success: true,
       stats: {
         totalUsers,
@@ -84,10 +99,14 @@ exports.getAdminStats = async (req, res) => {
         scheduledSessions
       },
       recentActivity: formattedActivity
-    });
+    };
+
+    console.log('✅ Sending response:', JSON.stringify(responseData, null, 2));
+
+    res.json(responseData);
 
   } catch (error) {
-    console.error('Admin stats error:', error);
+    console.error('❌ Admin stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch admin stats',

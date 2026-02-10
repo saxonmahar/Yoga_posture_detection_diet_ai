@@ -1,4 +1,4 @@
-const YogaSession = require('../models/yogaSession');
+const PoseSession = require('../models/posesession');
 const Food = require('../models/food');
 
 class AnalyticsServiceClass {
@@ -16,10 +16,11 @@ class AnalyticsServiceClass {
                 };
             }
             
-            // Get ALL yoga sessions for this user (not just last 30 days for now)
-            const sessions = await YogaSession.find({
-                user_id: userId
-            }).sort({ session_date: -1 });
+            // Get ALL pose sessions for this user (using PoseSession model, not YogaSession)
+            const sessions = await PoseSession.find({
+                userId: userId,
+                status: 'completed'
+            }).sort({ endTime: -1 });
 
             console.log(`📈 Found ${sessions.length} sessions for user ${userId}`);
 
@@ -49,18 +50,18 @@ class AnalyticsServiceClass {
                 };
             }
 
-            // Calculate real metrics from actual sessions
+            // Calculate real metrics from actual sessions (using PoseSession fields)
             const totalSessions = sessions.length;
-            const totalDuration = sessions.reduce((sum, s) => sum + (s.total_duration || 0), 0);
+            const totalDuration = sessions.reduce((sum, s) => sum + (s.duration || 0), 0);
             
             // Calculate average accuracy from all poses in all sessions
             let totalAccuracySum = 0;
             let totalPoseCount = 0;
             
             sessions.forEach(session => {
-                if (session.poses_practiced && session.poses_practiced.length > 0) {
-                    session.poses_practiced.forEach(pose => {
-                        totalAccuracySum += pose.accuracy_score || 0;
+                if (session.poses && session.poses.length > 0) {
+                    session.poses.forEach(pose => {
+                        totalAccuracySum += pose.accuracyScore || 0;
                         totalPoseCount++;
                     });
                 }
@@ -71,10 +72,10 @@ class AnalyticsServiceClass {
             // Most practiced poses
             const poseCount = {};
             sessions.forEach(session => {
-                if (session.poses_practiced) {
-                    session.poses_practiced.forEach(pose => {
-                        if (pose.pose_name) {
-                            poseCount[pose.pose_name] = (poseCount[pose.pose_name] || 0) + 1;
+                if (session.poses) {
+                    session.poses.forEach(pose => {
+                        if (pose.poseName) {
+                            poseCount[pose.poseName] = (poseCount[pose.poseName] || 0) + 1;
                         }
                     });
                 }
@@ -95,9 +96,9 @@ class AnalyticsServiceClass {
                 // Get all attempts for this pose
                 const poseAttempts = [];
                 sessions.forEach(session => {
-                    if (session.poses_practiced) {
-                        session.poses_practiced.forEach(pose => {
-                            if (pose.pose_name === poseName) {
+                    if (session.poses) {
+                        session.poses.forEach(pose => {
+                            if (pose.poseName === poseName) {
                                 poseAttempts.push(pose);
                             }
                         });
@@ -105,17 +106,17 @@ class AnalyticsServiceClass {
                 });
 
                 const avgScore = poseAttempts.length > 0 
-                    ? Math.round(poseAttempts.reduce((sum, p) => sum + (p.accuracy_score || 0), 0) / poseAttempts.length)
+                    ? Math.round(poseAttempts.reduce((sum, p) => sum + (p.accuracyScore || 0), 0) / poseAttempts.length)
                     : 0;
                 
                 const bestScore = poseAttempts.length > 0 
-                    ? Math.max(...poseAttempts.map(p => p.accuracy_score || 0))
+                    ? Math.max(...poseAttempts.map(p => p.accuracyScore || 0))
                     : 0;
 
-                const successfulCompletions = poseAttempts.filter(p => p.completed_successfully).length;
+                const successfulCompletions = poseAttempts.filter(p => p.accuracyScore >= 90).length;
 
                 return {
-                    pose_id: `yog${Math.floor(Math.random() * 6) + 1}`, // Generate ID
+                    pose_id: poseAttempts[0]?.poseId || `yog${Math.floor(Math.random() * 6) + 1}`,
                     pose_name: poseName,
                     mastery_level: bestScore >= 90 ? 'Advanced' : bestScore >= 75 ? 'Intermediate' : 'Beginner',
                     average_score: avgScore,
@@ -132,7 +133,7 @@ class AnalyticsServiceClass {
                 achievements.push({
                     name: 'First Session Complete',
                     description: 'Completed your first yoga session!',
-                    unlocked_date: sessions[sessions.length - 1].session_date,
+                    unlocked_date: sessions[sessions.length - 1].endTime || sessions[sessions.length - 1].createdAt,
                     icon: '🎉'
                 });
             }
@@ -140,7 +141,7 @@ class AnalyticsServiceClass {
                 achievements.push({
                     name: 'Dedicated Practitioner',
                     description: 'Completed 5 yoga sessions!',
-                    unlocked_date: sessions[sessions.length - 5].session_date,
+                    unlocked_date: sessions[sessions.length - 5].endTime || sessions[sessions.length - 5].createdAt,
                     icon: '🏆'
                 });
             }
@@ -183,6 +184,21 @@ class AnalyticsServiceClass {
                 });
             }
 
+            // Convert sessions to format expected by frontend (with session_date field)
+            const recentSessions = sessions.slice(0, 10).map(session => ({
+                _id: session._id,
+                session_date: session.endTime || session.createdAt,
+                total_duration: session.duration,
+                poses_practiced: session.poses.map(pose => ({
+                    pose_id: pose.poseId,
+                    pose_name: pose.poseName,
+                    accuracy_score: pose.accuracyScore,
+                    hold_duration: pose.holdDuration,
+                    completed_successfully: pose.accuracyScore >= 90
+                })),
+                session_notes: session.sessionName || session.userNotes
+            }));
+
             return {
                 success: true,
                 analytics: {
@@ -195,7 +211,7 @@ class AnalyticsServiceClass {
                     },
                     pose_progress: poseProgress,
                     achievements: achievements,
-                    recent_sessions: sessions.slice(0, 10), // Last 10 sessions (to cover 7 days)
+                    recent_sessions: recentSessions,
                     insights: insights
                 }
             };
@@ -209,9 +225,10 @@ class AnalyticsServiceClass {
     // Calculate current streak with REAL data
     async calculateCurrentStreak(userId) {
         try {
-            const sessions = await YogaSession.find({
-                user_id: userId
-            }).sort({ session_date: -1 });
+            const sessions = await PoseSession.find({
+                userId: userId,
+                status: 'completed'
+            }).sort({ endTime: -1 });
 
             if (sessions.length === 0) return 0;
 
@@ -226,7 +243,7 @@ class AnalyticsServiceClass {
                 endOfDay.setHours(23, 59, 59, 999);
 
                 const hasSession = sessions.find(session => {
-                    const sessionDate = new Date(session.session_date);
+                    const sessionDate = new Date(session.endTime || session.createdAt);
                     return sessionDate >= startOfDay && sessionDate <= endOfDay;
                 });
 

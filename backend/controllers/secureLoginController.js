@@ -197,8 +197,12 @@ const secureLoginController = async (req, res) => {
       }
     }
 
-    // Generate JWT
-    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET, {
+    // Generate JWT (include role for admin access)
+    const token = jwt.sign({ 
+      id: user._id, 
+      email: user.email,
+      role: user.role || 'user'
+    }, JWT_SECRET, {
       expiresIn: "7d",
     });
 

@@ -33,7 +33,7 @@ const recordYogaSession = async (req, res) => {
     await poseSession.save();
     console.log('✅ Pose session saved:', poseSession._id);
 
-    // Update user progress
+    // Update user progress with retry logic for version conflicts
     let userProgress = await UserProgress.findOne({ user_id });
     
     if (!userProgress) {
@@ -54,8 +54,38 @@ const recordYogaSession = async (req, res) => {
     userProgress.updateOverallStats();
     userProgress.overall_stats.total_practice_time += total_duration;
 
-    await userProgress.save();
-    console.log('✅ User progress updated');
+    // Retry save with version conflict handling
+    let saveAttempts = 0;
+    const maxAttempts = 3;
+    let saved = false;
+    
+    while (!saved && saveAttempts < maxAttempts) {
+      try {
+        await userProgress.save();
+        saved = true;
+        console.log('✅ User progress updated');
+      } catch (error) {
+        if (error.name === 'VersionError' && saveAttempts < maxAttempts - 1) {
+          saveAttempts++;
+          console.log(`⚠️ Version conflict, retrying... (attempt ${saveAttempts}/${maxAttempts})`);
+          // Reload the document and reapply changes
+          userProgress = await UserProgress.findOne({ user_id });
+          poses_practiced.forEach(pose => {
+            userProgress.updatePoseProgress(
+              pose.pose_id, 
+              pose.pose_name, 
+              pose.accuracy_score, 
+              pose.completed_successfully
+            );
+          });
+          userProgress.updateOverallStats();
+          userProgress.overall_stats.total_practice_time += total_duration;
+          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
+        } else {
+          throw error;
+        }
+      }
+    }
 
     // Check for new achievements (simple implementation)
     const newAchievements = [];

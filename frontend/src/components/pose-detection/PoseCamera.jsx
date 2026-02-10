@@ -150,7 +150,8 @@ const PoseCamera = ({
   mirrored = true,
   selectedPose = 'yog2',
   onPoseDetection,
-  onPoseChange // Add this prop to handle pose changes
+  onPoseChange, // Add this prop to handle pose changes
+  onPoseComplete // NEW: Callback when pose is completed
 }) => {
   const navigate = useNavigate(); // Add navigation hook
   const { user } = useAuth(); // Add auth context
@@ -171,6 +172,9 @@ const PoseCamera = ({
   
   // Add current selected pose state
   const [currentSelectedPose, setCurrentSelectedPose] = useState(selectedPose);
+  
+  // Add state to store last detection result
+  const [lastDetectionResult, setLastDetectionResult] = useState(null);
 
   // Update currentSelectedPose when selectedPose prop changes
   useEffect(() => {
@@ -207,11 +211,15 @@ const PoseCamera = ({
         console.log('🧹 CANVAS COMPLETELY CLEARED!');
       }
       
-      // 4. UPDATE POSE STATE
+      // 4. CLEAR LAST DETECTION RESULT - THIS IS THE FIX!
+      setLastDetectionResult(null);
+      console.log('🗑️ LAST DETECTION RESULT CLEARED!');
+      
+      // 5. UPDATE POSE STATE
       setCurrentSelectedPose(selectedPose);
       console.log(`✅ Pose state updated to: ${selectedPose}`);
       
-      // 5. RESET ALL POSE-SPECIFIC STATES
+      // 6. RESET ALL POSE-SPECIFIC STATES
       setPerfectPoseCount(0);
       setConsecutiveFrames(0);
       setPoseCompleted(false);
@@ -219,7 +227,7 @@ const PoseCamera = ({
       setShowCelebration(false);
       setLandmarkCount(0);
       
-      // 6. RESET SESSION DATA
+      // 7. RESET SESSION DATA
       setSessionData({
         startTime: new Date(),
         attempts: 0,
@@ -228,15 +236,15 @@ const PoseCamera = ({
         correctionsNeeded: []
       });
       
-      // 7. RESET GUIDANCE
+      // 8. RESET GUIDANCE
       setGuidancePhase('preparation');
       setCurrentInstructionStep(0);
       setIsGivingInstructions(false);
       
       console.log(`✅✅✅ POSE SWITCH COMPLETE: ${selectedPose} - Everything reset!`);
       
-      // 8. RESTART DETECTION with longer delay to ensure clean state
-      if (wasDetecting && isStreaming) {
+      // 9. RESTART DETECTION - Always restart if webcam is streaming
+      if (isStreaming) {
         setTimeout(() => {
           console.log(`▶️ RESTARTING DETECTION for: ${selectedPose}`);
           setGuidancePhase('analysis');
@@ -248,6 +256,8 @@ const PoseCamera = ({
             await detectPose();
           }, 50);
         }, 1000); // Increased to 1 second for cleaner transition
+      } else {
+        console.log('⚠️ Webcam not streaming, cannot restart detection');
       }
     }
   }, [selectedPose, currentSelectedPose, isDetecting, isStreaming]);
@@ -508,6 +518,9 @@ const PoseCamera = ({
 
       const result = await response.json();
 
+      // Store result in state for canvas drawing
+      setLastDetectionResult(result);
+
       if (result.success && result.landmarks && result.landmarks.length > 0) {
         setLandmarkCount(result.landmarks.length);
         setDebugInfo(`Got ${result.landmarks.length} landmarks - Drawing...`);
@@ -576,6 +589,12 @@ const PoseCamera = ({
                   // Record successful completion and STOP DETECTION IMMEDIATELY
                   recordYogaSession(true);
                   
+                  // Notify parent that pose is completed
+                  if (onPoseComplete) {
+                    onPoseComplete(currentSelectedPose);
+                    console.log('✅ Notified parent: Pose completed -', currentSelectedPose);
+                  }
+                  
                   // STOP DETECTION AUTOMATICALLY after 3 perfect poses
                   setTimeout(() => {
                     stopDetection();
@@ -641,6 +660,7 @@ const PoseCamera = ({
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     console.log(`🎯 DRAWING ${landmarks.length} LANDMARKS ON ${canvas.width}x${canvas.height} CANVAS`);
+    console.log(`📊 RESULT OBJECT:`, result ? `accuracy_score=${result.accuracy_score}, pose_name=${result.pose_name}` : 'NULL');
 
     // Draw skeleton connections FIRST (BRIGHT GREEN lines)
     const connections = [
@@ -771,7 +791,9 @@ const PoseCamera = ({
     }
 
     // Score overlay with better visibility and responsive colors
-    if (result.accuracy_score !== undefined) {
+    console.log(`🎯 SCORE OVERLAY CHECK: result=${!!result}, accuracy_score=${result?.accuracy_score}`);
+    if (result && result.accuracy_score !== undefined) {
+      console.log(`✅ DRAWING SCORE OVERLAY: ${result.accuracy_score}%`);
       // Background with border - color changes based on score
       let bgColor, borderColor, textColor;
       if (result.accuracy_score >= 90) {
@@ -1272,38 +1294,28 @@ const PoseCamera = ({
                           key={pose.id}
                           onClick={() => {
                             // Select new pose and restart detection
-                            console.log(`🔄 Switching from ${currentSelectedPose} to ${pose.id}`);
-                            setCurrentSelectedPose(pose.id); // Update current pose
+                            console.log(`🔄 USER CLICKED NEW POSE: ${currentSelectedPose} → ${pose.id}`);
                             
-                            // Notify parent component about pose change if callback exists
+                            // FIRST: Notify parent to update selectedPose prop
                             if (onPoseChange) {
+                              console.log(`📤 Calling onPoseChange with: ${pose.id}`);
                               onPoseChange(pose.id);
                             }
                             
+                            // Hide pose selection modal
                             setShowPoseSelection(false);
+                            
+                            // Announce new pose
                             ttsService.speak(`Starting ${pose.name}. Get ready!`, true);
                             
-                            // Reset pose-specific states
-                            setPerfectPoseCount(0);
-                            setConsecutiveFrames(0);
-                            setPoseCompleted(false);
-                            setLastPoseState(false);
+                            // The useEffect will detect the pose change and handle cleanup + restart
+                            // But we need to ensure isStreaming is true for restart to work
+                            if (!isStreaming) {
+                              console.log('⚠️ Webcam not streaming, starting webcam...');
+                              startWebcam();
+                            }
                             
-                            // Reset session data for new pose
-                            setSessionData({
-                              startTime: new Date(),
-                              attempts: 0,
-                              accuracyScores: [],
-                              feedbackGiven: [],
-                              correctionsNeeded: []
-                            });
-                            
-                            // Start new pose session INSTANTLY - no instruction delay
-                            setTimeout(() => {
-                              setGuidancePhase('analysis');
-                              setIsGivingInstructions(false);
-                              startDetection();
-                            }, 500); // Minimal delay for state updates
+                            console.log(`✅ Pose selection complete. Waiting for useEffect to handle cleanup and restart...`);
                           }}
                           className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-gray-200 hover:border-blue-400 cursor-pointer transition-all hover:shadow-lg group"
                         >
@@ -1383,11 +1395,22 @@ const PoseCamera = ({
                   <div className="space-y-3">
                     <button
                       onClick={() => {
+                        // STOP detection completely
+                        stopDetection();
+                        
+                        // Close the pose complete modal
                         setShowPoseComplete(false);
+                        
+                        // Show pose selection
                         setShowPoseSelection(true);
+                        
+                        // Reset pose state
                         setPerfectPoseCount(0);
                         setConsecutiveFrames(0);
                         setPoseCompleted(false);
+                        setLastDetectionResult(null); // Clear old results
+                        
+                        console.log('🔄 Choose Next Pose clicked - Detection stopped, showing selection');
                       }}
                       className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg transition-colors"
                     >

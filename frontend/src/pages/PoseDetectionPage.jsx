@@ -15,6 +15,7 @@ const PoseDetectionPage = () => {
   
   // State variables
   const [selectedPose, setSelectedPose] = useState('yog3');
+  const [completedPoses, setCompletedPoses] = useState([]); // Track completed poses
 
   // Professional yoga poses from the integrated system
   const YOGA_POSES = [
@@ -25,6 +26,14 @@ const PoseDetectionPage = () => {
     { id: 'yog5', name: 'Downward Facing Dog', icon: '🐕', difficulty: 'Intermediate', color: 'from-yellow-500 to-amber-500', description: 'Inverted V-shape with hands and feet on ground' },
     { id: 'yog6', name: 'Plank Pose', icon: '💪', difficulty: 'Beginner', color: 'from-indigo-500 to-blue-500', description: 'Hold body straight like a plank' }
   ];
+  
+  // Handle pose completion
+  const handlePoseComplete = (poseId) => {
+    console.log('✅ Pose completed:', poseId);
+    if (!completedPoses.includes(poseId)) {
+      setCompletedPoses([...completedPoses, poseId]);
+    }
+  };
 
   // ==================== User Authentication ====================
   useEffect(() => {
@@ -116,9 +125,12 @@ const PoseDetectionPage = () => {
                   onStartPose={(poseId, poseData) => {
                     console.log('🧘 Professional pose started:', poseId, poseData);
                   }}
+                  onPoseComplete={handlePoseComplete}
+                  completedPoses={completedPoses}
                   isActive={false}
                 />
               </AnimatedCard>
+
             </div>
 
             {/* Right Column - Quick Actions & Tips */}

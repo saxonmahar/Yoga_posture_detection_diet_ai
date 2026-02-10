@@ -8,7 +8,7 @@ import ttsService from '../../services/ttsService';
 
 const ML_API_URL = 'http://localhost:5000';
 
-const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isActive = false }) => {
+const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, onPoseComplete, completedPoses = [], isActive = false }) => {
   const [hoveredPose, setHoveredPose] = useState(null);
   const [availablePoses, setAvailablePoses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -277,7 +277,9 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
 
         {/* Pose Grid - Smaller, More Compact Cards */}
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-          {PROFESSIONAL_POSES.map((pose) => {
+          {PROFESSIONAL_POSES
+            .filter(pose => !completedPoses.includes(pose.id)) // Hide completed poses
+            .map((pose) => {
             const isSelected = selectedPose === pose.id;
             const isStarting = startingPose === pose.id;
             const apiPose = availablePoses[pose.id];
@@ -647,6 +649,7 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, isA
                 mirrored={true}
                 selectedPose={activePose}
                 onPoseDetection={handlePoseDetection}
+                onPoseComplete={onPoseComplete} // Pass the callback
                 onPoseChange={(newPoseId) => {
                   console.log(`🔄 Parent received pose change: ${activePose} → ${newPoseId}`);
                   setActivePose(newPoseId);

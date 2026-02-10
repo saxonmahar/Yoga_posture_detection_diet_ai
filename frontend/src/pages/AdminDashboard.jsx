@@ -21,6 +21,8 @@ export default function AdminDashboard() {
   // Fetch dashboard data
   const fetchDashboardData = async () => {
     try {
+      console.log('🔄 Fetching admin dashboard data...');
+      
       const [statsRes, serverRes, logsRes] = await Promise.all([
         fetch('http://localhost:5001/api/admin/stats', {
           credentials: 'include'
@@ -33,10 +35,18 @@ export default function AdminDashboard() {
         })
       ]);
 
+      console.log('📊 Stats response status:', statsRes.status);
+      console.log('🖥️ Server response status:', serverRes.status);
+      console.log('📝 Logs response status:', logsRes.status);
+
       if (statsRes.ok) {
         const statsData = await statsRes.json();
+        console.log('✅ Stats data received:', statsData);
         setStats(statsData.stats);
         setRecentActivity(statsData.recentActivity || []);
+      } else {
+        const errorData = await statsRes.json();
+        console.error('❌ Stats fetch failed:', errorData);
       }
 
       if (serverRes.ok) {
