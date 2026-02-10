@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import Webcam from 'react-webcam';
 import ttsService from '../../services/ttsService';
+import PostYogaMealCard from '../diet-plan/PostYogaMealCard';
 
 const ML_API_URL = 'http://localhost:5000';
 
@@ -175,6 +176,23 @@ const PoseCamera = ({
   
   // Add state to store last detection result
   const [lastDetectionResult, setLastDetectionResult] = useState(null);
+  
+  // Post-yoga meal card state
+  const [showMealCard, setShowMealCard] = useState(false);
+  const [mealCardSessionData, setMealCardSessionData] = useState(null);
+
+  // Listen for "Choose Next Pose" event from meal card
+  useEffect(() => {
+    const handleChooseNextPose = () => {
+      console.log('🔄 Choose Next Pose triggered from meal card');
+      setShowMealCard(false);
+      setShowPoseComplete(false);
+      setShowPoseSelection(true);
+    };
+
+    window.addEventListener('chooseNextPose', handleChooseNextPose);
+    return () => window.removeEventListener('chooseNextPose', handleChooseNextPose);
+  }, []);
 
   // Update currentSelectedPose when selectedPose prop changes
   useEffect(() => {
@@ -595,12 +613,35 @@ const PoseCamera = ({
                     console.log('✅ Notified parent: Pose completed -', currentSelectedPose);
                   }
                   
+                  // Prepare session data for post-yoga meal card
+                  const mealSessionData = {
+                    caloriesBurned: currentPose?.estimatedCalories || 8,
+                    duration: Math.round(poseDuration / 60), // Convert to minutes
+                    poses: [{
+                      poseName: currentPose?.name || currentSelectedPose,
+                      category: currentPose?.category || 'Balance'
+                    }],
+                    accuracy: sessionData.accuracyScores.length > 0 ? 
+                      Math.round(sessionData.accuracyScores.reduce((a, b) => a + b, 0) / sessionData.accuracyScores.length) : 90,
+                    timeOfDay: getTimeOfDay()
+                  };
+                  
+                  console.log('🍽️ Preparing meal card with session data:', mealSessionData);
+                  setMealCardSessionData(mealSessionData);
+                  
                   // STOP DETECTION AUTOMATICALLY after 3 perfect poses
                   setTimeout(() => {
                     stopDetection();
                     setShowCelebration(false);
                     setShowPoseComplete(true);
                     setDebugInfo('🎉 Pose completed! 3 perfect poses achieved - Detection stopped.');
+                    
+                    // Show meal card after a short delay
+                    setTimeout(() => {
+                      setShowPoseComplete(false); // HIDE pose complete modal
+                      setShowMealCard(true);
+                      console.log('🍽️ Showing post-yoga meal card');
+                    }, 2000); // Show meal card 2 seconds after pose complete modal
                   }, 3000);
                 }
                 
@@ -932,6 +973,14 @@ const PoseCamera = ({
     }
   };
 
+  // Helper function to get time of day
+  const getTimeOfDay = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) return 'morning';
+    if (hour >= 12 && hour < 17) return 'afternoon';
+    return 'evening';
+  };
+
   // Record yoga session data to backend
   const recordYogaSession = async (completedSuccessfully = false) => {
     try {
@@ -946,13 +995,18 @@ const PoseCamera = ({
       const endTime = new Date();
       const durationMs = endTime - (sessionData.startTime || new Date());
       const duration = Math.min(Math.max(Math.round(durationMs / 1000 / 60), 1), 10); // Between 1-10 minutes
-      const poseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 'Unknown Pose';
+      
+      // CRITICAL FIX: Use currentSelectedPose (state) instead of selectedPose (prop) to avoid stale closure
+      const poseId = currentSelectedPose || selectedPose;
+      const poseName = PROFESSIONAL_POSES.find(p => p.id === poseId)?.name || 'Unknown Pose';
+      
+      console.log(`🔍 Recording session with pose_id: ${poseId} (currentSelectedPose=${currentSelectedPose}, selectedPose=${selectedPose})`);
 
       const sessionPayload = {
         user_id: userId,
         total_duration: Math.max(duration, 1), // At least 1 minute
         poses_practiced: [{
-          pose_id: selectedPose,
+          pose_id: poseId, // FIXED: Use poseId variable instead of selectedPose directly
           pose_name: poseName,
           accuracy_score: sessionData.accuracyScores.length > 0 ?
             Math.max(...sessionData.accuracyScores) : (completedSuccessfully ? 90 : 75),
@@ -1575,6 +1629,18 @@ const PoseCamera = ({
             🛑 Stop Camera
           </button>
         </div>
+      )}
+      
+      {/* Post-Yoga Meal Card */}
+      {showMealCard && mealCardSessionData && (
+        <PostYogaMealCard
+          sessionData={mealCardSessionData}
+          onClose={() => {
+            setShowMealCard(false);
+            setMealCardSessionData(null);
+            console.log('🍽️ Meal card closed');
+          }}
+        />
       )}
     </div>
   );

@@ -3,8 +3,14 @@ const router = express.Router();
 const dietController = require('../controllers/dietController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// Diet recommendations - temporarily public for testing
+// Public routes
 router.post('/recommendations', dietController.getDietRecommendation);
+
+// Yoga-Diet Integration (public for now)
+router.post('/post-yoga-meals', dietController.getPostYogaMeals);
+router.get('/pre-yoga-meals', dietController.getPreYogaMeals);
+router.get('/nepali-foods', dietController.getNepaliFood);
+router.get('/search', dietController.searchFoods);
 
 // All other diet routes require authentication
 router.use(authMiddleware.verifyToken);

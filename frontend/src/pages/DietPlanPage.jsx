@@ -13,6 +13,7 @@ function DietPlanPage() {
   const [recommendations, setRecommendations] = useState(null);
   const [regenerating, setRegenerating] = useState(false);
   const [yogaSessionData, setYogaSessionData] = useState(null);
+  const [hasCompletedSession, setHasCompletedSession] = useState(false);
 
   // Default stats if user object is missing
   const defaultStats = {
@@ -24,6 +25,137 @@ function DietPlanPage() {
   };
 
   const stats = user?.stats || defaultStats;
+
+  // Fetch diet recommendations with custom data
+  const fetchRecommendationsWithData = async (customStats) => {
+    try {
+      setError(null);
+      setLoading(true);
+
+      const userData = {
+        age: user?.age || customStats.age || 25,
+        height: user?.height || customStats.height || 170,
+        weight: user?.weight || customStats.weight || 70,
+        activity_level: customStats.activityLevel || 'moderately_active',
+        body_type: user?.bodyType || customStats.bodyType || 'mesomorphic',
+        goal: user?.goal || customStats.goal || 'maintain'
+      };
+
+      const response = await dietService.getRecommendation(userData);
+      
+      if (response.data.success) {
+        setRecommendations(response.data.recommendation);
+      } else {
+        setError('Failed to get recommendations');
+      }
+    } catch (err) {
+      console.error('Error fetching recommendations:', err);
+      setError(err.response?.data?.error || 'Failed to fetch diet recommendations. Please make sure the Python Flask server is running on port 5000.');
+    } finally {
+      setLoading(false);
+      setRegenerating(false);
+    }
+  };
+
+  // Fetch diet recommendations
+  const fetchRecommendations = async () => {
+    await fetchRecommendationsWithData(stats);
+  };
+
+  // Check if user has completed a yoga session - DATABASE IS SOURCE OF TRUTH
+  useEffect(() => {
+    const checkSessionCompletion = async () => {
+      try {
+        // ALWAYS check database first - this is the source of truth
+        if (user?._id || user?.id) {
+          const userId = user._id || user.id;
+          const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`, {
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const totalSessions = data.analytics?.overall_stats?.total_sessions || 0;
+            
+            if (totalSessions > 0) {
+              setHasCompletedSession(true);
+              console.log('✅ Diet page: User has', totalSessions, 'sessions - UNLOCKING diet');
+              
+              // Sync localStorage with database truth
+              localStorage.setItem('hasCompletedYogaSession', 'true');
+            } else {
+              setHasCompletedSession(false);
+              console.log('⚠️ Diet page: User has 0 sessions - LOCKING diet');
+              
+              // Clear any stale localStorage data
+              localStorage.removeItem('hasCompletedYogaSession');
+            }
+            return; // Database check succeeded, don't use localStorage
+          }
+        }
+        
+        // Only if database fails, check localStorage as temporary fallback
+        console.warn('⚠️ Diet page: Database check failed, using localStorage fallback');
+        const completedSession = localStorage.getItem('hasCompletedYogaSession');
+        setHasCompletedSession(completedSession === 'true');
+        
+      } catch (error) {
+        console.error('❌ Diet page: Error checking session completion:', error);
+        // Only on error, use localStorage
+        const completedSession = localStorage.getItem('hasCompletedYogaSession');
+        setHasCompletedSession(completedSession === 'true');
+      }
+    };
+
+    if (!authLoading && user) {
+      checkSessionCompletion();
+    }
+  }, [user, authLoading]);
+
+  // Fetch recommendations when component mounts or location state changes
+  useEffect(() => {
+    // Only fetch if user is authenticated and has completed a session
+    if (!user || authLoading || !hasCompletedSession) {
+      return;
+    }
+
+    // Check for yoga session data from localStorage first
+    const sessionData = localStorage.getItem('yogaSessionData');
+    if (sessionData) {
+      try {
+        const parsedData = JSON.parse(sessionData);
+        setYogaSessionData(parsedData);
+        console.log('🧘‍♀️ Yoga session data found:', parsedData);
+        
+        // Adjust activity level based on yoga session
+        const adjustedStats = {
+          ...stats,
+          activityLevel: parsedData.totalCalories > 20 ? 'very_active' : 'moderately_active'
+        };
+        // Auto-fetch recommendations with adjusted stats
+        fetchRecommendationsWithData(adjustedStats);
+        return;
+      } catch (error) {
+        console.error('Error parsing yoga session data:', error);
+      }
+    }
+
+    // Check if coming from yoga session via navigation state
+    if (location.state?.yogaSession) {
+      setYogaSessionData(location.state.yogaSession);
+      // Adjust activity level based on yoga session
+      const adjustedStats = {
+        ...stats,
+        activityLevel: location.state.yogaSession.caloriesBurned > 100 ? 'very_active' : 'moderately_active'
+      };
+      // Auto-fetch recommendations with adjusted stats
+      fetchRecommendationsWithData(adjustedStats);
+    } else {
+      // Normal flow - fetch recommendations
+      fetchRecommendations();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.state, user, authLoading, hasCompletedSession]); // Run when these change
 
   // If still loading auth, show loading spinner
   if (authLoading) {
@@ -66,109 +198,90 @@ function DietPlanPage() {
     );
   }
 
-  // Fetch diet recommendations with custom data
-  const fetchRecommendationsWithData = async (customStats) => {
-    try {
-      setError(null);
-      setLoading(true);
-
-      const userData = {
-        age: user?.age || customStats.age || 25,
-        height: user?.height || customStats.height || 170,
-        weight: user?.weight || customStats.weight || 70,
-        activity_level: customStats.activityLevel || 'moderately_active',
-        body_type: user?.bodyType || customStats.bodyType || 'mesomorphic',
-        goal: user?.goal || customStats.goal || 'maintain'
-      };
-
-      const response = await dietService.getRecommendation(userData);
-      
-      if (response.data.success) {
-        setRecommendations(response.data.recommendation);
-      } else {
-        setError('Failed to get recommendations');
-      }
-    } catch (err) {
-      console.error('Error fetching recommendations:', err);
-      setError(err.response?.data?.error || 'Failed to fetch diet recommendations. Please make sure the Python Flask server is running on port 5000.');
-    } finally {
-      setLoading(false);
-      setRegenerating(false);
-    }
-  };
-
-  // Fetch diet recommendations
-  const fetchRecommendations = async () => {
-    await fetchRecommendationsWithData(stats);
-  };
-
-  // If no user is authenticated, show login prompt
-  if (!user && !authLoading) {
+  // If user hasn't completed a yoga session, show requirement screen
+  if (user && !authLoading && !hasCompletedSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30">
-            <Utensils className="w-10 h-10 text-emerald-400" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+        <div className="text-center max-w-2xl mx-auto">
+          {/* Animated Background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Smart Diet Plan</h2>
-          <p className="text-slate-400 mb-6">Please log in to access your personalized AI-powered diet recommendations.</p>
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl font-semibold transition-all shadow-lg shadow-emerald-500/20"
-            >
-              Log In
-            </button>
-            <button
-              onClick={() => navigate('/register')}
-              className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-xl font-semibold transition-all border border-slate-600/50 hover:border-slate-600"
-            >
-              Create Account
-            </button>
+
+          <div className="relative bg-slate-800/40 backdrop-blur-xl rounded-3xl p-12 border border-slate-700/50 shadow-2xl">
+            {/* Lock Icon */}
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-purple-500/30">
+              <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <Utensils className="w-8 h-8 text-white" />
+              </div>
+            </div>
+
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Complete a Yoga Session First! 🧘‍♀️
+            </h2>
+            <p className="text-xl text-slate-300 mb-6 leading-relaxed">
+              Your personalized diet plan is waiting for you, but we need to understand your activity level first.
+            </p>
+            
+            <div className="bg-slate-700/30 rounded-2xl p-6 mb-8 border border-slate-600/30">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center justify-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-400" />
+                Why Complete a Session?
+              </h3>
+              <div className="space-y-3 text-left">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-slate-300">
+                    <strong className="text-white">Accurate Calorie Calculation:</strong> We measure your actual calories burned
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-slate-300">
+                    <strong className="text-white">Pose-Specific Nutrition:</strong> Different poses need different nutrients
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-slate-300">
+                    <strong className="text-white">Recovery Optimization:</strong> Get meals that help your body recover
+                  </p>
+                </div>
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-slate-300">
+                    <strong className="text-white">Personalized Timing:</strong> Recommendations based on when you practice
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={() => navigate('/pose-detection')}
+                className="w-full px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl font-bold text-lg transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-3"
+              >
+                <Activity className="w-6 h-6" />
+                Start Your First Yoga Session
+              </button>
+              
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="w-full px-8 py-4 bg-slate-700/50 hover:bg-slate-700 rounded-xl font-semibold transition-all border border-slate-600/50 hover:border-slate-600"
+              >
+                Back to Dashboard
+              </button>
+            </div>
+
+            <p className="text-sm text-slate-500 mt-6">
+              💡 Tip: Complete just one pose (takes ~2 minutes) to unlock your personalized diet plan!
+            </p>
           </div>
         </div>
       </div>
     );
   }
-
-  useEffect(() => {
-    // Check for yoga session data from localStorage first
-    const sessionData = localStorage.getItem('yogaSessionData');
-    if (sessionData) {
-      try {
-        const parsedData = JSON.parse(sessionData);
-        setYogaSessionData(parsedData);
-        console.log('🧘‍♀️ Yoga session data found:', parsedData);
-        
-        // Adjust activity level based on yoga session
-        const adjustedStats = {
-          ...stats,
-          activityLevel: parsedData.totalCalories > 20 ? 'very_active' : 'moderately_active'
-        };
-        // Auto-fetch recommendations with adjusted stats
-        fetchRecommendationsWithData(adjustedStats);
-        return;
-      } catch (error) {
-        console.error('Error parsing yoga session data:', error);
-      }
-    }
-
-    // Check if coming from yoga session via navigation state
-    if (location.state?.yogaSession) {
-      setYogaSessionData(location.state.yogaSession);
-      // Adjust activity level based on yoga session
-      const adjustedStats = {
-        ...stats,
-        activityLevel: location.state.yogaSession.caloriesBurned > 100 ? 'very_active' : 'moderately_active'
-      };
-      // Auto-fetch recommendations with adjusted stats
-      fetchRecommendationsWithData(adjustedStats);
-    } else {
-      // Normal flow - fetch recommendations
-      fetchRecommendations();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state]); // Run when location state changes
 
   const handleRegenerate = () => {
     setRegenerating(true);

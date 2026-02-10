@@ -1,4 +1,123 @@
 const dietService = require('../services/dietService');
+const yogaDietService = require('../services/yogaDietService');
+
+// Get post-yoga meal recommendations
+exports.getPostYogaMeals = async (req, res) => {
+    try {
+        console.log('🧘 Post-yoga meal request:', req.body);
+        
+        const sessionData = {
+            caloriesBurned: req.body.caloriesBurned || 0,
+            duration: req.body.duration || 0,
+            poses: req.body.poses || [],
+            accuracy: req.body.accuracy || 0,
+            timeOfDay: req.body.timeOfDay || 'morning'
+        };
+
+        const recommendations = yogaDietService.getPostYogaMeals(sessionData);
+
+        res.json({
+            success: true,
+            ...recommendations
+        });
+    } catch (error) {
+        console.error('❌ Post-yoga meal error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get post-yoga meal recommendations',
+            details: error.message
+        });
+    }
+};
+
+// Get pre-yoga meal suggestions
+exports.getPreYogaMeals = async (req, res) => {
+    try {
+        const { scheduledTime } = req.query;
+        
+        if (!scheduledTime) {
+            return res.status(400).json({
+                success: false,
+                error: 'Scheduled time is required'
+            });
+        }
+
+        const recommendations = yogaDietService.getPreYogaMeals(scheduledTime);
+
+        res.json(recommendations);
+    } catch (error) {
+        console.error('❌ Pre-yoga meal error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get pre-yoga meal suggestions',
+            details: error.message
+        });
+    }
+};
+
+// Get Nepali foods
+exports.getNepaliFood = async (req, res) => {
+    try {
+        const { category, goal } = req.query;
+        
+        if (goal) {
+            const meals = yogaDietService.getMealsByGoal(goal, category || 'lunch');
+            return res.json({
+                success: true,
+                meals
+            });
+        }
+
+        const foods = yogaDietService.getAllFoods();
+        
+        if (category) {
+            return res.json({
+                success: true,
+                meals: foods[category] || []
+            });
+        }
+
+        res.json({
+            success: true,
+            foods
+        });
+    } catch (error) {
+        console.error('❌ Get Nepali food error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to get Nepali food data',
+            details: error.message
+        });
+    }
+};
+
+// Search foods
+exports.searchFoods = async (req, res) => {
+    try {
+        const { q } = req.query;
+        
+        if (!q) {
+            return res.status(400).json({
+                success: false,
+                error: 'Search query is required'
+            });
+        }
+
+        const results = yogaDietService.searchFoods(q);
+
+        res.json({
+            success: true,
+            results
+        });
+    } catch (error) {
+        console.error('❌ Search foods error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to search foods',
+            details: error.message
+        });
+    }
+};
 
 exports.logMeal = async (req, res) => {
     try {

@@ -49,6 +49,11 @@ class DietRecommendationSystem:
         self.breakfast_items = self._load_data("Data_sets/breakfast_data.csv")
         self.lunch_items = self._load_data("Data_sets/lunch_data.csv")
         self.dinner_items = self._load_data("Data_sets/dinner_data.csv")
+        
+        # Load Nepali foods
+        self.nepali_breakfast = self._load_data("Data_sets/nepali_breakfast.csv")
+        self.nepali_lunch = self._load_data("Data_sets/nepali_lunch.csv")
+        self.nepali_dinner = self._load_data("Data_sets/nepali_dinner.csv")
 
     def _load_data(self, filepath):
         """Load data with proper error handling and ensure required columns exist"""
@@ -214,6 +219,156 @@ def recommend():
         return jsonify(recommendations)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/recommend-post-yoga', methods=['POST'])
+def recommend_post_yoga():
+    """
+    Get post-yoga recovery meal recommendations
+    Expects: caloriesBurned, duration, poses, accuracy, timeOfDay
+    """
+    try:
+        data = request.json
+        
+        calories_burned = data.get('caloriesBurned', 0)
+        duration = data.get('duration', 0)
+        poses = data.get('poses', [])
+        accuracy = data.get('accuracy', 0)
+        time_of_day = data.get('timeOfDay', 'morning')
+        
+        # Analyze pose types
+        pose_analysis = analyze_poses(poses)
+        
+        # Determine meal type based on time
+        if time_of_day == 'morning' or time_of_day == 'breakfast':
+            meal_type = 'breakfast'
+        elif time_of_day == 'afternoon' or time_of_day == 'lunch':
+            meal_type = 'lunch'
+        else:
+            meal_type = 'dinner'
+        
+        # Create a temporary user for recommendations
+        user = VfcDietRecommendation(
+            age=25,  # Default values
+            height=170,
+            weight=70,
+            activity_level='very_active' if calories_burned > 150 else 'moderately_active',
+            body_type='mesomorphic'
+        )
+        
+        diet_system = DietRecommendationSystem(user)
+        
+        # Get Nepali foods for this meal type
+        if meal_type == 'breakfast':
+            meal_items = diet_system.nepali_breakfast
+        elif meal_type == 'lunch':
+            meal_items = diet_system.nepali_lunch
+        else:
+            meal_items = diet_system.nepali_dinner
+        
+        # Filter based on pose analysis
+        if pose_analysis['strength'] > 2:
+            # High protein for strength poses
+            if 'Proteins' in meal_items.columns:
+                filtered = meal_items[meal_items['Proteins'] >= 15]
+                if len(filtered) > 0:
+                    meal_items = filtered
+        
+        if pose_analysis['flexibility'] > 2:
+            # High fiber for flexibility (check if Fibre column exists)
+            if 'Fibre' in meal_items.columns:
+                filtered = meal_items[meal_items['Fibre'] >= 6]
+                if len(filtered) > 0:
+                    meal_items = filtered
+            elif 'Fiber' in meal_items.columns:
+                filtered = meal_items[meal_items['Fiber'] >= 6]
+                if len(filtered) > 0:
+                    meal_items = filtered
+        
+        # If no meals left after filtering, use all meals for that meal type
+        if len(meal_items) == 0:
+            if meal_type == 'breakfast':
+                meal_items = diet_system.nepali_breakfast
+            elif meal_type == 'lunch':
+                meal_items = diet_system.nepali_lunch
+            else:
+                meal_items = diet_system.nepali_dinner
+        
+        # Get recommendations
+        target_calories = calories_burned * 1.2  # 20% more for recovery
+        recommendations = diet_system.diverse_kmeans_recommendation(
+            meal_items, 
+            target_calories / 3,  # Divide by 3 items
+            k=3, 
+            n_items=3
+        )
+        
+        # Generate message
+        message = f"🧘 Great session! You burned {calories_burned} calories"
+        if accuracy >= 85:
+            message += f" with excellent {accuracy}% accuracy! 🎯"
+        elif accuracy >= 70:
+            message += f" with good {accuracy}% accuracy! 👍"
+        
+        if pose_analysis['strength'] > 2:
+            message += "\n\n💪 Your strength-focused session needs high protein for muscle recovery."
+        elif pose_analysis['flexibility'] > 2:
+            message += "\n\n🤸 Your flexibility work benefits from anti-inflammatory foods for joint health."
+        
+        return jsonify({
+            "success": True,
+            "sessionSummary": {
+                "caloriesBurned": calories_burned,
+                "duration": duration,
+                "accuracy": accuracy,
+                "poseTypes": pose_analysis['types']
+            },
+            "recoveryNeeds": {
+                "calories": round(target_calories),
+                "protein": 15 if pose_analysis['strength'] > 2 else 12,
+                "carbs": 50 if calories_burned > 150 else 30,
+                "hydration": round(duration / 15)
+            },
+            "recommendations": {
+                "primary": recommendations.iloc[0].to_dict() if len(recommendations) > 0 else {},
+                "alternatives": recommendations.iloc[1:].to_dict('records') if len(recommendations) > 1 else [],
+                "allOptions": recommendations.to_dict('records')
+            },
+            "message": message
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+def analyze_poses(poses):
+    """Analyze poses to determine focus areas"""
+    pose_types = {
+        'flexibility': ['tree', 'warrior2', 'goddess'],
+        'strength': ['plank', 'downdog'],
+        'balance': ['tree', 'goddess'],
+        'cardio': ['warrior2', 'downdog']
+    }
+    
+    analysis = {
+        'flexibility': 0,
+        'strength': 0,
+        'balance': 0,
+        'cardio': 0,
+        'types': []
+    }
+    
+    for pose in poses:
+        pose_name = pose.get('poseName', '').lower()
+        
+        for ptype, plist in pose_types.items():
+            if any(p in pose_name for p in plist):
+                analysis[ptype] += 1
+    
+    # Determine primary focus
+    max_type = max(analysis, key=lambda k: analysis[k] if k != 'types' else 0)
+    if analysis[max_type] > 0:
+        analysis['types'].append(max_type)
+    
+    return analysis
 
 if __name__ == '__main__':
     # Create data directory if it doesn't exist

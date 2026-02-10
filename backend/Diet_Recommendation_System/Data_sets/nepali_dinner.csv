@@ -1,0 +1,11 @@
+Food_items,Calories,Fats,Proteins,Carbohydrates,Fibre,Link,LocalName,Price,PrepTime,BestFor
+Khichdi,280,4,10,52,8,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,खिचडी,60,25,recovery
+Roti with Sabzi,320,6,11,55,9,https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400,रोटी सब्जी,70,30,post-yoga
+Vegetable Soup,180,3,6,32,7,https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400,तरकारी सूप,50,20,recovery
+Grilled Paneer Salad,340,16,20,25,6,https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400,ग्रिल्ड पनीर सलाद,150,25,post-yoga
+Light Dal with Roti,260,4,12,45,10,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,हल्का दाल,55,30,recovery
+Palak Paneer,320,18,16,22,8,https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400,पालक पनीर,140,30,post-yoga
+Mixed Vegetable Curry,240,8,8,38,9,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,मिश्रित तरकारी,75,25,post-yoga
+Egg Curry with Roti,360,14,18,42,6,https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400,अण्डा तरकारी,90,25,post-yoga
+Tofu Stir Fry,280,12,16,28,7,https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400,टोफु,120,20,post-yoga
+Lentil Soup,220,3,14,38,10,https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400,दालको सूप,60,25,recovery

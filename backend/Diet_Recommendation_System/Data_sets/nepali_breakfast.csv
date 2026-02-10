@@ -1,0 +1,11 @@
+Food_items,Calories,Fats,Proteins,Carbohydrates,Fibre,Link,LocalName,Price,PrepTime,BestFor
+Dal Bhat,350,5,12,65,8,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,दाल भात,80,30,post-yoga
+Chiura (Beaten Rice),280,3,8,55,5,https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400,चिउरा,40,10,pre-yoga
+Sel Roti,320,6,10,58,4,https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400,सेल रोटी,60,45,post-yoga
+Paratha with Pickle,300,8,9,48,6,https://images.unsplash.com/photo-1630383249896-424e482df921?w=400,पराठा,50,20,post-yoga
+Upma,260,6,7,45,5,https://images.unsplash.com/photo-1626074353765-517a681e40be?w=400,उपमा,45,15,pre-yoga
+Poha,250,4,6,50,4,https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400,पोहा,35,15,pre-yoga
+Aloo Paratha,380,12,10,55,7,https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400,आलू पराठा,60,25,post-yoga
+Dahi Chiura,300,4,10,58,6,https://images.unsplash.com/photo-1596797038530-2c107229654b?w=400,दही चिउरा,50,5,pre-yoga
+Roti with Ghee,280,8,8,45,5,https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400,रोटी घ्यू,40,15,post-yoga
+Samosa,262,13,6,32,3,https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400,समोसा,30,30,snack

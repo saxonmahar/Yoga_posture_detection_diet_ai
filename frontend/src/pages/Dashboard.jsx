@@ -73,10 +73,10 @@ const Dashboard = () => {
     setWeeklyProgress(weekly);
   };
 
-  // Check if user has completed a yoga session
+  // Check if user has completed a yoga session - DATABASE IS SOURCE OF TRUTH
   const checkSessionCompletion = async () => {
     try {
-      // First check database if user is authenticated
+      // ALWAYS check database first - this is the source of truth
       if (user?._id || user?.id) {
         const userId = user._id || user.id;
         const response = await fetch(`http://localhost:5001/api/analytics/user/${userId}`, {
@@ -85,29 +85,35 @@ const Dashboard = () => {
         
         if (response.ok) {
           const data = await response.json();
-          if (data.success && data.analytics?.overall_stats?.total_sessions > 0) {
+          const totalSessions = data.analytics?.overall_stats?.total_sessions || 0;
+          
+          if (totalSessions > 0) {
             setHasCompletedSession(true);
-            console.log('✅ Dashboard session check: User has completed sessions via database');
-            return;
+            console.log('✅ Dashboard: User has', totalSessions, 'sessions - UNLOCKING diet');
+            
+            // Sync localStorage with database truth
+            localStorage.setItem('hasCompletedYogaSession', 'true');
+          } else {
+            setHasCompletedSession(false);
+            console.log('⚠️ Dashboard: User has 0 sessions - LOCKING diet');
+            
+            // Clear any stale localStorage data
+            localStorage.removeItem('hasCompletedYogaSession');
           }
+          return; // Database check succeeded, don't use localStorage
         }
       }
       
-      // Fallback to localStorage check
+      // Only if database fails, check localStorage as temporary fallback
+      console.warn('⚠️ Dashboard: Database check failed, using localStorage fallback');
       const completedSession = localStorage.getItem('hasCompletedYogaSession');
-      const sessionData = localStorage.getItem('yogaSessionData');
-      const multiPoseSession = localStorage.getItem('multiPoseSessionComplete');
+      setHasCompletedSession(completedSession === 'true');
       
-      if (completedSession === 'true' || sessionData || multiPoseSession === 'true') {
-        setHasCompletedSession(true);
-      }
     } catch (error) {
-      console.error('Error checking session completion:', error);
-      // Fallback to localStorage
+      console.error('❌ Dashboard: Error checking session completion:', error);
+      // Only on error, use localStorage
       const completedSession = localStorage.getItem('hasCompletedYogaSession');
-      if (completedSession === 'true') {
-        setHasCompletedSession(true);
-      }
+      setHasCompletedSession(completedSession === 'true');
     }
   };
 

@@ -390,27 +390,27 @@ const ProgressDashboard = ({ userId, yogaProgressData }) => {
                     {new Date(session.session_date).toLocaleDateString()}
                   </div>
                   <div className="text-xs text-slate-400">
-                    {session.total_duration}m • {session.poses_practiced.length} poses
+                    {session.total_duration}m • {session.poses_practiced?.length || 0} poses
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2 mb-2">
                   <div className="text-xs text-slate-400">Average Accuracy:</div>
                   <div className="text-sm font-medium text-emerald-400">
-                    {Math.round(session.overall_performance.average_accuracy)}%
+                    {Math.round(session.overall_performance?.average_accuracy || 0)}%
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {session.poses_practiced.map((pose, poseIndex) => (
+                  {session.poses_practiced?.map((pose, poseIndex) => (
                     <div key={poseIndex} className={`px-2 py-1 rounded-full text-xs ${
                       pose.completed_successfully 
                         ? 'bg-green-500/20 text-green-400' 
                         : 'bg-slate-700/50 text-slate-400'
                     }`}>
-                      {pose.pose_name} ({Math.round(pose.accuracy_score)}%)
+                      {pose.pose_name} ({Math.round(pose.accuracy_score || 0)}%)
                     </div>
-                  ))}
+                  )) || <div className="text-xs text-slate-500">No poses recorded</div>}
                 </div>
               </div>
             ))}

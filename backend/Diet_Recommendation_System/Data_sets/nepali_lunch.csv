@@ -1,0 +1,11 @@
+Food_items,Calories,Fats,Proteins,Carbohydrates,Fibre,Link,LocalName,Price,PrepTime,BestFor
+Dal Bhat Tarkari,450,8,18,75,12,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,दाल भात तरकारी,120,45,post-yoga
+Momo (Steamed),380,10,16,52,6,https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?w=400,मोमो,100,60,post-yoga
+Thukpa,350,7,14,58,8,https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400,थुक्पा,110,30,recovery
+Rajma Chawal,420,6,16,70,14,https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400,राजमा चावल,90,40,post-yoga
+Chole Bhature,480,15,15,68,10,https://images.unsplash.com/photo-1626132647523-66f5bf380027?w=400,छोले भटुरे,100,50,post-yoga
+Chicken Curry with Rice,520,18,28,62,8,https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=400,कुखुराको तरकारी,150,50,post-yoga
+Vegetable Biryani,420,12,12,68,9,https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400,तरकारी बिर्यानी,130,45,post-yoga
+Paneer Tikka Masala,380,20,18,32,6,https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=400,पनीर टिक्का मसाला,180,35,post-yoga
+Aloo Gobi,280,10,8,42,8,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,आलू गोभी,80,30,post-yoga
+Chana Masala,320,8,14,52,12,https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400,चना मसाला,85,35,post-yoga

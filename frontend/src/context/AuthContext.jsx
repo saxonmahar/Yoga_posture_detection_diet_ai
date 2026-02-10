@@ -48,6 +48,13 @@ export const AuthProvider = ({ children }) => {
       console.log('🔍 Login Response:', response);
       console.log('🔍 User Data:', response.data?.user);
       console.log('🔍 Profile Photo:', response.data?.user?.profilePhoto);
+      
+      // Clear any stale session data from previous users
+      console.log('🧹 Clearing stale session data from localStorage...');
+      localStorage.removeItem('yogaSessionData');
+      localStorage.removeItem('multiPoseSessionComplete');
+      // Note: hasCompletedYogaSession will be set by Dashboard/DietPage based on database
+      
       setUser(response.data.user);
       return response;
     } catch (error) {
