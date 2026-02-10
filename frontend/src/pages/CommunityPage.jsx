@@ -26,12 +26,37 @@ const CommunityPage = () => {
   const [topFriends, setTopFriends] = useState([]);
   const [userBadges, setUserBadges] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [communityStats, setCommunityStats] = useState({
+    activeMembers: 0,
+    postsShared: 0,
+    averageAccuracy: 0,
+    totalSessions: 0
+  });
 
   // Fetch real community data
   useEffect(() => {
     const fetchCommunityData = async () => {
       try {
         setLoading(true);
+        
+        // Fetch community stats (public endpoint - no auth required)
+        try {
+          const statsResponse = await fetch('http://localhost:5001/api/community/stats');
+          if (statsResponse.ok) {
+            const statsData = await statsResponse.json();
+            if (statsData.success) {
+              setCommunityStats({
+                activeMembers: statsData.stats.activeMembers,
+                postsShared: statsData.stats.postsShared,
+                averageAccuracy: statsData.stats.averageAccuracy,
+                totalSessions: statsData.stats.totalSessions
+              });
+              console.log('✅ Community stats loaded:', statsData.stats);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching community stats:', error);
+        }
         
         // Fetch recent activity
         const activityData = await communityService.getRecentActivity(10);
@@ -560,9 +585,9 @@ const CommunityPage = () => {
         {/* Community Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-12">
           {[
-            { number: '4', label: 'Active Members', icon: Users },
-            { number: '5', label: 'Posts Shared', icon: MessageCircle },
-            { number: '92%', label: 'Success Rate', icon: Trophy },
+            { number: communityStats.activeMembers || '0', label: 'Active Members', icon: Users },
+            { number: communityStats.postsShared || '0', label: 'Posts Shared', icon: MessageCircle },
+            { number: `${communityStats.averageAccuracy || 0}%`, label: 'Success Rate', icon: Trophy },
             { number: '24/7', label: 'Community Support', icon: Heart }
           ].map((stat, index) => {
             const Icon = stat.icon;

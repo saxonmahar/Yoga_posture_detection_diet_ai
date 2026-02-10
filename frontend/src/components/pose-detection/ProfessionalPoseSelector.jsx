@@ -305,16 +305,6 @@ const ProfessionalPoseSelector = ({ selectedPose, onPoseSelect, onStartPose, onP
                   </div>
                 )}
 
-                {/* Professional Badge */}
-                <div className="absolute top-2 left-2 z-10">
-                  <div className="bg-gradient-to-r from-yellow-500 to-amber-500 backdrop-blur-sm px-2 py-1 rounded-full shadow-lg">
-                    <div className="flex items-center gap-1">
-                      <Zap className="w-2 h-2 text-white" />
-                      <span className="text-xs text-white font-bold">PRO</span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* Pose Image - Smaller and Compact */}
                 <div 
                   className="w-full h-32 mb-3 mt-6 rounded-lg overflow-hidden bg-gradient-to-br from-slate-700/30 to-slate-800/30 shadow-lg border border-slate-600/20 cursor-pointer group"

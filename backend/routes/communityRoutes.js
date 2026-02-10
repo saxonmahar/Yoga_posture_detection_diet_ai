@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const communityController = require('../controllers/communityController');
+const adminController = require('../controllers/adminController');
 const { verifyToken } = require('../middleware/authMiddleware');
+
+// Get community stats (public - no auth required)
+router.get('/stats', adminController.getCommunityStats);
 
 // Get recent community activity
 router.get('/activity', verifyToken, communityController.getRecentActivity);

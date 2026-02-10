@@ -206,6 +206,7 @@ class AnalyticsServiceClass {
                         total_sessions: totalSessions,
                         current_streak: currentStreak,
                         total_practice_time: totalDuration,
+                        average_accuracy: avgAccuracy, // Add average accuracy
                         overall_mastery_level: avgAccuracy >= 85 ? 'Advanced' : avgAccuracy >= 70 ? 'Intermediate' : 'Beginner',
                         favorite_pose: favoritePose
                     },

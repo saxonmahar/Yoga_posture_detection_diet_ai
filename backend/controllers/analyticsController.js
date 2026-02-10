@@ -9,13 +9,17 @@ const recordYogaSession = async (req, res) => {
     const { user_id, poses_practiced, total_duration, session_notes } = req.body;
 
     // Create new pose session using PoseSession model
+    const sessionEndTime = new Date();
+    const sessionStartTime = new Date(sessionEndTime.getTime() - (total_duration * 60 * 1000)); // Calculate start time from duration
+    
     const poseSession = new PoseSession({
       userId: user_id,
       sessionName: session_notes || 'Yoga Practice Session',
       sessionType: 'yoga',
       duration: Math.round(total_duration), // in minutes
+      startTime: sessionStartTime,
+      endTime: sessionEndTime,
       status: 'completed',
-      endTime: new Date(),
       totalPoses: poses_practiced?.length || 0,
       poses: poses_practiced?.map(pose => ({
         poseId: pose.pose_id,

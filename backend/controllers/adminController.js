@@ -166,14 +166,24 @@ exports.getServerStatus = async (req, res) => {
     }
 
     const servers = [
-      { name: 'Backend API', url: 'http://localhost:5001/api/auth/me', port: 5001 },
-      { name: 'ML Service', url: 'http://localhost:5000', port: 5000 },
+      { name: 'Backend API', url: null, port: 5001 }, // Don't check self, always online if we're here
+      { name: 'ML Service', url: 'http://localhost:5000/health', port: 5000 },
       { name: 'Diet Service', url: 'http://localhost:5002', port: 5002 },
       { name: 'Photo Service', url: 'http://localhost:5010', port: 5010 }
     ];
 
     const statusChecks = await Promise.all(
       servers.map(async (server) => {
+        // Backend API is always online if we're processing this request
+        if (server.name === 'Backend API') {
+          return {
+            name: server.name,
+            port: server.port,
+            status: 'online',
+            responseTime: 'N/A'
+          };
+        }
+        
         try {
           const response = await axios.get(server.url, { timeout: 2000 });
           return {
@@ -369,6 +379,60 @@ exports.getLoginLogs = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch login logs',
+      error: error.message
+    });
+  }
+};
+
+// Get community stats (for Community page)
+exports.getCommunityStats = async (req, res) => {
+  try {
+    console.log('📊 Fetching community stats...');
+
+    // Get total registered users (all members in the community)
+    const totalUsers = await User.countDocuments();
+    console.log('👥 Total registered users:', totalUsers);
+
+    // Get total sessions count
+    const totalSessions = await PoseSession.countDocuments({ status: 'completed' });
+    console.log('🧘 Total sessions:', totalSessions);
+
+    // Calculate average accuracy across all users
+    const sessions = await PoseSession.find({ status: 'completed' });
+    
+    let totalAccuracySum = 0;
+    let totalPoseCount = 0;
+    
+    sessions.forEach(session => {
+      if (session.poses && session.poses.length > 0) {
+        session.poses.forEach(pose => {
+          totalAccuracySum += pose.accuracyScore || 0;
+          totalPoseCount++;
+        });
+      }
+    });
+    
+    const averageAccuracy = totalPoseCount > 0 ? Math.round(totalAccuracySum / totalPoseCount) : 0;
+    console.log('🎯 Community average accuracy:', averageAccuracy);
+
+    // Get posts shared (for now, use sessions as proxy)
+    const postsShared = totalSessions; // In future, this would be actual posts
+
+    res.json({
+      success: true,
+      stats: {
+        activeMembers: totalUsers, // Total registered users
+        postsShared: postsShared,
+        averageAccuracy: averageAccuracy,
+        totalSessions: totalSessions
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Community stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch community stats',
       error: error.message
     });
   }
