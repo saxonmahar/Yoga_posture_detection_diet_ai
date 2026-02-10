@@ -1,6 +1,5 @@
 // Admin Controller - System Management and Analytics
 const User = require('../models/user');
-const YogaSession = require('../models/yogaSession');
 const PoseSession = require('../models/posesession');
 const Schedule = require('../models/schedule');
 const LoginLog = require('../models/loginLog');
@@ -23,7 +22,7 @@ exports.getAdminStats = async (req, res) => {
     // Get active users (logged in last 24 hours)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const activeUsers = await User.countDocuments({
-      lastLogin: { $gte: oneDayAgo }
+      'stats.lastLogin': { $gte: oneDayAgo }
     });
 
     // Get premium users
@@ -31,18 +30,18 @@ exports.getAdminStats = async (req, res) => {
       isPremium: true
     });
 
-    // Get total sessions
-    const totalSessions = await YogaSession.countDocuments();
+    // Get total sessions (using PoseSession)
+    const totalSessions = await PoseSession.countDocuments();
 
     // Get today's sessions
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
-    const todaySessions = await YogaSession.countDocuments({
+    const todaySessions = await PoseSession.countDocuments({
       createdAt: { $gte: todayStart }
     });
 
     // Get active today (users who had sessions today)
-    const activeToday = await YogaSession.distinct('user_id', {
+    const activeToday = await PoseSession.distinct('userId', {
       createdAt: { $gte: todayStart }
     });
 
@@ -50,20 +49,20 @@ exports.getAdminStats = async (req, res) => {
     const totalRevenue = premiumUsers * 500; // Assuming Rs 500 per premium user
 
     // Get recent activity (last 10 sessions)
-    const recentActivity = await YogaSession.find()
+    const recentActivity = await PoseSession.find()
       .sort({ createdAt: -1 })
       .limit(10)
-      .populate('user_id', 'fullName email')
-      .select('user_id total_duration poses createdAt');
+      .populate('userId', 'fullName email')
+      .select('userId sessionName avgAccuracy duration totalPoses createdAt');
 
     // Format recent activity
     const formattedActivity = recentActivity.map(session => ({
       id: session._id,
-      userName: session.user_id?.fullName || 'Unknown User',
-      userEmail: session.user_id?.email || '',
-      action: 'Completed yoga session',
-      poses: session.poses?.length || 0,
-      duration: Math.round(session.total_duration || 0),
+      userName: session.userId?.fullName || 'Unknown User',
+      userEmail: session.userId?.email || '',
+      action: `Completed ${session.sessionName || 'yoga session'} (${session.totalPoses || 0} poses)`,
+      accuracy: Math.round(session.avgAccuracy || 0),
+      duration: Math.round(session.duration || 0),
       timestamp: session.createdAt,
       timeAgo: getTimeAgo(session.createdAt)
     }));
@@ -281,7 +280,7 @@ exports.getAnalytics = async (req, res) => {
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
-      const count = await YogaSession.countDocuments({
+      const count = await PoseSession.countDocuments({
         createdAt: { $gte: date, $lt: nextDate }
       });
 

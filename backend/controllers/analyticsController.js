@@ -1,4 +1,4 @@
-const YogaSession = require('../models/yogaSession');
+const PoseSession = require('../models/posesession');
 const UserProgress = require('../models/userProgress');
 const AnalyticsService = require('../services/analyticsService');
 
@@ -8,16 +8,30 @@ const recordYogaSession = async (req, res) => {
     console.log('📊 Recording yoga session:', req.body);
     const { user_id, poses_practiced, total_duration, session_notes } = req.body;
 
-    // Create new yoga session
-    const yogaSession = new YogaSession({
-      user_id,
-      poses_practiced,
-      total_duration,
-      session_notes
+    // Create new pose session using PoseSession model
+    const poseSession = new PoseSession({
+      userId: user_id,
+      sessionName: session_notes || 'Yoga Practice Session',
+      sessionType: 'yoga',
+      duration: Math.round(total_duration), // in minutes
+      status: 'completed',
+      endTime: new Date(),
+      totalPoses: poses_practiced?.length || 0,
+      poses: poses_practiced?.map(pose => ({
+        poseId: pose.pose_id,
+        poseName: pose.pose_name,
+        accuracyScore: pose.accuracy_score || 0,
+        holdDuration: pose.hold_duration || 0,
+        feedback: pose.feedback_given?.map(msg => ({
+          category: 'form',
+          message: msg,
+          severity: 'good'
+        })) || []
+      })) || []
     });
 
-    await yogaSession.save();
-    console.log('✅ Yoga session saved:', yogaSession._id);
+    await poseSession.save();
+    console.log('✅ Pose session saved:', poseSession._id);
 
     // Update user progress
     let userProgress = await UserProgress.findOne({ user_id });
@@ -67,7 +81,7 @@ const recordYogaSession = async (req, res) => {
     res.status(201).json({
       success: true,
       message: 'Yoga session recorded successfully',
-      session: yogaSession,
+      session: poseSession,
       progress: userProgress,
       new_achievements: newAchievements
     });

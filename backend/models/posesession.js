@@ -169,8 +169,8 @@ const poseSessionSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Calculate duration before saving
-poseSessionSchema.pre('save', function(next) {
+// Calculate duration before saving (no callback needed in Mongoose 6+)
+poseSessionSchema.pre('save', function() {
     if (this.endTime && this.startTime) {
         const durationMs = this.endTime - this.startTime;
         this.duration = Math.round(durationMs / 60000); // Convert to minutes
@@ -190,8 +190,6 @@ poseSessionSchema.pre('save', function(next) {
     if (this.duration > 0) {
         this.caloriesBurned = Math.round(this.duration * 5);
     }
-    
-    next();
 });
 
 // Indexes for faster queries

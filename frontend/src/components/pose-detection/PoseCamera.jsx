@@ -157,6 +157,7 @@ const PoseCamera = ({
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
   const detectionIntervalRef = useRef(null);
+  const isProcessingRef = useRef(false); // Flag to prevent overlapping detections
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState(null);
   const [isDetecting, setIsDetecting] = useState(false);
@@ -174,22 +175,51 @@ const PoseCamera = ({
   // Update currentSelectedPose when selectedPose prop changes
   useEffect(() => {
     if (selectedPose !== currentSelectedPose) {
-      console.log(`🔄 Updating currentSelectedPose: ${currentSelectedPose} → ${selectedPose}`);
+      console.log(`🔄 POSE SWITCH DETECTED: ${currentSelectedPose} → ${selectedPose}`);
       
-      // IMMEDIATELY STOP ALL TTS when switching poses using TTS service
+      // NUCLEAR OPTION: Stop EVERYTHING immediately
+      
+      // 1. STOP ALL TTS - Multiple methods to ensure it stops
       ttsService.stopAll();
-      console.log('🔇 TTS STOPPED - Pose switched!');
+      ttsService.endSession();
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      console.log('🔇 TTS COMPLETELY STOPPED!');
       
+      // 2. STOP DETECTION IMMEDIATELY
+      const wasDetecting = isDetecting;
+      if (detectionIntervalRef.current) {
+        clearInterval(detectionIntervalRef.current);
+        detectionIntervalRef.current = null;
+      }
+      setIsDetecting(false);
+      console.log('⏸️ Detection STOPPED!');
+      
+      // 3. CLEAR CANVAS MULTIPLE TIMES to ensure it's clean
+      if (canvasRef.current) {
+        const ctx = canvasRef.current.getContext('2d');
+        // Clear multiple times with different methods
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0)';
+        ctx.fillRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        console.log('🧹 CANVAS COMPLETELY CLEARED!');
+      }
+      
+      // 4. UPDATE POSE STATE
       setCurrentSelectedPose(selectedPose);
+      console.log(`✅ Pose state updated to: ${selectedPose}`);
       
-      // Reset pose-specific states when switching poses
+      // 5. RESET ALL POSE-SPECIFIC STATES
       setPerfectPoseCount(0);
       setConsecutiveFrames(0);
       setPoseCompleted(false);
       setLastPoseState(false);
       setShowCelebration(false);
+      setLandmarkCount(0);
       
-      // Reset session data for new pose
+      // 6. RESET SESSION DATA
       setSessionData({
         startTime: new Date(),
         attempts: 0,
@@ -198,9 +228,29 @@ const PoseCamera = ({
         correctionsNeeded: []
       });
       
-      console.log(`✅ Pose switched to: ${selectedPose} - States reset`);
+      // 7. RESET GUIDANCE
+      setGuidancePhase('preparation');
+      setCurrentInstructionStep(0);
+      setIsGivingInstructions(false);
+      
+      console.log(`✅✅✅ POSE SWITCH COMPLETE: ${selectedPose} - Everything reset!`);
+      
+      // 8. RESTART DETECTION with longer delay to ensure clean state
+      if (wasDetecting && isStreaming) {
+        setTimeout(() => {
+          console.log(`▶️ RESTARTING DETECTION for: ${selectedPose}`);
+          setGuidancePhase('analysis');
+          setIsGivingInstructions(false);
+          
+          // Start fresh detection interval - 50ms for smooth tracking
+          setIsDetecting(true);
+          detectionIntervalRef.current = setInterval(async () => {
+            await detectPose();
+          }, 50);
+        }, 1000); // Increased to 1 second for cleaner transition
+      }
     }
-  }, [selectedPose, currentSelectedPose]);
+  }, [selectedPose, currentSelectedPose, isDetecting, isStreaming]);
   
   // Session Management State
   const [sessionState, setSessionState] = useState({
@@ -319,6 +369,13 @@ const PoseCamera = ({
   const startDetection = () => {
     if (isDetecting) return;
 
+    // CLEAR CANVAS BEFORE STARTING - Ensure clean slate
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      console.log('🧹 Canvas cleared before starting detection');
+    }
+
     setIsDetecting(true);
     setDebugInfo('Starting MediaPipe detection...');
 
@@ -343,10 +400,10 @@ const PoseCamera = ({
       sessionPhase: 'single-pose'
     }));
 
-    // Start detection loop - every 200ms
+    // Start detection loop - every 50ms for smooth real-time tracking (20 FPS)
     detectionIntervalRef.current = setInterval(async () => {
       await detectPose();
-    }, 200);
+    }, 50);
   };
 
   const stopDetection = () => {
@@ -405,29 +462,41 @@ const PoseCamera = ({
 
   const detectPose = async () => {
     if (!webcamRef.current?.video || !isStreaming) return;
+    
+    // Skip if previous detection is still processing (prevents queue buildup)
+    if (isProcessingRef.current) {
+      console.log('⏭️ Skipping frame - previous detection still processing');
+      return;
+    }
+    
+    isProcessingRef.current = true; // Mark as processing
 
     try {
       const video = webcamRef.current.video;
       if (video.readyState !== 4) return;
 
-      // Capture frame with higher resolution for better detection
+      // Capture frame with optimized resolution for FAST real-time detection
+      // Lower resolution = faster processing = less lag
       const canvas = document.createElement('canvas');
-      canvas.width = 1280;
-      canvas.height = 720;
+      canvas.width = 640;  // Reduced from 1280 for speed
+      canvas.height = 480; // Reduced from 720 for speed
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, 1280, 720);
+      ctx.drawImage(video, 0, 0, 640, 480);
 
-      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+      const imageData = canvas.toDataURL('image/jpeg', 0.6); // Reduced quality for speed
 
       setDebugInfo('Sending webcam frame to MediaPipe API...');
 
       // Call MediaPipe API with current selected pose
+      // Use selectedPose directly to avoid stale closure issues
+      const poseToDetect = selectedPose || currentSelectedPose;
+      console.log(`📤 Sending to ML API: pose_type=${poseToDetect} (selectedPose=${selectedPose}, currentSelectedPose=${currentSelectedPose})`);
       const response = await fetch(`${ML_API_URL}/api/ml/detect-pose`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: imageData,
-          pose_type: currentSelectedPose,
+          pose_type: poseToDetect,
           user_name: 'User'
         })
       });
@@ -550,6 +619,9 @@ const PoseCamera = ({
     } catch (error) {
       setDebugInfo(`Detection error: ${error.message}`);
       console.error('Detection error:', error);
+    } finally {
+      // Always reset processing flag when done
+      isProcessingRef.current = false;
     }
   };
 
@@ -753,10 +825,20 @@ const PoseCamera = ({
         ctx.fillText('ADJUST POSE! ⚠️', 20, 70);
       }
 
-      // Pose name with better visibility
+      // Show EXPECTED pose (what user selected) instead of detected pose for clarity
+      const expectedPoseName = PROFESSIONAL_POSES.find(p => p.id === selectedPose)?.name || 
+                               PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose)?.name || 
+                               'Unknown';
       ctx.fillStyle = textColor;
       ctx.font = 'bold 16px Arial';
-      ctx.fillText(`Pose: ${result.pose_name || 'Unknown'}`, 20, 95);
+      ctx.fillText(`Pose: ${expectedPoseName}`, 20, 95);
+      
+      // Show if detected pose is different from expected
+      if (result.pose_name && result.pose_name !== expectedPoseName) {
+        ctx.font = '12px Arial';
+        ctx.fillStyle = '#FF6B6B';
+        ctx.fillText(`(Detected: ${result.pose_name})`, 20, 112);
+      }
       
       // Feedback preview (first feedback item)
       if (result.feedback && result.feedback.length > 0) {
