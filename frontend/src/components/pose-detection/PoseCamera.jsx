@@ -1430,20 +1430,20 @@ const PoseCamera = ({
               </div>
             )}
             {showPoseComplete && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999]">
-                <div className="bg-gradient-to-r from-green-500 to-blue-500 p-8 rounded-3xl shadow-2xl text-center max-w-md mx-4">
-                  <div className="text-6xl mb-4">✅</div>
-                  <h2 className="text-4xl font-bold text-white mb-4">Pose Complete!</h2>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]">
+                <div className="bg-gradient-to-r from-green-500 to-blue-500 p-4 rounded-2xl shadow-2xl text-center max-w-sm">
+                  <div className="text-5xl mb-3">✅</div>
+                  <h2 className="text-3xl font-bold text-white mb-3">Pose Complete!</h2>
                   
                   {sessionState.completedPoses.length > 0 && (
-                    <div className="text-white mb-6">
-                      <p className="text-xl mb-2">{sessionState.completedPoses[sessionState.completedPoses.length - 1]?.name}</p>
-                      <p className="text-sm opacity-80">Duration: {Math.max(sessionState.completedPoses[sessionState.completedPoses.length - 1]?.duration || 30, 30)}s</p>
-                      <p className="text-sm opacity-80">Accuracy: {sessionState.completedPoses[sessionState.completedPoses.length - 1]?.maxAccuracy || sessionState.completedPoses[sessionState.completedPoses.length - 1]?.averageAccuracy || 90}%</p>
+                    <div className="text-white mb-4">
+                      <p className="text-lg mb-1">{sessionState.completedPoses[sessionState.completedPoses.length - 1]?.name}</p>
+                      <p className="text-xs opacity-80">Duration: {Math.max(sessionState.completedPoses[sessionState.completedPoses.length - 1]?.duration || 30, 30)}s</p>
+                      <p className="text-xs opacity-80">Accuracy: {sessionState.completedPoses[sessionState.completedPoses.length - 1]?.maxAccuracy || sessionState.completedPoses[sessionState.completedPoses.length - 1]?.averageAccuracy || 90}%</p>
                     </div>
                   )}
                   
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <button
                       onClick={() => {
                         // STOP detection completely
@@ -1463,7 +1463,7 @@ const PoseCamera = ({
                         
                         console.log('🔄 Choose Next Pose clicked - Detection stopped, showing selection');
                       }}
-                      className="w-full px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-white font-bold rounded-lg transition-colors"
+                      className="w-full px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-bold rounded-lg transition-colors"
                     >
                       🧘‍♀️ Choose Next Pose
                     </button>
@@ -1480,47 +1480,44 @@ const PoseCamera = ({
                           ttsService.speak("Session ended. Great work!", true);
                         }
                       }}
-                      className="w-full px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-bold rounded-lg transition-colors"
+                      className="w-full px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-lg transition-colors"
                     >
                       🏁 End Session
                     </button>
                   </div>
                   
-                  <p className="text-xs text-white/70 mt-4">
-                    Completed: {sessionState.completedPoses.length} pose(s) | Need 2 for full benefits
+                  <p className="text-xs text-white/70 mt-3">
+                    Completed: {sessionState.completedPoses.length} pose(s)
                   </p>
                 </div>
               </div>
             )}
             {showCelebration && (
               <div 
-                className="fixed inset-0 flex items-center justify-center bg-black/80 z-[9999]"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999]"
                 style={{ 
-                  position: 'fixed',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
                   zIndex: 9999
                 }}
               >
-                <div className="text-center animate-bounce bg-gradient-to-r from-yellow-400 to-orange-500 p-8 rounded-3xl shadow-2xl">
-                  <div className="text-9xl mb-6">🎉</div>
-                  <h1 className="text-7xl font-bold text-white mb-6 animate-pulse shadow-lg drop-shadow-lg">
+                <div className="text-center animate-bounce bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-2xl shadow-2xl max-w-sm">
+                  <div className="text-5xl mb-3">🎉</div>
+                  <h1 className="text-4xl font-bold text-white mb-3 animate-pulse shadow-lg drop-shadow-lg">
                     BRAVO!
                   </h1>
-                  <p className="text-3xl text-white mb-4 font-bold">
-                    3 Perfect Poses Completed!
+                  <p className="text-xl text-white mb-2 font-bold">
+                    Perfect Pose Held!
                   </p>
-                  <p className="text-2xl text-green-200 font-semibold">
+                  <p className="text-lg text-green-200 font-semibold">
                     Excellent work! 🌟
                   </p>
-                  <div className="flex justify-center space-x-6 mt-6 text-5xl">
+                  <div className="flex justify-center space-x-3 mt-3 text-3xl">
                     <span className="animate-bounce">🎊</span>
                     <span className="animate-bounce" style={{animationDelay: '0.1s'}}>✨</span>
                     <span className="animate-bounce" style={{animationDelay: '0.2s'}}>🎉</span>
-                    <span className="animate-bounce" style={{animationDelay: '0.3s'}}>⭐</span>
-                    <span className="animate-bounce" style={{animationDelay: '0.4s'}}>🎊</span>
                   </div>
                 </div>
               </div>
