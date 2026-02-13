@@ -555,30 +555,27 @@ const PoseCamera = ({
           correctionsNeeded: result.corrections ? [...prev.correctionsNeeded, ...result.corrections] : prev.correctionsNeeded
         }));
 
-        // AUTO-STOP WHEN POSE IS PERFECT - Count perfect poses (90% threshold for easier achievement)
+        // AUTO-STOP WHEN POSE IS PERFECT - Hold for 2 seconds (40 frames at 50ms = 2 seconds)
         if (result.accuracy_score >= 90) {
           setConsecutiveFrames(prev => {
             const newFrames = prev + 1;
+            const secondsHeld = Math.floor(newFrames * 0.05); // 50ms per frame = 0.05 seconds
             
-            // If pose held for 3 consecutive frames (about 0.6 seconds) and we haven't counted this pose yet
-            if (newFrames >= 3 && !lastPoseState) {
+            // If pose held for 40 consecutive frames (2 seconds)
+            if (newFrames >= 40 && !lastPoseState) {
               setPerfectPoseCount(prevCount => {
                 const newCount = prevCount + 1;
                 
-                if (newCount === 1) {
-                  ttsService.speak("Great! 1 out of 3 perfect poses!", true);
-                } else if (newCount === 2) {
-                  ttsService.speak("Excellent! 2 out of 3 perfect poses!", true);
-                } else if (newCount >= 3) {
-                  // BRAVO! CELEBRATION TIME!
+                if (newCount >= 1) {
+                  // BRAVO! CELEBRATION TIME - 2 seconds held!
                   ttsService.stopAll();
                   
                   setPoseCompleted(true);
                   setShowCelebration(true);
                   
-                  // Use TTS service for celebration
+                  // Use TTS service for celebration with "BRAVO!" message
                   setTimeout(() => {
-                    ttsService.celebratePerfectPose(currentSelectedPose, 3);
+                    ttsService.speak("BRAVO! You held the perfect pose! Amazing work!", true);
                   }, 200);
                   
                   // Record pose completion in session
@@ -594,7 +591,7 @@ const PoseCamera = ({
                     averageAccuracy: sessionData.accuracyScores.length > 0 ? 
                       Math.round(sessionData.accuracyScores.reduce((a, b) => a + b, 0) / sessionData.accuracyScores.length) : 90,
                     attempts: sessionData.attempts,
-                    perfectCount: 3,
+                    perfectCount: 1,
                     maxAccuracy: sessionData.accuracyScores.length > 0 ? Math.max(...sessionData.accuracyScores) : 90
                   };
                   
@@ -629,12 +626,12 @@ const PoseCamera = ({
                   console.log('🍽️ Preparing meal card with session data:', mealSessionData);
                   setMealCardSessionData(mealSessionData);
                   
-                  // STOP DETECTION AUTOMATICALLY after 3 perfect poses
+                  // STOP DETECTION AUTOMATICALLY after 2 seconds hold
                   setTimeout(() => {
                     stopDetection();
                     setShowCelebration(false);
                     setShowPoseComplete(true);
-                    setDebugInfo('🎉 Pose completed! 3 perfect poses achieved - Detection stopped.');
+                    setDebugInfo('🎉 BRAVO! Pose held for 2 seconds - Detection stopped.');
                     
                     // Show meal card after a short delay
                     setTimeout(() => {
@@ -1085,14 +1082,14 @@ const PoseCamera = ({
       {/* Simple instruction - no big boxes */}
       <div className="mb-2 text-center">
         <p className="text-green-300 text-sm">
-          🧘‍♀️ <strong>Stand 3-4 meters back for full body view</strong> • Hold poses with {'>'}95% accuracy for "Perfect pose!" 🎉
+          🧘‍♀️ <strong>Stand 3-4 meters back for full body view</strong> • Hold pose with {'>'}90% accuracy for 2 seconds to complete! 🎉
         </p>
       </div>
 
       {/* Compact Debug Info */}
       <div className="mb-2 p-2 bg-blue-500/20 border border-blue-500 rounded-lg">
         <p className="text-blue-300 text-xs">
-          <strong>Status:</strong> {debugInfo} | <strong>Landmarks:</strong> {landmarkCount} | <strong>Perfect:</strong> {perfectPoseCount}/3 | <strong>Expected:</strong> {PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose)?.name || 'Unknown'}
+          <strong>Status:</strong> {debugInfo} | <strong>Landmarks:</strong> {landmarkCount} | <strong>Hold Time:</strong> {Math.floor(consecutiveFrames * 0.05)}s / 2s | <strong>Expected:</strong> {PROFESSIONAL_POSES.find(p => p.id === currentSelectedPose)?.name || 'Unknown'}
           {landmarkCount === 0 && isDetecting && (
             <span className="text-red-300 ml-2 animate-pulse">⚠️ Move back more • Improve lighting</span>
           )}
